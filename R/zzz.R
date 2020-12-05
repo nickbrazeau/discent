@@ -7,3 +7,10 @@ NULL
 #' @importFrom Rcpp sourceCpp
 ## usethis namespace: end
 NULL
+
+#------------------------------------------------
+# unload dll when package is unloaded
+#' @noRd
+.onUnload <- function(libpath) {
+  library.dynam.unload("discent", libpath)  # nocov
+}
