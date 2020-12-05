@@ -1,20 +1,43 @@
 Package: discent
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Estimation of Deme Inbreeding Spatial Coefficients with Gradient Descent
+Version: 0.5.0
 Authors@R: 
-    person(given = "Nicholas",
+    c(person(given = "Nick",
            family = "Brazeau",
            role = c("aut", "cre"),
-           email = "nbrazeau@med.unc.edu",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           comment = c(ORCID = "0000-0003-3976-7965")),
+           person(given = "Bob",
+           family = "Verity",
+           role = c("aut")),
+           )
+Description: In the early 1970s, Malécot described the relationship between genetic relatedness 
+and physical distance, forming the framework of isolation by distance, or -- put simply --
+pairs that are far apart are less likely to mate. Capitalizing on this framework by using measures
+of Identity by Descent, we produce a deme inbreeding spatial coefficient (DISC) using "vanilla" gradient descent.
+For the mathematical formulation of the of DISC, see: <TODO>. Briefly, n brief, we assume that the relatedness 
+between two locations (demes) in space is given by the average pairwise IBD between the two locations conditional
+on the distance that seperates them. Further, we assume that geographic distance is scaled by a migration rate, 
+which is a global parameter among all spatial locations.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports:
+    dplyr,
+    magrittr,
+    tidyr,
+    purrr,
+    tibble,
+    crayon,
+    stats,
+    utils
+Suggests: 
+    knitr,
+    rmarkdown,
+    covr,
+    testthat (>= 2.1.0)
+VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 LinkingTo: 
     Rcpp
-Imports: 
-    Rcpp
+SystemRequirements: C++11
