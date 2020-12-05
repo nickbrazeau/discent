@@ -1,6 +1,7 @@
 # DISCent
 <!-- badges: start -->
 [![Travis build status](https://travis-ci.com/nickbrazeau/discent.svg?branch=main)](https://travis-ci.com/nickbrazeau/discent)
+[![Codecov test coverage](https://codecov.io/gh/nickbrazeau/discent/branch/main/graph/badge.svg)](https://codecov.io/gh/nickbrazeau/discent?branch=main)
 <!-- badges: end -->
 
 <description>
@@ -35,7 +36,12 @@ remotes::install_github("nickbrazeau/discent")
     sudo apt-get install r-base-dev texlive-full
     ```
 
+Assuming everything installed correctly, you can now load the package:
+
+```
+library(discent)
+```
 
 
 ## Running the Model 
-For instructions on running the model, please see the vignette: [TODO]()
+For instructions on running the model, please see the vignette: [Running the Model]()
