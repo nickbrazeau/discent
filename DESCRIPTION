@@ -14,7 +14,7 @@ Description: In the early 1970s, Malécot described the relationship between gen
 and physical distance, forming the framework of isolation by distance, or -- put simply --
 pairs that are far apart are less likely to mate. Capitalizing on this framework by using measures
 of Identity by Descent, we produce a deme inbreeding spatial coefficient (DISC) using "vanilla" gradient descent.
-For the mathematical formulation of the of DISC, see: <TODO>. Briefly, n brief, we assume that the relatedness 
+For the mathematical formulation of the of DISC, see: <TODO>. Briefly, we assume that the relatedness 
 between two locations (demes) in space is given by the average pairwise IBD between the two locations conditional
 on the distance that seperates them. Further, we assume that geographic distance is scaled by a migration rate, 
 which is a global parameter among all spatial locations.
