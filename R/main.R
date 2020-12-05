@@ -63,6 +63,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   }
   assert_dataframe(K_gendist_geodist)
   assert_vector(start_params)
+  sapply(start_params[!grepl("m", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(f_learningrate)
   assert_single_numeric(m_learningrate)
   assert_single_logical(full_matrix)
