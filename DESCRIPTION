@@ -1,27 +1,23 @@
 Package: discent
+Type: Package
 Title: Estimation of Deme Inbreeding Spatial Coefficients with Gradient Descent
 Version: 0.5.0
-Authors@R: 
-    c(person(given = "Nick",
-           family = "Brazeau",
-           role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-3976-7965")),
-           person(given = "Bob",
-           family = "Verity",
-           role = c("aut")),
-           )
+Authors@R: as.person(c(
+    "Nick Brazeau <nbrazeau@imperial.ac.uk> [aut, cre]", 
+    "Bob Verity <r.verity@imperial.ac.uk> [aut]"))
 Description: In the early 1970s, Malécot described the relationship between genetic relatedness 
-and physical distance, forming the framework of isolation by distance, or -- put simply --
-pairs that are far apart are less likely to mate. Capitalizing on this framework by using measures
-of Identity by Descent, we produce a deme inbreeding spatial coefficient (DISC) using "vanilla" gradient descent.
-For the mathematical formulation of the of DISC, see: <TODO>. Briefly, we assume that the relatedness 
-between two locations (demes) in space is given by the average pairwise IBD between the two locations conditional
-on the distance that seperates them. Further, we assume that geographic distance is scaled by a migration rate, 
-which is a global parameter among all spatial locations.
+            and physical distance, forming the framework of isolation by distance, or -- put simply --
+            pairs that are far apart are less likely to mate. Capitalizing on this framework by using measures
+            of Identity by Descent, we produce a deme inbreeding spatial coefficient (DISC) using "vanilla" gradient descent.
+            For the mathematical formulation of the of DISC, see: <TODO>. Briefly, we assume that the relatedness 
+            between two locations (demes) in space is given by the average pairwise IBD between the two locations conditional
+            on the distance that seperates them. Further, we assume that geographic distance is scaled by a migration rate, 
+            which is a global parameter among all spatial locations.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
+    Rcpp,
     dplyr,
     magrittr,
     tidyr,

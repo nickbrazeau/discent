@@ -1,0 +1,17 @@
+title: discent
+template:
+  params:
+    bootswatch: flatly
+
+navbar:
+  title: "discent"
+  left:
+    - text: "Vignettes"
+      menu:
+        - text: "Running the Model"
+          href: articles/runmod.html
+    - text: "Functions"
+      href: reference/index.html
+  right:
+   - icon: fa-github
+     href: https://github.com/nickbrazeau/discent
