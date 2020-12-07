@@ -71,7 +71,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     //-------------------------------
     // get current cost for given Fvector and M
     //-------------------------------
-    for (int i = 0; i < (n_Demes-1); i++) { // cost is for every pair in the upper triangle
+    // cost is for every pair in the upper triangle
+    for (int i = 0; i < (n_Demes-1); i++) {
       for (int j = i+1; j < n_Demes; j++) {
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
@@ -84,7 +85,9 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
 
     //-------------------------------
     // F gradient
-    // N.B. going be complete row (not just triangle )in order for all sample i's to be accounted for in the gradient (fi + fj where j can be i)
+    // N.B. needs to be complete row (not just triangle) in order for all
+    // sample i's to be accounted for in the gradient (fi + fj where j can be i)
+    // N.B. storing each i, so summing out js/ps
     //-------------------------------
     // clear results from previous step
     vector<double> fgrad(n_Demes);
@@ -126,6 +129,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
         }
       }
     }
+
     //-------------------------------
     // Update F and M
     //-------------------------------
