@@ -108,6 +108,12 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   }
 
   # put gendist into an array
+  # NB we are filling an array with dimension of size:
+  #   locations x locations x max K-pairs
+  # Will fill in w/ -1 to indicate missing/skip where demes do not
+  # have max pairs.
+  # This approach wastes memory but allows for a structured array
+  # versus a list with varying sizes (and eventually a more efficient for-loop)
   n_Kpairmax <- max(purrr::map_dbl(gendist$data, nrow))
   gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
   for (i in 1:nrow(gendist)) {
