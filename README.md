@@ -1,6 +1,7 @@
 # DISCent
 <!-- badges: start -->
 [![Travis build status](https://travis-ci.com/nickbrazeau/discent.svg?branch=main)](https://travis-ci.com/nickbrazeau/discent)
+[![Codecov test coverage](https://codecov.io/gh/nickbrazeau/discent/branch/master/graph/badge.svg)](https://codecov.io/gh/nickbrazeau/discent?branch=master)
 <!-- badges: end -->
 
 <description>

@@ -165,8 +165,11 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                report_progress = report_progress
   )
 
-  args_functions <- list(report_progress = report_progress)
-  output_raw <- cluster_inbreeding_coef_cpp(args, args_functions, args_progress)
+  # create progress bars
+  pb <- txtProgressBar(min = 0, max = steps-1, initial = NA, style = 3)
+  args_progress <- list(pb = pb)
+  args_functions <- list(update_progress = update_progress)
+  output_raw <- deme_inbreeding_coef_cpp(args, args_functions, args_progress)
 
   # process output
   colnames(keyi) <- c("Deme", "key")
