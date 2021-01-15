@@ -21,6 +21,8 @@ expand_pairwise <- function(y){
 #' this should be set to false If this is an asymetric matrix, this should be set to true In the latter instance,
 #' users will need to have already expanded every IJ and JI combination (which are by default not equivalent)
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
+#' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
+#' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
 #' @details The gen.geo.dist dataframe must be named with the following columns:
 #'          "smpl1"; "smpl2"; "locat1"; "locat2"; "gendist"; "geodist"; which corresponds to:
 #'          Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
@@ -46,7 +48,8 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                                    m_learningrate = 1e-10,
                                    full_matrix = FALSE,
                                    steps = 1e3,
-                                   report_progress = TRUE){
+                                   report_progress = TRUE,
+                                   return_verbose = FALSE){
 
   #..............................................................
   # Assertions & Catches
@@ -173,7 +176,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
 
   # process output
   colnames(keyi) <- c("Deme", "key")
-  if (Sys.getenv("DEME_INBREED_DEBUG") == "TRUE") {
+  if (return_verbose) {
     output <- list(
       deme_key = keyi,
       m_run = output_raw$m_run,
