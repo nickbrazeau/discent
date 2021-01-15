@@ -7,7 +7,7 @@
 <description>
 
 ## IMPORTANT NOTES
-:warning: This model has planned development and is guaranteed to be backwards compatible. Version updates that are not backwards compatible will be noted in the `NEWS.md` file.
+:warning: This model has planned development and is not guaranteed to be backwards compatible. Version updates that are not backwards compatible will be noted in the `NEWS.md` file.
 
 
 ## Overview
