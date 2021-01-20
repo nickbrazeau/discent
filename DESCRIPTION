@@ -25,7 +25,9 @@ Imports:
     tibble,
     crayon,
     stats,
-    utils
+    utils,
+    ggplot2,
+    scales
 Suggests: 
     knitr,
     rmarkdown,
