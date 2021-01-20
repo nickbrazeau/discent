@@ -13,7 +13,8 @@ deme_inbreeding_spcoef(
   m_learningrate = 1e-10,
   full_matrix = FALSE,
   steps = 1000,
-  report_progress = TRUE
+  report_progress = TRUE,
+  return_verbose = FALSE
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ users will need to have already expanded every IJ and JI combination (which are 
 \item{steps}{numeric; the number of "steps" as we move down the gradient}
 
 \item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
+
+\item{return_verbose}{boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
+only for the final iteration. User will typically not want to store every iteration, which can be memory intensive}
 }
 \description{
 The purpose of this statistic is to identify an inbreeding coefficient, or degree of
