@@ -66,7 +66,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   }
   assert_dataframe(K_gendist_geodist)
   assert_vector(start_params)
-  assert_length(start_params, n = (length(unique(c(input$locat1, input$locat2))) + 1),
+  assert_length(start_params, n = (length(unique(c(K_gendist_geodist$locat1, K_gendist_geodist$locat2))) + 1),
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
   sapply(start_params[!grepl("m", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
