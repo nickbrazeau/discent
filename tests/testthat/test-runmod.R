@@ -8,7 +8,7 @@ test_that("model runs works", {
     locat = sample(LETTERS, size = 10, replace = F)
   )
   # bring together
-  K_gendist_geodist <- tibble::as_tibble(t(combn(locats$smpl, 2)))
+  K_gendist_geodist <- as.data.frame(t(combn(locats$smpl, 2)))
   colnames(K_gendist_geodist)[1] <- "smpl1"
   colnames(locats)[1] <- "smpl1"
   K_gendist_geodist <- dplyr::left_join(K_gendist_geodist, locats, by = "smpl1")
@@ -46,7 +46,6 @@ test_that("model runs works", {
                                          m_upperbound = 1,
                                          f_learningrate = 1e-4,
                                          m_learningrate = 1e-10,
-                                         full_matrix = FALSE,
                                          steps = 1e2,
                                          report_progress = TRUE)
   testthat::expect_length(mod, 4)

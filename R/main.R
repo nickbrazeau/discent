@@ -68,7 +68,6 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   sapply(start_params[!grepl("m", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(f_learningrate)
   assert_single_numeric(m_learningrate)
-  assert_single_logical(full_matrix)
   assert_single_int(steps)
   assert_single_logical(report_progress)
 
@@ -104,9 +103,9 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
     dplyr::select(c("locat1", "locat2", "gendist")) %>%
     dplyr::group_by_at(c("locat1", "locat2")) %>%
     tidyr::nest(.) %>%
-    dplyr::arrange_at(c("locat1", "locat2")) %>%
     dplyr::left_join(., keyi, by = "locat1") %>%
-    dplyr::left_join(., keyj, by = "locat2")
+    dplyr::left_join(., keyj, by = "locat2") %>%
+    dplyr::arrange_at(c("i", "j"))
 
 
   # put gendist into an array
@@ -128,13 +127,18 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
     dplyr::select(c("locat1", "locat2", "geodist")) %>%
     dplyr::group_by_at(c("locat1", "locat2")) %>%
     tidyr::nest(.) %>%
-    dplyr::arrange_at(c("locat1", "locat2"))
-
-
-  geodist$data <- purrr::map_dbl(geodist$data, function(x){unique(x[[1]])})
-  geodist <- geodist %>%
     dplyr::left_join(., keyi, by = "locat1") %>%
-    dplyr::left_join(., keyj, by = "locat2")
+    dplyr::left_join(., keyj, by = "locat2") %>%
+    dplyr::arrange_at(c("i", "j"))
+
+  # simplify geodistance data storage
+  geodist$data <- purrr::map_dbl(geodist$data, function(x){
+                                                            if (length(unique(unlist(x))) != 1) {
+                                                              stop("Locat1 and Locat2 have different geodistances among P-sample combinations. Distances should all be same among samples")
+                                                            }
+                                                            return( x[[1]] ) # all same by unique
+                                                          }
+                                 )
 
   # upper tri
   geodist_mat <- matrix(data = -1, nrow = length(locats), ncol = length(locats))
