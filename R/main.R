@@ -17,9 +17,6 @@ expand_pairwise <- function(y){
 #' @param m_lowerbound numeric; a lower bound for the m parameter
 #' @param m_upperbound numeric; an upper bound for the m parameter
 #' @param steps numeric; the number of "steps" as we move down the gradient
-#' @param full_matrix boolean; whether or not the user entered in a full matrix. If this is a symmetric distance matrix,
-#' this should be set to false If this is an asymetric matrix, this should be set to true In the latter instance,
-#' users will need to have already expanded every IJ and JI combination (which are by default not equivalent)
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
@@ -36,7 +33,7 @@ expand_pairwise <- function(y){
 #'              represented as "demes," such that multiple individuals live in the same deme
 #'              (i.e. samples are sourced from the same location). The expected pairwise relationship
 #'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
-#'              coefficient and the geographic distance between the demes.
+#'              coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
 #' @export
 #'
 
@@ -46,7 +43,6 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                                    m_upperbound = 1,
                                    f_learningrate = 1e-4,
                                    m_learningrate = 1e-10,
-                                   full_matrix = FALSE,
                                    steps = 1e3,
                                    report_progress = TRUE,
                                    return_verbose = FALSE){
@@ -103,24 +99,15 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   keyj <- data.frame(locat2 = demes, j = 1:length(demes))
 
   # get genetic data by pairs through efficient nest
-  if (full_matrix) {
-    gendist <- K_gendist_geodist %>%
-      dplyr::select(c("locat1", "locat2", "gendist")) %>%
-      dplyr::group_by_at(c("locat1", "locat2")) %>%
-      tidyr::nest(.) %>%
-      dplyr::arrange_at(c("locat1", "locat2")) %>%
-      dplyr::left_join(., keyi, by = "locat1") %>%
-      dplyr::left_join(., keyj, by = "locat2")
-  } else {
-    gendist <- K_gendist_geodist %>%
-      discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
-      dplyr::select(c("locat1", "locat2", "gendist")) %>%
-      dplyr::group_by_at(c("locat1", "locat2")) %>%
-      tidyr::nest(.) %>%
-      dplyr::arrange_at(c("locat1", "locat2")) %>%
-      dplyr::left_join(., keyi, by = "locat1") %>%
-      dplyr::left_join(., keyj, by = "locat2")
-  }
+  gendist <- K_gendist_geodist %>%
+    discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
+    dplyr::select(c("locat1", "locat2", "gendist")) %>%
+    dplyr::group_by_at(c("locat1", "locat2")) %>%
+    tidyr::nest(.) %>%
+    dplyr::arrange_at(c("locat1", "locat2")) %>%
+    dplyr::left_join(., keyi, by = "locat1") %>%
+    dplyr::left_join(., keyj, by = "locat2")
+
 
   # put gendist into an array
   # NB we are filling an array with dimension of size:
@@ -136,20 +123,13 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   }
 
   # put geo information into distance matrix
-  if (full_matrix) {
-    geodist <- K_gendist_geodist %>%
-      dplyr::select(c("locat1", "locat2", "geodist")) %>%
-      dplyr::group_by_at(c("locat1", "locat2")) %>%
-      tidyr::nest(.) %>%
-      dplyr::arrange_at(c("locat1", "locat2"))
-  } else {
-    geodist <- K_gendist_geodist %>%
-      discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
-      dplyr::select(c("locat1", "locat2", "geodist")) %>%
-      dplyr::group_by_at(c("locat1", "locat2")) %>%
-      tidyr::nest(.) %>%
-      dplyr::arrange_at(c("locat1", "locat2"))
-  }
+  geodist <- K_gendist_geodist %>%
+    discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
+    dplyr::select(c("locat1", "locat2", "geodist")) %>%
+    dplyr::group_by_at(c("locat1", "locat2")) %>%
+    tidyr::nest(.) %>%
+    dplyr::arrange_at(c("locat1", "locat2"))
+
 
   geodist$data <- purrr::map_dbl(geodist$data, function(x){unique(x[[1]])})
   geodist <- geodist %>%
