@@ -76,6 +76,15 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   assert_single_int(steps)
   assert_single_logical(report_progress)
 
+  #......................
+  # check for self comparisons
+  #......................
+  sapply(K_gendist_geodist$geodist, assert_neq, y = 0,
+         message = "No within-deme sample comparisons allowed. Geodistance should not be 0")
+  mapply(assert_neq, K_gendist_geodist$locat1, K_gendist_geodist$locat2,
+         message = "No within-deme sample comparisons allowed. Locat names should not be the same")
+
+
   #..............................................................
   # setup and create progress bars
   #..............................................................

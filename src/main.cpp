@@ -96,7 +96,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
-        if (i != j) {
+        if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
               fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] * m) +
@@ -116,7 +116,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // step through partial deriv for M
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
-        if (i != j) {
+        if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
               mgrad += 2 * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) *
