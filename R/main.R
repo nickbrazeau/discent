@@ -136,7 +136,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                                                             if (length(unique(unlist(x))) != 1) {
                                                               stop("Locat1 and Locat2 have different geodistances among P-sample combinations. Distances should all be same among samples")
                                                             }
-                                                            return( x[[1]] ) # all same by unique
+                                                            return( unique(unlist(x)) ) # all same by unique
                                                           }
                                  )
 
