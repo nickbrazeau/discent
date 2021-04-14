@@ -7,7 +7,8 @@ using namespace std;
 // Perform gradient descent to calculate deme Fi's
 // [[Rcpp::export]]
 Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
-
+  // overflow cost parameter
+  const double OVERFLO_DOUBLE = DBL_MAX/1000000.0;
   // extract proposed Fis for each K
   vector<double> fvec = rcpp_to_vector_double(args["fvec"]); // proposed Inb. Coeff. for demes
   // extract proposed M and boundaries
@@ -80,6 +81,13 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
           }
         }
       }
+    }
+
+    //-------------------------------
+    // Catch and Cap Extreme Costs
+    //-------------------------------
+    if (cost[step] > OVERFLO_DOUBLE) {
+      cost[step] = OVERFLO_DOUBLE;
     }
 
     //-------------------------------
