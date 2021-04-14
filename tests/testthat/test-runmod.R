@@ -44,8 +44,7 @@ test_that("model runs works", {
                                          start_params = start_params,
                                          m_lowerbound = 0,
                                          m_upperbound = 1,
-                                         f_learningrate = 1e-4,
-                                         m_learningrate = 1e-10,
+                                         learningrate = 1e-10,
                                          steps = 1e2,
                                          report_progress = TRUE)
   testthat::expect_length(mod, 4)
