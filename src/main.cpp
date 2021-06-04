@@ -13,6 +13,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   double m = rcpp_to_double(args["m"]); // proposed global M of migration
   double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
   double m_upperbound = rcpp_to_double(args["m_upperbound"]);
+  // momentum
+  double momentum = rcpp_to_double(args["momentum"]);
   // get dims
   int n_Demes = fvec.size();
   int n_Kpairmax =  rcpp_to_int(args["n_Kpairmax"]);
@@ -55,6 +57,15 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   vector<double> m_run(steps);
   vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
 
+  // items for momentum
+    // f grad
+  vector<vector<double>> fgrad(steps+1, vector<double>(n_Demes));
+    // initial condition
+  fill(fgrad[0].begin(), fgrad[0].end(), 0);
+    //m grad
+  vector<double> mgrad(steps+1);
+    // initial condition
+  mgrad[0] = 0.0;
 
   //-------------------------------
   // start grad descent by looping through steps
@@ -88,17 +99,14 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // sample i's to be accounted for in the gradient (fi + fj where j can be i)
     // N.B. storing each i, so summing out js/ps
     //-------------------------------
-    // clear results from previous step
-    vector<double> fgrad(n_Demes);
-    fill(fgrad.begin(), fgrad.end(), 0);
-
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
         if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
-              fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] * m) +
+              // remember in our grad vectors, +1 is our "current" state
+              fgrad[step+1][i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] * m) +
                 ((fvec[i] + fvec[j])/2) * exp(-2*geodist_mat[i][j] * m);
             }
           }
@@ -110,15 +118,14 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // M gradient
     // N.B. all terms included here, easier sum -- longer partial derivative
     //-------------------------------
-    // clear previous step results
-    double mgrad = 0;
     // step through partial deriv for M
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
         if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
-              mgrad += 2 * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) *
+              // remember in our grad vectors, +1 is our "current" state
+              mgrad[step+1] += 2 * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) *
                 exp(-geodist_mat[i][j] * m) -
                 2 * geodist_mat[i][j] *
                 ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) *
@@ -135,7 +142,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // update F
     for (int i = 0; i < n_Demes; i++){
       // update fs
-      fvec[i] = fvec[i] - f_learningrate * fgrad[i];
+      fvec[i] = fvec[i] - (momentum*fgrad[step][i] + f_learningrate*fgrad[step+1][i]);
       // hard bounds on f
       if (fvec[i] < 0) {
         fvec[i] = 0;
@@ -147,7 +154,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       fi_run[step][i] = fvec[i];
     }
     // update M
-    m = m - m_learningrate * mgrad;
+    m = m - (momentum*mgrad[step] + m_learningrate*mgrad[step+1]);
     // hard bounds for M
     if (m < m_lowerbound) {
       m = m_lowerbound;

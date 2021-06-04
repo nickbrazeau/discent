@@ -15,6 +15,7 @@ expand_pairwise <- function(y){
 #' @param f_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
 #' @param m_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
 #' @param m_lowerbound numeric; a lower bound for the m parameter
+#' @param momentum numeric; gamma parameter for momentum for adaptive learning rate
 #' @param m_upperbound numeric; an upper bound for the m parameter
 #' @param steps numeric; the number of "steps" as we move down the gradient
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
@@ -43,6 +44,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                                    m_upperbound = 1,
                                    f_learningrate = 1e-5,
                                    m_learningrate = 1e-10,
+                                   momentum = 0.9,
                                    steps = 1e3,
                                    report_progress = TRUE,
                                    return_verbose = FALSE){
@@ -68,6 +70,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   sapply(start_params[!grepl("m", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(f_learningrate)
   assert_single_numeric(m_learningrate)
+  assert_single_numeric(momentum)
   assert_single_int(steps)
   assert_single_logical(report_progress)
 
@@ -160,6 +163,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                m_upperbound = m_upperbound,
                f_learningrate = f_learningrate,
                m_learningrate = m_learningrate,
+               momentum = momentum,
                steps = steps,
                report_progress = report_progress
   )
