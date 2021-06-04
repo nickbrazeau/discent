@@ -12,7 +12,8 @@ expand_pairwise <- function(y){
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
 #' @param K_gendist_geodist dataframe; The genetic-geographic data by deme (K)
 #' @param start_params named numeric vector; vector of start parameters.
-#' @param learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent
+#' @param f_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
+#' @param m_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
 #' @param m_lowerbound numeric; a lower bound for the m parameter
 #' @param m_upperbound numeric; an upper bound for the m parameter
 #' @param steps numeric; the number of "steps" as we move down the gradient
@@ -40,7 +41,8 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                                    start_params = c(),
                                    m_lowerbound = 0,
                                    m_upperbound = 1,
-                                   learningrate = 1e-10,
+                                   f_learningrate = 1e-5,
+                                   m_learningrate = 1e-10,
                                    steps = 1e3,
                                    report_progress = TRUE,
                                    return_verbose = FALSE){
@@ -64,7 +66,8 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
   sapply(start_params[!grepl("m", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
-  assert_single_numeric(learningrate)
+  assert_single_numeric(f_learningrate)
+  assert_single_numeric(m_learningrate)
   assert_single_int(steps)
   assert_single_logical(report_progress)
 
@@ -155,7 +158,8 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                m = unname(start_params["m"]),
                m_lowerbound = m_lowerbound,
                m_upperbound = m_upperbound,
-               learningrate = learningrate,
+               f_learningrate = f_learningrate,
+               m_learningrate = m_learningrate,
                steps = steps,
                report_progress = report_progress
   )
