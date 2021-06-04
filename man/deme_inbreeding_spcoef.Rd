@@ -9,7 +9,8 @@ deme_inbreeding_spcoef(
   start_params = c(),
   m_lowerbound = 0,
   m_upperbound = 1,
-  learningrate = 1e-10,
+  f_learningrate = 1e-05,
+  m_learningrate = 1e-10,
   steps = 1000,
   report_progress = TRUE,
   return_verbose = FALSE
@@ -24,7 +25,9 @@ deme_inbreeding_spcoef(
 
 \item{m_upperbound}{numeric; an upper bound for the m parameter}
 
-\item{learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent}
+\item{f_learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients}
+
+\item{m_learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
 
 \item{steps}{numeric; the number of "steps" as we move down the gradient}
 
