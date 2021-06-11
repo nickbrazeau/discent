@@ -14,8 +14,6 @@ expand_pairwise <- function(y){
 #' @param start_params named numeric vector; vector of start parameters.
 #' @param f_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
 #' @param m_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
-#' @param m_lowerbound numeric; a lower bound for the m parameter
-#' @param m_upperbound numeric; an upper bound for the m parameter
 #' @param steps numeric; the number of "steps" as we move down the gradient
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
@@ -39,8 +37,6 @@ expand_pairwise <- function(y){
 
 deme_inbreeding_spcoef <- function(K_gendist_geodist,
                                    start_params = c(),
-                                   m_lowerbound = 0,
-                                   m_upperbound = 1,
                                    f_learningrate = 1e-5,
                                    m_learningrate = 1e-10,
                                    steps = 1e3,
