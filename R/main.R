@@ -53,6 +53,13 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   if (!all(colnames(K_gendist_geodist) %in% c("smpl1", "smpl2", "locat1", "locat2", "gendist", "geodist"))) {
     stop("The K_gendist_geodist must contain columns with names: smpl1, smpl2, locat1, locat2, gendist, geodist")
   }
+  # make sure correct order
+  for (i in 1:6) {
+    if (colnames(K_gendist_geodist)[i] != c("smpl1", "smpl2", "locat1", "locat2", "gendist", "geodist")[i]) {
+      stop("The K_gendist_geodist must contain columns with names in the exact order of: smpl1, smpl2, locat1, locat2, gendist, geodist")
+    }
+  }
+
   locats <- names(start_params)[!grepl("m", names(start_params))]
   if (!all(unique(c(K_gendist_geodist$locat1, K_gendist_geodist$locat2)) %in% locats)) {
     stop("You have cluster names in your K_gendist_geodist dataframe that are not included in your start parameters")
@@ -133,12 +140,12 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
 
   # simplify geodistance data storage
   geodist$data <- purrr::map_dbl(geodist$data, function(x){
-                                                            if (length(unique(unlist(x))) != 1) {
-                                                              stop("Locat1 and Locat2 have different geodistances among P-sample combinations. Distances should all be same among samples")
-                                                            }
-                                                            return( unique(unlist(x)) ) # all same by unique
-                                                          }
-                                 )
+    if (length(unique(unlist(x))) != 1) {
+      stop("Locat1 and Locat2 have different geodistances among P-sample combinations. Distances should all be same among samples")
+    }
+    return( unique(unlist(x)) ) # all same by unique
+  }
+  )
 
   # upper tri
   geodist_mat <- matrix(data = -1, nrow = length(locats), ncol = length(locats))
@@ -156,8 +163,6 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                fvec = unname( start_params[!grepl("m", names(start_params))] ),
                n_Kpairmax = n_Kpairmax,
                m = unname(start_params["m"]),
-               m_lowerbound = m_lowerbound,
-               m_upperbound = m_upperbound,
                f_learningrate = f_learningrate,
                m_learningrate = m_learningrate,
                steps = steps,
