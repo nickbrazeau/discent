@@ -29,7 +29,7 @@ update_progress <- function(pb_list, name, i, max_i) {
 #' @noRd
 # no export because simple
 logit <- function(p){
-  return(log(p/(1-p)))
+  return( log(p/(1-p)) )
 }
 
 #------------------------------------------------

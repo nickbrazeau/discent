@@ -93,8 +93,8 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   # transform data
   K_gendist_geodist <- K_gendist_geodist %>%
     dplyr::mutate(gendist = discent:::logit(gendist),
-                  gendist = ifelse(gendist == Inf, .Machine$double.xmax, gendist),
-                  gendist = ifelse(gendist == -Inf, .Machine$double.xmin, gendist)
+                  gendist = ifelse(gendist == Inf, 6, gendist), # reasonable bounds on logit
+                  gendist = ifelse(gendist == -Inf, -6, gendist) # reasonable bounds on logit
     )
 
 
