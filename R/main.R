@@ -1,3 +1,17 @@
+#' @title logit transformation
+#' @noRd
+# no export because simple
+logit <- function(p){
+ return(log(p/(1-p)))
+}
+
+#' @title expit transformation
+#' @noRd
+# no export because simple
+expit <- function(p){
+  return(1/(1+exp(-p)))
+}
+
 #' @title Simple function for expanding a pairwise matrix
 #' @noRd
 # no export because lacks generalizability
@@ -100,6 +114,15 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   keyi <- data.frame(locat1 = demes, i = 1:length(demes))
   keyj <- data.frame(locat2 = demes, j = 1:length(demes))
 
+
+  # transform data
+  K_gendist_geodist <- K_gendist_geodist %>%
+    dplyr::mutate(gendist = logit(gendist),
+                  gendist = ifelse(gendist == Inf, .Machine$double.xmax, gendist),
+                  gendist = ifelse(gendist == -Inf, .Machine$double.xmin, gendist)
+    )
+
+
   # get genetic data by pairs through efficient nest
   gendist <- K_gendist_geodist %>%
     discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
@@ -109,6 +132,9 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
     dplyr::left_join(., keyi, by = "locat1") %>%
     dplyr::left_join(., keyj, by = "locat2") %>%
     dplyr::arrange_at(c("i", "j"))
+
+
+
 
 
   # put gendist into an array
@@ -179,13 +205,13 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
       m_run = output_raw$m_run,
       fi_run = output_raw$fi_run,
       cost = output_raw$cost,
-      Final_Fis = output_raw$Final_Fis,
+      Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)
   } else {
     output <- list(
       deme_key = keyi,
       cost = output_raw$cost,
-      Final_Fis = output_raw$Final_Fis,
+      Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)
   }
 
