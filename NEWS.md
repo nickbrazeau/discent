@@ -3,5 +3,7 @@ This is the first release of this package for use in
 manuscript: . 
 
 ## Future Development
-Matern covariance for spatial correlations
-Better gradient descent optimization algorithm
+In the future, we intend to incorporate the following extensions:  
+
+* Options for diffferent spatial covariances 
+* Gradient descent optimization "on the fly"

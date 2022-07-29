@@ -9,11 +9,11 @@ deme_inbreeding_spcoef(
   start_params = c(),
   m_lowerbound = 0,
   m_upperbound = 1,
-  f_learningrate = 1e-04,
+  f_learningrate = 1e-05,
   m_learningrate = 1e-10,
-  full_matrix = FALSE,
   steps = 1000,
-  report_progress = TRUE
+  report_progress = TRUE,
+  return_verbose = FALSE
 )
 }
 \arguments{
@@ -25,17 +25,16 @@ deme_inbreeding_spcoef(
 
 \item{m_upperbound}{numeric; an upper bound for the m parameter}
 
-\item{f_learningrate}{numeric; alpha parameter for how much each inbreeding "step" is weighted in the gradient descent}
+\item{f_learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients}
 
-\item{m_learningrate}{numeric; alpha parameter for how much each migration "step" is weighted in the gradient descent}
-
-\item{full_matrix}{boolean; whether or not the user entered in a full matrix. If this is a symmetric distance matrix,
-this should be set to false If this is an asymetric matrix, this should be set to true In the latter instance,
-users will need to have already expanded every IJ and JI combination (which are by default not equivalent)}
+\item{m_learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
 
 \item{steps}{numeric; the number of "steps" as we move down the gradient}
 
 \item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
+
+\item{return_verbose}{boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
+only for the final iteration. User will typically not want to store every iteration, which can be memory intensive}
 }
 \description{
 The purpose of this statistic is to identify an inbreeding coefficient, or degree of
@@ -43,7 +42,7 @@ relatedness, for a given location in space. We assume that locations in spaces c
 represented as "demes," such that multiple individuals live in the same deme
 (i.e. samples are sourced from the same location). The expected pairwise relationship
 between two individuals, or samples, is dependent on the each sample's deme's inbreeding
-coefficient and the geographic distance between the demes.
+coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
 }
 \details{
 The gen.geo.dist dataframe must be named with the following columns:

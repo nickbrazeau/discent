@@ -7,13 +7,12 @@ using namespace std;
 // Perform gradient descent to calculate deme Fi's
 // [[Rcpp::export]]
 Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
-
+  // overflow cost parameter
+  const double OVERFLO_DOUBLE = DBL_MAX/1000000.0;
   // extract proposed Fis for each K
   vector<double> fvec = rcpp_to_vector_double(args["fvec"]); // proposed Inb. Coeff. for demes
   // extract proposed M and boundaries
   double m = rcpp_to_double(args["m"]); // proposed global M of migration
-  double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
-  double m_upperbound = rcpp_to_double(args["m_upperbound"]);
   // get dims
   int n_Demes = fvec.size();
   int n_Kpairmax =  rcpp_to_int(args["n_Kpairmax"]);
@@ -84,6 +83,13 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     }
 
     //-------------------------------
+    // Catch and Cap Extreme Costs
+    //-------------------------------
+    if (cost[step] > OVERFLO_DOUBLE) {
+      cost[step] = OVERFLO_DOUBLE;
+    }
+
+    //-------------------------------
     // F gradient
     // N.B. needs to be complete row (not just triangle) in order for all
     // sample i's to be accounted for in the gradient (fi + fj where j can be i)
@@ -96,7 +102,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
-        if (i != j) {
+        if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
               fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] * m) +
@@ -116,7 +122,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // step through partial deriv for M
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
-        if (i != j) {
+        if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
               mgrad += 2 * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) *
@@ -137,25 +143,11 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     for (int i = 0; i < n_Demes; i++){
       // update fs
       fvec[i] = fvec[i] - f_learningrate * fgrad[i];
-      // hard bounds on f
-      if (fvec[i] < 0) {
-        fvec[i] = 0;
-      }
-      if (fvec[i] > 1) {
-        fvec[i] = 1;
-      }
       // store for out
       fi_run[step][i] = fvec[i];
     }
     // update M
     m = m - m_learningrate * mgrad;
-    // hard bounds for M
-    if (m < m_lowerbound) {
-      m = m_lowerbound;
-    }
-    if (m > m_upperbound) {
-      m = m_upperbound;
-    }
     // store for out
     m_run[step] = m;
 

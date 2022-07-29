@@ -17,3 +17,6 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(discent)
 ```
+
+# Simulating Data for the Model
+Here, we will use data that we previously simulated with the  [`polySimIBD`](https://github.com/nickbrazeau/polySimIBD) package.
