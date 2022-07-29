@@ -23,3 +23,32 @@ update_progress <- function(pb_list, name, i, max_i) {
     close(pb_list[[name]])
   }
 }
+
+#------------------------------------------------
+#' @title logit transformation
+#' @noRd
+# no export because simple
+logit <- function(p){
+  return(log(p/(1-p)))
+}
+
+#------------------------------------------------
+#' @title expit transformation
+#' @noRd
+# no export because simple
+expit <- function(p){
+  return(1/(1+exp(-p)))
+}
+
+#------------------------------------------------
+#' @title Simple function for expanding a pairwise matrix
+#' @noRd
+# no export because lacks generalizability
+expand_pairwise <- function(y){
+  yexpand <- y
+  colnames(yexpand) <- c("smpl2", "smpl1", "locat2", "locat1", "gendist", "geodist")
+  yexpand <- rbind.data.frame(y, yexpand) # now have all pairwise possibilities
+  yexpand <- yexpand[!duplicated(yexpand), ] # remove duplicate selfs
+  return(yexpand)
+}
+
