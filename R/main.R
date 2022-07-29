@@ -1,28 +1,3 @@
-#' @title logit transformation
-#' @noRd
-# no export because simple
-logit <- function(p){
- return(log(p/(1-p)))
-}
-
-#' @title expit transformation
-#' @noRd
-# no export because simple
-expit <- function(p){
-  return(1/(1+exp(-p)))
-}
-
-#' @title Simple function for expanding a pairwise matrix
-#' @noRd
-# no export because lacks generalizability
-expand_pairwise <- function(y){
-  yexpand <- y
-  colnames(yexpand) <- c("smpl2", "smpl1", "locat2", "locat1", "gendist", "geodist")
-  yexpand <- rbind.data.frame(y, yexpand) # now have all pairwise possibilities
-  yexpand <- yexpand[!duplicated(yexpand), ] # remove duplicate selfs
-  return(yexpand)
-}
-
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
 #' @param K_gendist_geodist dataframe; The genetic-geographic data by deme (K)
 #' @param start_params named numeric vector; vector of start parameters.
@@ -117,9 +92,9 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
 
   # transform data
   K_gendist_geodist <- K_gendist_geodist %>%
-    dplyr::mutate(gendist = logit(gendist),
-                  gendist = ifelse(gendist == Inf, .Machine$double.xmax, gendist),
-                  gendist = ifelse(gendist == -Inf, .Machine$double.xmin, gendist)
+    dplyr::mutate(gendist = discent:::logit(gendist),
+                  gendist = ifelse(gendist == Inf, 6, gendist), # reasonable bounds on logit
+                  gendist = ifelse(gendist == -Inf, -6, gendist) # reasonable bounds on logit
     )
 
 
