@@ -182,7 +182,7 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
     output <- list(
       deme_key = keyi,
       m_run = output_raw$m_run,
-      fi_run = output_raw$fi_run,
+      fi_run = expit(do.call("rbind", output_raw$fi_run)),
       cost = output_raw$cost,
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)

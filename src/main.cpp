@@ -148,13 +148,13 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
           fvec[i] = fvec[i] - f_learningrate * fgrad[i];
         // store for out and for momentum (prior gradients needed)
         fi_run[step][i] = fvec[i];
-        fi_t_grad[step][i] = fgrad[i];
+        fi_t_grad[step][i] = f_learningrate * fgrad[i];
       }
         // update M
         m = m - m_learningrate * mgrad;
         // store for out and for momentum (prior gradients needed)
         m_run[step] = m;
-        m_t_grad[step] = mgrad;
+        m_t_grad[step] = m_learningrate * mgrad;
     } else { // section with momementum, where it is accounts for the previous gradient and results in EMA (alternative option is gradient * learning rate)
       // update F
       for (int i = 0; i < n_Demes; i++){
@@ -162,13 +162,13 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
           fvec[i] = fvec[i] - (f_learningrate * fgrad[i] + momentum * fi_t_grad[step-1][i]);
         // store for out
         fi_run[step][i] = fvec[i];
-        fi_t_grad[step][i] = fgrad[i];
+        fi_t_grad[step][i] = f_learningrate * fgrad[i];
       }
         // update M
         m = m - m_learningrate * mgrad;
         // store for out
         m_run[step] = m;
-        m_t_grad[step] = mgrad;
+        m_t_grad[step] = m_learningrate * mgrad;
     }
 
 
