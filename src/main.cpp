@@ -7,6 +7,8 @@ using namespace std;
 // Perform gradient descent to calculate deme Fi's
 // [[Rcpp::export]]
 Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
+  // overflow cost parameter
+  const double OVERFLO_DOUBLE = DBL_MAX/1000000.0;
   // extract proposed Fis for each K
   vector<double> fvec = rcpp_to_vector_double(args["fvec"]); // proposed Inb. Coeff. for demes
   // extract proposed M and boundaries
@@ -44,6 +46,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   int steps = rcpp_to_int(args["steps"]);
   double f_learningrate = rcpp_to_double(args["f_learningrate"]);
   double m_learningrate = rcpp_to_double(args["m_learningrate"]);
+  double momentum = rcpp_to_double(args["momentum"]);
   bool report_progress = rcpp_to_bool(args["report_progress"]);
   Rcpp::Function update_progress = args_functions["update_progress"];
 
@@ -51,17 +54,9 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   vector<double> cost(steps);
   fill(cost.begin(), cost.end(), 0);
   vector<double> m_run(steps);
+  vector<double> m_t_grad(steps);
   vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
-
-  // items for momentum
-    // f grad
-  vector<vector<double>> fgrad(steps+1, vector<double>(n_Demes));
-    // initial condition
-  fill(fgrad[0].begin(), fgrad[0].end(), 0);
-    //m grad
-  vector<double> mgrad(steps+1);
-    // initial condition
-  mgrad[0] = 0.0;
+  vector<vector<double>> fi_t_grad(steps, vector<double>(n_Demes));
 
   //-------------------------------
   // start grad descent by looping through steps
@@ -90,19 +85,29 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     }
 
     //-------------------------------
+    // Catch and Cap Extreme Costs
+    //-------------------------------
+    if (cost[step] > OVERFLO_DOUBLE) {
+      cost[step] = OVERFLO_DOUBLE;
+    }
+
+    //-------------------------------
     // F gradient
     // N.B. needs to be complete row (not just triangle) in order for all
     // sample i's to be accounted for in the gradient (fi + fj where j can be i)
     // N.B. storing each i, so summing out js/ps
     //-------------------------------
+    // clear results from previous step
+    vector<double> fgrad(n_Demes);
+    fill(fgrad.begin(), fgrad.end(), 0);
+
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
         if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
-              // remember in our grad vectors, +1 is our "current" state
-              fgrad[step+1][i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] * m) +
+              fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] * m) +
                 ((fvec[i] + fvec[j])/2) * exp(-2*geodist_mat[i][j] * m);
             }
           }
@@ -114,14 +119,15 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // M gradient
     // N.B. all terms included here, easier sum -- longer partial derivative
     //-------------------------------
+    // clear previous step results
+    double mgrad = 0;
     // step through partial deriv for M
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
         if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
-              // remember in our grad vectors, +1 is our "current" state
-              mgrad[step+1] += 2 * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) *
+              mgrad += 2 * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) *
                 exp(-geodist_mat[i][j] * m) -
                 2 * geodist_mat[i][j] *
                 ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) *
@@ -135,31 +141,36 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     //-------------------------------
     // Update F and M
     //-------------------------------
-    // update F
-    for (int i = 0; i < n_Demes; i++){
-      // update fs
-      fvec[i] = fvec[i] - f_learningrate * fgrad[i];
-      // hard bounds on f
-      if (fvec[i] < 0) {
-        fvec[i] = 0;
+    if (step == 0) {
+      // update F
+      for (int i = 0; i < n_Demes; i++){
+          // update fs
+          fvec[i] = fvec[i] - f_learningrate * fgrad[i];
+        // store for out and for momentum (prior gradients needed)
+        fi_run[step][i] = fvec[i];
+        fi_t_grad[step][i] = fgrad[i];
       }
-      if (fvec[i] > 1) {
-        fvec[i] = 1;
+        // update M
+        m = m - m_learningrate * mgrad;
+        // store for out and for momentum (prior gradients needed)
+        m_run[step] = m;
+        m_t_grad[step] = mgrad;
+    } else { // section with momementum, where it is accounts for the previous gradient and results in EMA (alternative option is gradient * learning rate)
+      // update F
+      for (int i = 0; i < n_Demes; i++){
+          // update fs
+          fvec[i] = fvec[i] - (f_learningrate * fgrad[i] + momentum * fi_t_grad[step-1][i]);
+        // store for out
+        fi_run[step][i] = fvec[i];
+        fi_t_grad[step][i] = fgrad[i];
       }
-      // store for out
-      fi_run[step][i] = fvec[i];
+        // update M
+        m = m - m_learningrate * mgrad;
+        // store for out
+        m_run[step] = m;
+        m_t_grad[step] = mgrad;
     }
-    // update M
-    m = m - m_learningrate * mgrad;
-    // hard bounds for M
-    if (m < m_lowerbound) {
-      m = m_lowerbound;
-    }
-    if (m > m_upperbound) {
-      m = m_upperbound;
-    }
-    // store for out
-    m_run[step] = m;
+
 
   } // end steps
 
@@ -171,29 +182,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
                             Rcpp::Named("fi_run") = fi_run,
                             Rcpp::Named("cost") = cost,
                             Rcpp::Named("Final_Fis") = fvec,
-                            Rcpp::Named("Final_m") = m
-  );
+                            Rcpp::Named("Final_m") = m);
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
