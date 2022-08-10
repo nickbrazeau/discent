@@ -1,22 +1,9 @@
-#' @title Simple function for expanding a pairwise matrix
-#' @noRd
-# no export because lacks generalizability
-expand_pairwise <- function(y){
-  yexpand <- y
-  colnames(yexpand) <- c("smpl2", "smpl1", "locat2", "locat1", "gendist", "geodist")
-  yexpand <- rbind.data.frame(y, yexpand) # now have all pairwise possibilities
-  yexpand <- yexpand[!duplicated(yexpand), ] # remove duplicate selfs
-  return(yexpand)
-}
-
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
 #' @param K_gendist_geodist dataframe; The genetic-geographic data by deme (K)
 #' @param start_params named numeric vector; vector of start parameters.
 #' @param f_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
 #' @param m_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
-#' @param m_lowerbound numeric; a lower bound for the m parameter
 #' @param momentum numeric; gamma parameter for momentum for adaptive learning rate
-#' @param m_upperbound numeric; an upper bound for the m parameter
 #' @param steps numeric; the number of "steps" as we move down the gradient
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
@@ -40,8 +27,6 @@ expand_pairwise <- function(y){
 
 deme_inbreeding_spcoef <- function(K_gendist_geodist,
                                    start_params = c(),
-                                   m_lowerbound = 0,
-                                   m_upperbound = 1,
                                    f_learningrate = 1e-5,
                                    m_learningrate = 1e-10,
                                    momentum = 0.9,
@@ -55,6 +40,13 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   if (!all(colnames(K_gendist_geodist) %in% c("smpl1", "smpl2", "locat1", "locat2", "gendist", "geodist"))) {
     stop("The K_gendist_geodist must contain columns with names: smpl1, smpl2, locat1, locat2, gendist, geodist")
   }
+  # make sure correct order
+  for (i in 1:6) {
+    if (colnames(K_gendist_geodist)[i] != c("smpl1", "smpl2", "locat1", "locat2", "gendist", "geodist")[i]) {
+      stop("The K_gendist_geodist must contain columns with names in the exact order of: smpl1, smpl2, locat1, locat2, gendist, geodist")
+    }
+  }
+
   locats <- names(start_params)[!grepl("m", names(start_params))]
   if (!all(unique(c(K_gendist_geodist$locat1, K_gendist_geodist$locat2)) %in% locats)) {
     stop("You have cluster names in your K_gendist_geodist dataframe that are not included in your start parameters")
@@ -100,6 +92,15 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   keyi <- data.frame(locat1 = demes, i = 1:length(demes))
   keyj <- data.frame(locat2 = demes, j = 1:length(demes))
 
+
+  # transform data
+  K_gendist_geodist <- K_gendist_geodist %>%
+    dplyr::mutate(gendist = discent:::logit(gendist),
+                  gendist = ifelse(gendist == Inf, 6, gendist), # reasonable bounds on logit
+                  gendist = ifelse(gendist == -Inf, -6, gendist) # reasonable bounds on logit
+    )
+
+
   # get genetic data by pairs through efficient nest
   gendist <- K_gendist_geodist %>%
     discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
@@ -109,6 +110,9 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
     dplyr::left_join(., keyi, by = "locat1") %>%
     dplyr::left_join(., keyj, by = "locat2") %>%
     dplyr::arrange_at(c("i", "j"))
+
+
+
 
 
   # put gendist into an array
@@ -136,12 +140,12 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
 
   # simplify geodistance data storage
   geodist$data <- purrr::map_dbl(geodist$data, function(x){
-                                                            if (length(unique(unlist(x))) != 1) {
-                                                              stop("Locat1 and Locat2 have different geodistances among P-sample combinations. Distances should all be same among samples")
-                                                            }
-                                                            return( unique(unlist(x)) ) # all same by unique
-                                                          }
-                                 )
+    if (length(unique(unlist(x))) != 1) {
+      stop("Locat1 and Locat2 have different geodistances among P-sample combinations. Distances should all be same among samples")
+    }
+    return( unique(unlist(x)) ) # all same by unique
+  }
+  )
 
   # upper tri
   geodist_mat <- matrix(data = -1, nrow = length(locats), ncol = length(locats))
@@ -159,8 +163,6 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
                fvec = unname( start_params[!grepl("m", names(start_params))] ),
                n_Kpairmax = n_Kpairmax,
                m = unname(start_params["m"]),
-               m_lowerbound = m_lowerbound,
-               m_upperbound = m_upperbound,
                f_learningrate = f_learningrate,
                m_learningrate = m_learningrate,
                momentum = momentum,
@@ -182,13 +184,13 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
       m_run = output_raw$m_run,
       fi_run = output_raw$fi_run,
       cost = output_raw$cost,
-      Final_Fis = output_raw$Final_Fis,
+      Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)
   } else {
     output <- list(
       deme_key = keyi,
       cost = output_raw$cost,
-      Final_Fis = output_raw$Final_Fis,
+      Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)
   }
 

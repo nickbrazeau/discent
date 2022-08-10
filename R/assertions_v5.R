@@ -1,5 +1,3 @@
-#### HELPER FUNCTIONS ####################################################################
-
 #------------------------------------------------
 # for single value, return value as string. For vector of values return string
 # of comma-separated values enclosed in curly brackets
@@ -15,8 +13,6 @@ nice_format <- function(x) {
   }
   return(ret)
 }
-
-#### BASIC OBJECT TYPES ####################################################################
 
 #------------------------------------------------
 # x is NULL

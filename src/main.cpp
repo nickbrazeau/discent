@@ -11,10 +11,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   vector<double> fvec = rcpp_to_vector_double(args["fvec"]); // proposed Inb. Coeff. for demes
   // extract proposed M and boundaries
   double m = rcpp_to_double(args["m"]); // proposed global M of migration
-  double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
-  double m_upperbound = rcpp_to_double(args["m_upperbound"]);
-  // momentum
-  double momentum = rcpp_to_double(args["momentum"]);
   // get dims
   int n_Demes = fvec.size();
   int n_Kpairmax =  rcpp_to_int(args["n_Kpairmax"]);
@@ -142,7 +138,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // update F
     for (int i = 0; i < n_Demes; i++){
       // update fs
-      fvec[i] = fvec[i] - (momentum*fgrad[step][i] + f_learningrate*fgrad[step+1][i]);
+      fvec[i] = fvec[i] - f_learningrate * fgrad[i];
       // hard bounds on f
       if (fvec[i] < 0) {
         fvec[i] = 0;
@@ -154,7 +150,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       fi_run[step][i] = fvec[i];
     }
     // update M
-    m = m - (momentum*mgrad[step] + m_learningrate*mgrad[step+1]);
+    m = m - m_learningrate * mgrad;
     // hard bounds for M
     if (m < m_lowerbound) {
       m = m_lowerbound;
