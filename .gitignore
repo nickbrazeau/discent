@@ -10,5 +10,5 @@
 # Data files I'm generating
 sandbox/
 old/
-docs
 inst/doc
+todo.txt
