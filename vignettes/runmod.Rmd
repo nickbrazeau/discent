@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(discent)
+library(discent) 
 ```
 
 # Simulating Data for the Model
