@@ -267,8 +267,8 @@ get_ibd_wrapper <- function(swfsim, dwnsmpl, locatcomb) {
     magrittr::set_colnames(c("p1", "p2")) %>%
     dplyr::mutate(ibd = as.vector(unlist(ibd)))
   # memberships
-  membership_x <- tibble::tibble(p1 = 1:225, deme1 = sort(rep(c(1,10,36,54,56,58,71,91,100), 25)))
-  membership_y <- tibble::tibble(p2 = 1:225, deme2 = sort(rep(c(1,10,36,54,56,58,71,91,100), 25)))
+  membership_x <- tibble::tibble(p1 = 1:225, deme1 = sort(rep(c(1,10,36,54,56,58,76,91,100), 25)))
+  membership_y <- tibble::tibble(p2 = 1:225, deme2 = sort(rep(c(1,10,36,54,56,58,76,91,100), 25)))
   comb_hosts_df <- comb_hosts_df %>%
     dplyr::left_join(., membership_x) %>%
     dplyr::left_join(., membership_y) %>%
