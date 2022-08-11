@@ -52,16 +52,24 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
 
   // items of interest to keep track of
   vector<double> cost(steps);
-  fill(cost.begin(), cost.end(), 0);
   vector<double> m_run(steps);
-  vector<double> m_t_grad(steps);
+  vector<double> m_mom_grad(steps);
+  double m_ada_grad = 0; // init for cumsum
   vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
-  vector<vector<double>> fi_t_grad(steps, vector<double>(n_Demes));
+  vector<vector<double>> fi_mom_grad(steps, vector<double>(n_Demes));
+  vector<double> fi_ada_grad(n_Demes);
+  fill(fi_ada_grad.begin(), fi_ada_grad.end(), 0); //init for cumsum
+  double bGf = 0;
+  double bGm = 0;
+
+  // to delete
+  vector<double> store_f_learn(steps);
+  vector<double> store_m_learn(steps);
 
   //-------------------------------
   // start grad descent by looping through steps
   //-------------------------------
-  for (int step = 0; step < steps; step++) {
+  for (int step = 0; step < steps; ++step) {
 
     // report progress
     if (report_progress) {
@@ -101,6 +109,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     vector<double> fgrad(n_Demes);
     fill(fgrad.begin(), fgrad.end(), 0);
 
+
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
@@ -137,9 +146,31 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
         }
       }
     }
+    //-------------------------------
+    // Update adaptive learning rate
+    //-------------------------------
+    // note outer product can be reduced to diagonal, which is just inner product of gt and as a result, gradient^2
+    // NB this is a cumsum of gt, so can just add over each step (ada is monotonically decreasing)
+    // adding error identity matrix for each element as well
+    // https://optimization.cbe.cornell.edu/index.php?title=AdaGrad
+    // https://wordpress.cs.vt.edu/optml/2018/03/27/adagrad/
+    for (int i = 0; i < n_Demes; i++){
+      fi_ada_grad[i] += pow(fgrad[i], 2);
+      bGf += fi_ada_grad[i] + 1e-10;
+    }
+    // adapt f learning rate
+    f_learningrate = f_learningrate * pow(bGf, (-1/2));
+    //f_learningrate = f_learningrate * 1e-3;
+    store_f_learn[step] = f_learningrate;
+    // adapt m learning rate
+    m_ada_grad += pow(mgrad, 2);
+    bGm += m_ada_grad + 1e-10;
+    //m_learningrate = m_learningrate * pow(bGm, (-1/2));
+    m_learningrate = m_learningrate * 1e-3;
+    store_m_learn[step] = m_learningrate;
 
     //-------------------------------
-    // Update F and M
+    // Update F and M with momentum
     //-------------------------------
     if (step == 0) {
       // update F
@@ -148,27 +179,27 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
           fvec[i] = fvec[i] - f_learningrate * fgrad[i];
         // store for out and for momentum (prior gradients needed)
         fi_run[step][i] = fvec[i];
-        fi_t_grad[step][i] = f_learningrate * fgrad[i];
+        fi_mom_grad[step][i] = f_learningrate * fgrad[i];
       }
         // update M
         m = m - m_learningrate * mgrad;
         // store for out and for momentum (prior gradients needed)
         m_run[step] = m;
-        m_t_grad[step] = m_learningrate * mgrad;
+        m_mom_grad[step] = m_learningrate * mgrad;
     } else { // section with momementum, where it is accounts for the previous gradient and results in EMA (alternative option is gradient * learning rate)
       // update F
       for (int i = 0; i < n_Demes; i++){
           // update fs
-          fvec[i] = fvec[i] - (f_learningrate * fgrad[i] + momentum * fi_t_grad[step-1][i]);
+          fvec[i] = fvec[i] - (f_learningrate * fgrad[i] + momentum * fi_mom_grad[step-1][i]);
         // store for out
         fi_run[step][i] = fvec[i];
-        fi_t_grad[step][i] = f_learningrate * fgrad[i];
+        fi_mom_grad[step][i] = f_learningrate * fgrad[i];
       }
         // update M
         m = m - m_learningrate * mgrad;
         // store for out
         m_run[step] = m;
-        m_t_grad[step] = m_learningrate * mgrad;
+        m_mom_grad[step] = m_learningrate * mgrad;
     }
 
 
@@ -182,6 +213,14 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
                             Rcpp::Named("fi_run") = fi_run,
                             Rcpp::Named("cost") = cost,
                             Rcpp::Named("Final_Fis") = fvec,
+                            Rcpp::Named("fi_ada_grad") = fi_ada_grad,
+                            Rcpp::Named("m_ada_grad") = m_ada_grad,
+                            Rcpp::Named("final_f_learn_rate") = f_learningrate,
+                            Rcpp::Named("final_m_learn_rate") = m_learningrate,
+                            Rcpp::Named("store_f_learn") = store_f_learn,
+                            Rcpp::Named("store_m_learn") = store_m_learn,
+                            Rcpp::Named("bGf") = bGf,
+                            Rcpp::Named("bGm") = bGm,
                             Rcpp::Named("Final_m") = m);
 
 }
