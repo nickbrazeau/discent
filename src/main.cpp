@@ -57,6 +57,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   double m_ada_grad = 0; // init for cumsum
   vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
   vector<vector<double>> fi_mom_grad(steps, vector<double>(n_Demes));
+
   vector<double> fi_ada_grad(n_Demes);
   fill(fi_ada_grad.begin(), fi_ada_grad.end(), 0); //init for cumsum
   double bGf = 0;
@@ -65,7 +66,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   // to delete
   vector<double> store_f_learn(steps);
   vector<double> store_m_learn(steps);
-
+  vector<vector<double>> fi_store_grad(steps, vector<double>(n_Demes));
+  vector<double> m_store_grad(steps);
   //-------------------------------
   // start grad descent by looping through steps
   //-------------------------------
@@ -157,6 +159,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     for (int i = 0; i < n_Demes; i++){
       fi_ada_grad[i] += pow(fgrad[i], 2);
       bGf += fi_ada_grad[i] + 1e-10;
+      // to delete
+      fi_store_grad[step][i] = fgrad[i];
     }
     // adapt f learning rate
     f_learningrate = f_learningrate * (1/sqrt(bGf));
@@ -166,6 +170,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     bGm += m_ada_grad + 1e-10;
     m_learningrate = m_learningrate * (1/sqrt(bGm));
     store_m_learn[step] = m_learningrate;
+    // to delete
+    m_store_grad[step] = mgrad;
 
     //-------------------------------
     // Update F and M with momentum
@@ -213,8 +219,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
                             Rcpp::Named("Final_Fis") = fvec,
                             Rcpp::Named("fi_ada_grad") = fi_ada_grad,
                             Rcpp::Named("m_ada_grad") = m_ada_grad,
-                            Rcpp::Named("final_f_learn_rate") = f_learningrate,
-                            Rcpp::Named("final_m_learn_rate") = m_learningrate,
+                            Rcpp::Named("fi_store_grad") = fi_store_grad,
+                            Rcpp::Named("m_store_grad") = m_store_grad,
                             Rcpp::Named("store_f_learn") = store_f_learn,
                             Rcpp::Named("store_m_learn") = store_m_learn,
                             Rcpp::Named("bGf") = bGf,
