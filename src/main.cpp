@@ -159,14 +159,12 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       bGf += fi_ada_grad[i] + 1e-10;
     }
     // adapt f learning rate
-    f_learningrate = f_learningrate * pow(bGf, (-1/2));
-    //f_learningrate = f_learningrate * 1e-3;
+    f_learningrate = f_learningrate * (1/sqrt(bGf));
     store_f_learn[step] = f_learningrate;
     // adapt m learning rate
     m_ada_grad += pow(mgrad, 2);
     bGm += m_ada_grad + 1e-10;
-    //m_learningrate = m_learningrate * pow(bGm, (-1/2));
-    m_learningrate = m_learningrate * 1e-3;
+    m_learningrate = m_learningrate * (1/sqrt(bGm));
     store_m_learn[step] = m_learningrate;
 
     //-------------------------------
