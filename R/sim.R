@@ -11,6 +11,8 @@
 #' @description
 #' \deqn{ \frac{1}{N_i + N_j}(1 - P(D \leq d)) + (1 - \frac{1}{N_i + N_j})(1 - P(D \leq d)) }
 #'
+#'@export
+
 sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
   #......................
   # assertions
@@ -20,8 +22,6 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
   assert_numeric(rate)
   assert_numeric(Ft)
   assert_single_bounded(Ft, left = 0, right = 1)
-  assert_numeric(varFt)
-  assert_int(loci)
   if (inherits(distmat, "dist")) {
     assert_same_length(demesize, nrow(as.matrix(distmat)),
                        message = "Distance matrix must contain a row and column
@@ -42,23 +42,23 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
   # distance to long
   demedistlong <- broom::tidy(as.dist(distmat))
   demedistlong <- dplyr::bind_rows(demedistlong,
-                                   tibble::tibble(item1 = sort(unique(c(btwn$item1, btwn$item2))),
-                                                  item2 = sort(unique(c(btwn$item1, btwn$item2))),
+                                   tibble::tibble(item1 = sort(unique(c(demedistlong$item1, demedistlong$item2))),
+                                                  item2 = sort(unique(c(demedistlong$item1, demedistlong$item2))),
                                                   distance = 0)
   ) %>%
     magrittr::set_colnames(c("locat1", "locat2", "geodist"))
   # individuals to long
   inds <- 1:cumsum(demesize)[length(demesize)]
   # trackers for demes
-  d1 <- tibble::tibble(p1 = inds, locat1 = as.factor(rep(1:length(demesize), demesize)),
+  d1 <- tibble::tibble(smpl1 = inds, locat1 = as.factor(rep(1:length(demesize), demesize)),
                        demesize1 = rep(demesize, demesize))
-  d2 <- tibble::tibble(p2 = inds, locat2 = as.factor(rep(1:length(demesize), demesize)),
+  d2 <- tibble::tibble(smpl2 = inds, locat2 = as.factor(rep(1:length(demesize), demesize)),
                        demesize2 = rep(demesize, demesize))
   # combinations and joins
-  combinds <- tibble::as_tibble(t(combn(inds, 2))) %>%
-    magrittr::set_colnames(c("p1", "p2")) %>%
-    dplyr::left_join(., d1, by = "p1") %>%
-    dplyr::left_join(., d2, by = "p2") %>%
+  combinds <- tibble::as_tibble(t(combn(inds, 2)), .name_repair = "minimal") %>%
+    magrittr::set_colnames(c("smpl1", "smpl2")) %>%
+    dplyr::left_join(., d1, by = "smpl1") %>%
+    dplyr::left_join(., d2, by = "smpl2") %>%
     dplyr::left_join(., demedistlong, by = c("locat1", "locat2"))
 
   # function for drawing mean IBD based iso by dist
@@ -81,7 +81,7 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
   # tidy up and out
   combinds <- combinds %>%
     dplyr::mutate(gendist = purrr::map_dbl(mft, draw_realized_ibdibd)) %>%
-    dplyr::select(c("p1", "p2", "locat1", "locat2", "geodist", "gendist"))
+    dplyr::select(c("smpl1", "smpl2", "locat1", "locat2", "gendist", "geodist"))
   return(combinds)
 
 }
