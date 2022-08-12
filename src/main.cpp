@@ -50,28 +50,26 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   bool report_progress = rcpp_to_bool(args["report_progress"]);
   Rcpp::Function update_progress = args_functions["update_progress"];
 
+  // items for momentum
+  vector<vector<double>> fi_update(steps, vector<double>(n_Demes));
+  vector<double> m_update(steps);
+  m_update[0] = 0;
+
   // items of interest to keep track of
   vector<double> cost(steps);
   vector<double> m_run(steps);
-  vector<double> m_mom_grad(steps);
-  double m_ada_grad = 0; // init for cumsum
+  m_run[0] = m;
   vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
-  vector<vector<double>> fi_mom_grad(steps, vector<double>(n_Demes));
+  for (int i = 0; i < n_Demes; i++) {
+    fi_run[0][i] = fvec[i];
+    fi_update[0][i] = 0;
+  }
 
-  vector<double> fi_ada_grad(n_Demes);
-  fill(fi_ada_grad.begin(), fi_ada_grad.end(), 0); //init for cumsum
-  double bGf = 0;
-  double bGm = 0;
 
-  // to delete
-  vector<double> store_f_learn(steps);
-  vector<double> store_m_learn(steps);
-  vector<vector<double>> fi_store_grad(steps, vector<double>(n_Demes));
-  vector<double> m_store_grad(steps);
   //-------------------------------
   // start grad descent by looping through steps
   //-------------------------------
-  for (int step = 0; step < steps; ++step) {
+  for (int step = 1; step < steps; ++step) {
 
     // report progress
     if (report_progress) {
@@ -156,55 +154,30 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // adding error identity matrix for each element as well
     // https://optimization.cbe.cornell.edu/index.php?title=AdaGrad
     // https://wordpress.cs.vt.edu/optml/2018/03/27/adagrad/
-    for (int i = 0; i < n_Demes; i++){
-      fi_ada_grad[i] += pow(fgrad[i], 2);
-      bGf += fi_ada_grad[i] + 1e-10;
-      // to delete
-      fi_store_grad[step][i] = fgrad[i];
-    }
-    // adapt f learning rate
-    f_learningrate = f_learningrate * (1/sqrt(bGf));
-    store_f_learn[step] = f_learningrate;
-    // adapt m learning rate
-    m_ada_grad += pow(mgrad, 2);
-    bGm += m_ada_grad + 1e-10;
-    m_learningrate = m_learningrate * (1/sqrt(bGm));
-    store_m_learn[step] = m_learningrate;
-    // to delete
-    m_store_grad[step] = mgrad;
 
     //-------------------------------
-    // Update F and M with momentum
+    // Update F and M
+    // Momentum takes into account prior updates to help move gradient out of local minima or saddle points
+    // w_current = w_prior - update_current
+    // update_current = momentum * update_prior + learning_rate * g(t), where g(t) is gradient
+    // https://towardsdatascience.com/gradient-descent-with-momentum-59420f626c8f
+    // https://machinelearningmastery.com/gradient-descent-with-momentum-from-scratch/
+    // https://towardsdatascience.com/gradient-descent-explained-9b953fc0d2c
     //-------------------------------
-    if (step == 0) {
-      // update F
-      for (int i = 0; i < n_Demes; i++){
-          // update fs
-          fvec[i] = fvec[i] - f_learningrate * fgrad[i];
-        // store for out and for momentum (prior gradients needed)
-        fi_run[step][i] = fvec[i];
-        fi_mom_grad[step][i] = f_learningrate * fgrad[i];
-      }
-        // update M
-        m = m - m_learningrate * mgrad;
-        // store for out and for momentum (prior gradients needed)
-        m_run[step] = m;
-        m_mom_grad[step] = m_learningrate * mgrad;
-    } else { // section with momementum, where it is accounts for the previous gradient and results in EMA (alternative option is gradient * learning rate)
-      // update F
-      for (int i = 0; i < n_Demes; i++){
-          // update fs
-          fvec[i] = fvec[i] - (f_learningrate * fgrad[i] + momentum * fi_mom_grad[step-1][i]);
-        // store for out
-        fi_run[step][i] = fvec[i];
-        fi_mom_grad[step][i] = f_learningrate * fgrad[i];
-      }
-        // update M
-        m = m - m_learningrate * mgrad;
-        // store for out
-        m_run[step] = m;
-        m_mom_grad[step] = m_learningrate * mgrad;
-    }
+    // update F
+   for (int i = 0; i < n_Demes; i++){
+     // store update for m_velocity
+     fi_update[step][i] = f_learningrate * fgrad[i] + momentum * fi_update[step-1][i];
+     // update fs
+     fvec[i] = fvec[i] - fi_update[step][i];
+     // store for out
+     fi_run[step][i] = fvec[i];
+   }
+   // update M
+   m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
+   m = m - m_update[step];
+   // store for out
+   m_run[step] = m;
 
 
   } // end steps
@@ -215,16 +188,10 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   // return as Rcpp object
   return Rcpp::List::create(Rcpp::Named("m_run") = m_run,
                             Rcpp::Named("fi_run") = fi_run,
+                            Rcpp::Named("m_update") = m_update,
+                            Rcpp::Named("fi_update") = fi_update,
                             Rcpp::Named("cost") = cost,
                             Rcpp::Named("Final_Fis") = fvec,
-                            Rcpp::Named("fi_ada_grad") = fi_ada_grad,
-                            Rcpp::Named("m_ada_grad") = m_ada_grad,
-                            Rcpp::Named("fi_store_grad") = fi_store_grad,
-                            Rcpp::Named("m_store_grad") = m_store_grad,
-                            Rcpp::Named("store_f_learn") = store_f_learn,
-                            Rcpp::Named("store_m_learn") = store_m_learn,
-                            Rcpp::Named("bGf") = bGf,
-                            Rcpp::Named("bGm") = bGm,
                             Rcpp::Named("Final_m") = m);
 
 }

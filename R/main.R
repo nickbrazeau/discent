@@ -93,14 +93,6 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
   keyj <- data.frame(locat2 = demes, j = 1:length(demes))
 
 
-  # transform data
-  K_gendist_geodist <- K_gendist_geodist %>%
-    dplyr::mutate(gendist = discent:::logit(gendist),
-                  gendist = ifelse(gendist == Inf, 6, gendist), # reasonable bounds on logit
-                  gendist = ifelse(gendist == -Inf, -6, gendist) # reasonable bounds on logit
-    )
-
-
   # get genetic data by pairs through efficient nest
   gendist <- K_gendist_geodist %>%
     discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
@@ -110,9 +102,6 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
     dplyr::left_join(., keyi, by = "locat1") %>%
     dplyr::left_join(., keyj, by = "locat2") %>%
     dplyr::arrange_at(c("i", "j"))
-
-
-
 
 
   # put gendist into an array
@@ -182,23 +171,17 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
     output <- list(
       deme_key = keyi,
       m_run = output_raw$m_run,
-      fi_run = expit(do.call("rbind", output_raw$fi_run)),
-      fi_ada = output_raw$fi_ada_grad,
-      m_ada = output_raw$m_ada_grad,
-      bGf = output_raw$bGf,
-      bGm = output_raw$bGm,
-      store_f_learn = output_raw$store_f_learn,
-      store_m_learn = output_raw$store_m_learn,
-      fi_store_grad = do.call("rbind", output_raw$fi_store_grad),
-      m_store_grad = output_raw$m_store_grad,
+      fi_run = do.call("rbind", output_raw$fi_run),
+      m_update = output_raw$m_update,
+      fi_update = do.call("rbind", output_raw$fi_update),
       cost = output_raw$cost,
-      Final_Fis = expit(output_raw$Final_Fis),
+      Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m)
   } else {
     output <- list(
       deme_key = keyi,
       cost = output_raw$cost,
-      Final_Fis = expit(output_raw$Final_Fis),
+      Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m)
   }
 
