@@ -7,8 +7,6 @@
 deme_inbreeding_spcoef(
   K_gendist_geodist,
   start_params = c(),
-  m_lowerbound = 0,
-  m_upperbound = 1,
   f_learningrate = 1e-05,
   m_learningrate = 1e-10,
   momentum = 0.9,
@@ -21,10 +19,6 @@ deme_inbreeding_spcoef(
 \item{K_gendist_geodist}{dataframe; The genetic-geographic data by deme (K)}
 
 \item{start_params}{named numeric vector; vector of start parameters.}
-
-\item{m_lowerbound}{numeric; a lower bound for the m parameter}
-
-\item{m_upperbound}{numeric; an upper bound for the m parameter}
 
 \item{f_learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients}
 
