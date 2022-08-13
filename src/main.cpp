@@ -159,24 +159,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
         }
       }
     }
-    //-------------------------------
-    // Update adaptive learning rate
-    // note outer product can be reduced to diagonal, which is just inner product of gt and as a result, gradient^2
-    // NB this is a cumsum of gt, so can just add over each step (ada is monotonically decreasing)
-    // adding error identity matrix for each element as well
-    // https://optimization.cbe.cornell.edu/index.php?title=AdaGrad
-    // https://wordpress.cs.vt.edu/optml/2018/03/27/adagrad/
-    //-------------------------------
-    // f_grad2[step] = pow(fgrad[0], 2);
-    // bGf += pow(fgrad[0], 2); // note, we are using first fgrad randomly to represent rest of the DISC grad; point to not
-    // // overwhelm learning rate given that we have n_Deme pseudoparameters but really just one effective parameter
-    // // (and one learning rate)
-    // m_grad2[step] = pow(mgrad, 2);
-    // bMf += pow(mgrad, 2);
-    // f_learningrate = f_learningrate/sqrt(bGf + 1e-10); // error offset to avoid singularity
-    // m_learningrate = m_learningrate/sqrt(bMf + 1e-10);
-    // f_learners[step] = f_learningrate;
-    // m_learners[step] = m_learningrate;
 
 
     //-------------------------------
@@ -223,6 +205,26 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
    if (cost[step] > OVERFLO_DOUBLE) {
      cost[step] = OVERFLO_DOUBLE;
    }
+
+   //-------------------------------
+   // Update adaptive learning rate
+   // note outer product can be reduced to diagonal, which is just inner product of gt and as a result, gradient^2
+   // NB this is a cumsum of gt, so can just add over each step (ada is monotonically decreasing)
+   // adding error identity matrix for each element as well
+   // https://optimization.cbe.cornell.edu/index.php?title=AdaGrad
+   // https://wordpress.cs.vt.edu/optml/2018/03/27/adagrad/
+   //-------------------------------
+   f_grad2[step] = pow(fgrad[0], 2);
+   bGf += pow(fgrad[0], 2); // note, we are using first fgrad randomly to represent rest of the DISC grad; point to not
+   // overwhelm learning rate given that we have n_Deme pseudoparameters but really just one effective parameter
+   // (and one learning rate)
+   m_grad2[step] = pow(mgrad, 2);
+   bMf += pow(mgrad, 2);
+   f_learningrate = f_learningrate/sqrt(bGf + 1e-10); // error offset to avoid singularity
+   m_learningrate = m_learningrate/sqrt(bMf + 1e-10);
+   f_learners[step] = f_learningrate;
+   m_learners[step] = m_learningrate;
+
 
 
   } // end steps
