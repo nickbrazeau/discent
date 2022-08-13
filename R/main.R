@@ -174,9 +174,18 @@ deme_inbreeding_spcoef <- function(K_gendist_geodist,
       fi_run = do.call("rbind", output_raw$fi_run),
       m_update = output_raw$m_update,
       fi_update = do.call("rbind", output_raw$fi_update),
+
+      f_grad2 = output_raw$f_grad2,
+      m_grad2 = output_raw$m_grad2,
+
+      m_learners = output_raw$m_learners,
+      f_learners = output_raw$f_learners,
+
       cost = output_raw$cost,
       Final_Fis = output_raw$Final_Fis,
-      Final_m = output_raw$Final_m)
+      Final_m = output_raw$Final_m
+      )
+
   } else {
     output <- list(
       deme_key = keyi,
