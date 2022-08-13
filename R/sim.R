@@ -46,20 +46,20 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
                                                   item2 = sort(unique(c(demedistlong$item1, demedistlong$item2))),
                                                   distance = 0)
   ) %>%
-    magrittr::set_colnames(c("locat1", "locat2", "geodist"))
+    magrittr::set_colnames(c("deme1", "deme2", "geodist"))
   # individuals to long
   inds <- 1:cumsum(demesize)[length(demesize)]
   # trackers for demes
-  d1 <- tibble::tibble(smpl1 = inds, locat1 = as.factor(rep(1:length(demesize), demesize)),
+  d1 <- tibble::tibble(smpl1 = inds, deme1 = as.factor(rep(1:length(demesize), demesize)),
                        demesize1 = rep(demesize, demesize))
-  d2 <- tibble::tibble(smpl2 = inds, locat2 = as.factor(rep(1:length(demesize), demesize)),
+  d2 <- tibble::tibble(smpl2 = inds, deme2 = as.factor(rep(1:length(demesize), demesize)),
                        demesize2 = rep(demesize, demesize))
   # combinations and joins
   combinds <- tibble::as_tibble(t(combn(inds, 2)), .name_repair = "minimal") %>%
     magrittr::set_colnames(c("smpl1", "smpl2")) %>%
     dplyr::left_join(., d1, by = "smpl1") %>%
     dplyr::left_join(., d2, by = "smpl2") %>%
-    dplyr::left_join(., demedistlong, by = c("locat1", "locat2"))
+    dplyr::left_join(., demedistlong, by = c("deme1", "deme2"))
 
   # function for drawing mean IBD based iso by dist
   draw_mean_Ftibd <- function(demesize1, demesize2, geodist, rate, Ft) {
@@ -81,7 +81,7 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
   # tidy up and out
   combinds <- combinds %>%
     dplyr::mutate(gendist = purrr::map_dbl(mft, draw_realized_ibdibd)) %>%
-    dplyr::select(c("smpl1", "smpl2", "locat1", "locat2", "gendist", "geodist"))
+    dplyr::select(c("smpl1", "smpl2", "deme1", "deme2", "gendist", "geodist"))
   return(combinds)
 
 }

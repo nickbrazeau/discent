@@ -46,7 +46,7 @@ expit <- function(p){
 # no export because lacks generalizability
 expand_pairwise <- function(y){
   yexpand <- y
-  colnames(yexpand) <- c("smpl2", "smpl1", "locat2", "locat1", "gendist", "geodist")
+  colnames(yexpand) <- c("smpl2", "smpl1", "deme2", "deme1", "gendist", "geodist")
   yexpand <- rbind.data.frame(y, yexpand) # now have all pairwise possibilities
   yexpand <- yexpand[!duplicated(yexpand), ]
   return(yexpand)
