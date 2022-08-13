@@ -28,10 +28,12 @@ test_that("Fi gradient by hand", {
                                          start_params = our_start_params,
                                          f_learningrate = 1e-5,
                                          m_learningrate = 1e-10,
+                                         momentum = 0.9,
                                          steps = 1e3,
                                          report_progress = T,
                                          return_verbose = T)
   # back out gradient for F1
+  # NB velocity set to 0 at first iter, so the additional momentum term cancels out
   discF1 <- ret$fi_update[2,1]/1e-5
 
   # test out
@@ -73,10 +75,12 @@ test_that("M gradient by hand", {
                                          start_params = our_start_params,
                                          f_learningrate = 1e-5,
                                          m_learningrate = 1e-10,
+                                         momentum = 0.9,
                                          steps = 1e3,
                                          report_progress = T,
                                          return_verbose = T)
   # back out gradient for M
+  # NB velocity set to 0 at first iter, so the additional momentum term cancels out
   discM <- ret$m_update[2]/1e-10
 
   # test out

@@ -176,7 +176,6 @@ deme_inbreeding_spcoef <- function(discdat,
 
       f_grad2 = output_raw$f_grad2,
       m_grad2 = output_raw$m_grad2,
-      mcall = output_raw$mcall,
 
       m_learners = output_raw$m_learners,
       f_learners = output_raw$f_learners,
