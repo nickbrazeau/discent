@@ -73,7 +73,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   f_grad2[0] = 0;
   vector<double> m_grad2(steps);
   m_grad2[0] = 0;
-  double mcall = 0;
 
 
   //-------------------------------
@@ -191,15 +190,16 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     //-------------------------------
     // update F
    for (int i = 0; i < n_Demes; i++){
-     // store update for m_velocity
-     fi_update[step][i] = f_learningrate * fgrad[i]; //+ momentum * fi_update[step-1][i];
      // update fs
+     // fi_update[step][i] = f_learningrate * fgrad[i];
+     fi_update[step][i] = f_learningrate * fgrad[i] + momentum * fi_update[step-1][i];
      fvec[i] = fvec[i] - fi_update[step][i];
      // store for out
      fi_run[step][i] = fvec[i];
    }
    // update M
-   m_update[step] = m_learningrate * mgrad; //+ momentum * m_update[step-1];
+  // m_update[step] = m_learningrate * mgrad;
+   m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
    m = m - m_update[step];
    // store for out
    m_run[step] = m;
@@ -241,7 +241,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
 
                             Rcpp::Named("f_grad2") = f_grad2,
                             Rcpp::Named("m_grad2") = m_grad2,
-                              Rcpp::Named("mcall") = mcall,
 
                             Rcpp::Named("cost") = cost,
                             Rcpp::Named("Final_Fis") = fvec,
