@@ -23,10 +23,13 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
   assert_numeric(Ft)
   assert_single_bounded(Ft, left = 0, right = 1)
   if (inherits(distmat, "dist")) {
-    assert_same_length(demesize, nrow(as.matrix(distmat)),
-                       message = "Distance matrix must contain a row and column
+    assert_eq(length(demesize), nrow(as.matrix(distmat)),
+              message = "Distance matrix must contain a row and column
                        for each deme")
   } else {
+    assert_eq(length(demesize), nrow(distmat),
+              message = "Distance matrix must contain a row and column
+                       for each deme")
     assert_eq(nrow(distmat), ncol(distmat),
               message = "If not a distance matrix (class: 'dist'), then
               distance matrix must be square")
