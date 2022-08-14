@@ -1,0 +1,8 @@
+pandoc: '2.18'
+pkgdown: 2.0.5
+pkgdown_sha: ~
+articles:
+  installation: installation.html
+  runmod: runmod.html
+last_built: 2022-08-10T05:33Z
+

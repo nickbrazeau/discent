@@ -10,5 +10,8 @@
 # Data files I'm generating
 sandbox/
 old/
-docs
 inst/doc
+todo.txt
+validation/data/sim_data/
+validation/validation.Rproj
+validation/analyses/sanbox/

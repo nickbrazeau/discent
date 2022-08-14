@@ -28,14 +28,14 @@ Imports:
     utils,
     ggplot2,
     scales,
-    testthat (>= 2.1.0),
-    covr
+    testthat (>= 2.1.0)
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    covr
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0
 LinkingTo: 
     Rcpp
 SystemRequirements: C++11
