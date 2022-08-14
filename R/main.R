@@ -91,6 +91,15 @@ deme_inbreeding_spcoef <- function(discdat,
   keyi <- data.frame(deme1 = demes, i = 1:length(demes))
   keyj <- data.frame(deme2 = demes, j = 1:length(demes))
 
+  # transform data w/ logit
+  discdat <- discdat %>%
+    dplyr::mutate(gendist = discent:::logit(gendist),
+                  gendist = ifelse(gendist == Inf, 6, gendist), # reasonable bounds on logit
+                  gendist = ifelse(gendist == -Inf, -6, gendist) # reasonable bounds on logit
+    )
+  # transform start parameters w/ logit
+  start_params[names(start_params) != "m"] <- discent:::logit(start_params[names(start_params) != "m"])
+
 
   # get genetic data by pairs through efficient nest
   gendist <- discdat %>%
@@ -170,18 +179,11 @@ deme_inbreeding_spcoef <- function(discdat,
     output <- list(
       deme_key = keyi,
       m_run = output_raw$m_run,
-      fi_run = do.call("rbind", output_raw$fi_run),
+      fi_run = discent:::expit(do.call("rbind", output_raw$fi_run)),
       m_update = output_raw$m_update,
       fi_update = do.call("rbind", output_raw$fi_update),
-
-      f_grad2 = output_raw$f_grad2,
-      m_grad2 = output_raw$m_grad2,
-
-      m_learners = output_raw$m_learners,
-      f_learners = output_raw$f_learners,
-
       cost = output_raw$cost,
-      Final_Fis = output_raw$Final_Fis,
+      Final_Fis = discent:::expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m
       )
 
