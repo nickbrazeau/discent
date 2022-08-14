@@ -1,7 +1,8 @@
 # DISCent
 <!-- badges: start -->
-[![master checks](https://github.com/nickbrazeau/discent/workflows/main_build/badge.svg)](https://github.com/nickbrazeau/discent/actions)
-[![Codecov test coverage](https://codecov.io/gh/nickbrazeau/discent/branch/master/graph/badge.svg)](https://codecov.io/gh/nickbrazeau/discent?branch=master)
+[![main_build](https://github.com/nickbrazeau/actions/discent/workflows/check-standard.yaml/badge.svg?branch=master) 
+[![main_build](https://github.com/nickbrazeau/actions/discent/workflows/check-standard.yaml/badge.svg?branch=develop) 
+[![Code Coverage](https://github.com/nickbrazeau/actions/discent/workflows/test-coverage.yaml/badge.svg?branch=master)
 <!-- badges: end -->
 
 <description>
