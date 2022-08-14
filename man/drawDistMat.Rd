@@ -4,14 +4,12 @@
 \alias{drawDistMat}
 \title{Simple function for simulating a distance matrix}
 \usage{
-drawDistMat(nDemes = 5, mDist = 1000, vDist = 50)
+drawDistMat(nDemes = 5, rateDist = 0.001)
 }
 \arguments{
 \item{nDemes}{integer; number of demes to consider}
 
-\item{mDist}{numeric; mean of distance between demes}
-
-\item{vDist}{numeric; variance of distance between demes}
+\item{rateDist}{numeric; rate in exponential distribution (for drawing distances)}
 }
 \value{
 Distance matrix of class \code{dist}

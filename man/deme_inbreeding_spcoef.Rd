@@ -5,7 +5,7 @@
 \title{Identify Deme Inbreeding Spatial Coefficients in Continuous Space}
 \usage{
 deme_inbreeding_spcoef(
-  K_gendist_geodist,
+  discdat,
   start_params = c(),
   f_learningrate = 1e-05,
   m_learningrate = 1e-10,
@@ -16,7 +16,7 @@ deme_inbreeding_spcoef(
 )
 }
 \arguments{
-\item{K_gendist_geodist}{dataframe; The genetic-geographic data by deme (K)}
+\item{discdat}{dataframe; The genetic-geographic data by deme (K)}
 
 \item{start_params}{named numeric vector; vector of start parameters.}
 
@@ -43,7 +43,7 @@ coefficient and the geographic distance between the demes. The program assumes a
 }
 \details{
 The gen.geo.dist dataframe must be named with the following columns:
-"smpl1"; "smpl2"; "locat1"; "locat2"; "gendist"; "geodist"; which corresponds to:
+"smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
 Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
 Pairwise Genetic Distance; Pairwise Geographpic Distance. Note, the order of the
 columns do not matter but the names of the columns must match.
