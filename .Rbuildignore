@@ -1,9 +1,9 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
-^\.travis\.yml$
 ^codecov\.yml$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
 ^validation$
+^\.github$
