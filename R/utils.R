@@ -25,22 +25,6 @@ update_progress <- function(pb_list, name, i, max_i) {
 }
 
 #------------------------------------------------
-#' @title logit transformation
-#' @noRd
-# no export because simple
-logit <- function(p){
-  return( log(p/(1-p)) )
-}
-
-#------------------------------------------------
-#' @title expit transformation
-#' @noRd
-# no export because simple
-expit <- function(p){
-  return(1/(1+exp(-p)))
-}
-
-#------------------------------------------------
 #' @title Simple function for expanding a pairwise matrix
 #' @noRd
 # no export because lacks generalizability
@@ -80,4 +64,24 @@ rnorm_interval <- function(mean, sd, a=0, b=1) {
   # no longer relative to a
   ret <- ret + a
   return(ret)
+}
+
+#------------------------------------------------
+#' @title Simple function for simulating a distance matrix
+#' @param nDemes integer; number of demes to consider
+#' @param rateDist numeric; rate in exponential distribution (for drawing distances)
+#' @details Draws distances from a squared-normal distribution
+#' @returns Distance matrix of class \code{dist}
+#' @export
+
+drawDistMat <- function(nDemes = 5, rateDist = 1e-3) {
+  ddists <- rexp(n = ncol(combn(nDemes, 2)), rateDist)
+  # catch any 0s
+  ddists[ddists == 0] <- 1
+  distmat <- matrix(NA, nrow = nDemes, ncol = nDemes)
+  distmat[ lower.tri(distmat) ] <- ddists
+  distmat[ upper.tri(distmat) ] <- distmat[ lower.tri(distmat) ]
+  # selves to 0
+  diag(distmat) <- 0
+  return(as.dist(distmat))
 }
