@@ -191,7 +191,7 @@ deme_inbreeding_spcoef <- function(discdat,
     output <- list(
       deme_key = keyi,
       cost = output_raw$cost,
-      Final_Fis = output_raw$Final_Fis,
+      Final_Fis = discent:::expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)
   }
 
