@@ -25,6 +25,22 @@ update_progress <- function(pb_list, name, i, max_i) {
 }
 
 #------------------------------------------------
+#' @title logit transformation
+#' @noRd
+# no export because simple
+logit <- function(p){
+  return( log(p/(1-p)) )
+}
+
+#------------------------------------------------
+#' @title expit transformation
+#' @noRd
+# no export because simple
+expit <- function(p){
+  return(1/(1+exp(-p)))
+}
+
+#------------------------------------------------
 #' @title Simple function for expanding a pairwise matrix
 #' @noRd
 # no export because lacks generalizability
