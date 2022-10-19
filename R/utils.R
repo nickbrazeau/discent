@@ -80,7 +80,7 @@ drawDistMat <- function(nDemes = 5, rateDist = 1e-3) {
   ddists[ddists == 0] <- 1
   distmat <- matrix(NA, nrow = nDemes, ncol = nDemes)
   distmat[ lower.tri(distmat) ] <- ddists
-  distmat[ upper.tri(distmat) ] <- distmat[ lower.tri(distmat) ]
+  distmat[ upper.tri(distmat) ] <- t(distmat)[ lower.tri(distmat) ]
   # selves to 0
   diag(distmat) <- 0
   return(as.dist(distmat))
