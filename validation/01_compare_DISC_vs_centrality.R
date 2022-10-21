@@ -18,13 +18,14 @@ library(ggraph)
 #............................................................
 # make simulations
 #...........................................................
-mods <- tibble::tibble(mod = 1:100) %>%
+nmods <- 100
+mods <- tibble::tibble(mod = 1:nmods) %>%
   dplyr::mutate(
     nDemes = sample(5:10, size = 100, replace = T),
     demesize = purrr::map(nDemes,
                           function(x){sapply(1:x, function(x) sample(2:10, size = 1))}),
-    distmat = purrr::map(nDemes, discent::drawDistMat, mDist = 100, vDist = 20),
-    Ft = sample(seq(0,1,0.001), 100))
+    distmat = purrr::map(nDemes, discent::drawDistMat, rateDist = 1e-3),
+    Ft = sample(seq(0,1,0.001), nmods))
 # draw simulations
 mods$discdat <- purrr::pmap(mods[,c("demesize", "distmat", "Ft")],
                             discent::sim_IBDIBD, rate = 1e-3)
@@ -53,51 +54,65 @@ mods$disc <- purrr::pmap(mods[,c("discdat", "start_params")],
                          report_progress = F, return_verbose = F)
 
 
+mods <- mods %>%
+  dplyr::mutate(Final_Fis = purrr::map(disc, "Final_Fis"),
+                Final_m = purrr::map_dbl(disc, "Final_m"))
+
 #............................................................
-#### viz connections ####
+#### Compare w/ Centrality ####
 #...........................................................
-# see if connections are as expected
+calc_centrality_by_smpl <- function(discdat) {
+  # get node deme membership
+  discdatexpand <- discdat
+  colnames(discdat) <- c("smpl2", "smpl1", "deme2", "deme1", "gendist", "geodist")
+  expand <- dplyr::bind_rows(discdat, discdatexpand)
+  membership <- expand %>%
+    dplyr::rename(deme = deme1,
+                  name = smpl1) %>%
+    dplyr::mutate(name = as.character(name)) %>%
+    dplyr::select(c("name", "deme")) %>%
+    dplyr::filter(!duplicated(.))
 
-adj_graph <- comb_hosts_df %>%
-  tidygraph::as_tbl_graph(., directed = F)
+  # now get centrality
+  centralret <- discdat %>%
+    tidygraph::as_tbl_graph(., directed = F) %>%
+    dplyr::mutate(host_importance = tidygraph::centrality_pagerank(weights = gendist)) %>%
+    tidygraph::activate("nodes") %>%
+    tibble::as_tibble() %>%
+    dplyr::left_join(., membership, by = "name") %>%
+    dplyr::rename(Deme = deme)
+  return(centralret)
+}
 
 
-comb_hosts_dfexpand <- comb_hosts_df
-colnames(comb_hosts_dfexpand) <- c("p2", "p1", "ibd", "deme2", "deme1", "distval", "longnum.y", "latnum.y", "longum.x", "latnum.x")
-expand <- dplyr::bind_rows(comb_hosts_df, comb_hosts_dfexpand)
-membership <- expand %>%
-  dplyr::rename(deme = deme1,
-                name = p1) %>%
-  dplyr::mutate(name = as.character(name)) %>%
-  dplyr::select(c("name", "deme")) %>%
-  dplyr::filter(!duplicated(.))
-
-
-adj_graph %>%
-  tidygraph::activate(., "nodes") %>%
-  dplyr::left_join(., membership) %>%
-  dplyr::mutate(community = as.factor(tidygraph::group_louvain(weights = ibd))) %>%
-  tidygraph::activate("edges") %>%
-  dplyr::filter(ibd > 0.25) %>%
-  ggraph::ggraph(layout = 'kk') +
-  ggraph::geom_edge_link(aes(width = ibd,
-                             color = ibd)) +
-  #ggraph::geom_node_point(aes(color = community), size = 3) +
-  ggraph::geom_node_point(aes(color = factor(deme)), size = 3) +
-  ggraph::scale_edge_width_continuous(range = c(0, 1), guide = "none") +
-  scale_edge_color_viridis("IBD", values = c(0,1), option = "plasma") +
-  scale_color_brewer(palette = "Set1") +
-  ggraph::theme_graph() +
-  theme(legend.position = "bottom")
+corr_cent_disc <- function(disc, centralret) {
+  discret <- dplyr::bind_cols(disc$deme_key, disc = disc$Final_Fis)
+  cordat <- dplyr::left_join(centralret, discret, by = "Deme")
+  return(cor(cordat$host_importance, cordat$disc))
+}
 
 #......................
-# centrality
+# bring together
 #......................
-adj_graph %>%
-  activate(nodes) %>%
-  dplyr::left_join(., membership) %>%
-  mutate(host_importance = tidygraph::centrality_pagerank(weights = ibd)) %>%
-  tibble::as_tibble() %>%
+mods <- mods %>%
+  dplyr::mutate(centralret = purrr::map(discdat, calc_centrality_by_smpl),
+                corr = purrr::map2_dbl(disc, centralret, corr_cent_disc))
+
+mods %>%
+  dplyr::filter(Final_m < 1) %>%
   ggplot() +
-  geom_boxplot(aes(x = factor(deme), y = host_importance, group = deme))
+  geom_boxplot(aes(x = corr)) +
+  coord_flip() +
+  theme_linedraw()
+
+
+
+mods %>%
+  dplyr::filter(Final_m < 1) %>%
+  ggplot() +
+  geom_point(aes(x = Ft, y = corr)) +
+  theme_linedraw()
+
+
+summary(unlist(mods$Final_Fis))
 

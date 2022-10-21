@@ -26,6 +26,8 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
     assert_eq(length(demesize), nrow(as.matrix(distmat)),
               message = "Distance matrix must contain a row and column
                        for each deme")
+    assertthat::are_equal(isSymmetric(as.matrix(distmat)), TRUE,
+                          message = "Distance matrix must be a symmetric matrix")
   } else {
     assert_eq(length(demesize), nrow(distmat),
               message = "Distance matrix must contain a row and column
@@ -33,7 +35,7 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
     assert_eq(nrow(distmat), ncol(distmat),
               message = "If not a distance matrix (class: 'dist'), then
               distance matrix must be square")
-    assertthat::are_equal(distmat[ lower.tri(distmat) ], distmat[ upper.tri(distmat) ],
+    assertthat::are_equal(isSymmetric(distmat), TRUE,
                           message = "If not a distance matrix (class: 'dist'), then
                           must be a symmetric matrix")
   }
