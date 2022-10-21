@@ -42,10 +42,10 @@ names(our_start_params) <- 1:2
 our_start_params <- c(our_start_params, "m" = 1e-3)
 mods <- mods %>%
   dplyr::mutate(start_params = purrr::map(nDemes, function(x){
-                                            ret <- rep(0.2, x)
-                                            names(ret) <- 1:x
-                                            ret <- c(ret, "m" = 1e-3)
-                                            return(ret) }))
+    ret <- rep(0.2, x)
+    names(ret) <- 1:x
+    ret <- c(ret, "m" = 1e-3)
+    return(ret) }))
 
 mods$disc <- purrr::pmap(mods[,c("discdat", "start_params")],
                          discent::deme_inbreeding_spcoef,
@@ -100,4 +100,3 @@ adj_graph %>%
   tibble::as_tibble() %>%
   ggplot() +
   geom_boxplot(aes(x = factor(deme), y = host_importance, group = deme))
-
