@@ -3,96 +3,96 @@
 ##          the discent model behaves under different "expected"
 ##          versus realized IBD pairings
 ##
-## Notes:
+## Notes: Migration matrix are from - to format
 ## .................................................................................
 library(tidyverse)
 library(raster)
 library(polySimIBD)
 set.seed(48)
-setwd("validation") # setwd down one from package for validation work
+
+#............................................................
+# lattice model and location data
+#...........................................................
+latticemodel <- readRDS("results/sim_data/lattice_model.rds")
+latticemodel <- latticemodel[c(1,11,58,61,64,111,121),]
+latticemodel <- latticemodel %>%
+  dplyr::arrange(longnum, latnum)
+
+# expand for join
+locatcomb <- readRDS("results/sim_data/locatcombo.rds")
+locatcombexpand <- locatcomb
+colnames(locatcombexpand) <- c("deme2", "deme1", "distval", "longnum.y", "latnum.y", "longnum.x", "latnum.x")
+locatcomb <- dplyr::bind_rows(locatcomb, locatcombexpand)
+locatcomb <- locatcomb %>%
+  dplyr::filter(deme1 %in% latticemodel$deme &
+                  deme2 %in% latticemodel$deme) %>%
+  dplyr::filter(!duplicated(.)) %>%  #NB, diagonal on distmatrix gets duplicated
+  dplyr::mutate(deme1 = as.character(deme1),
+                deme2 = as.character(deme2))
 #............................................................
 #### PART 1: Make distance/migration setup ####
 #   same plan of square with 9 samples
 #   going to manually set up migration matrix for sink-source dynamics
 #...........................................................
-ogdistmat <- matrix(NA, nrow = 9, ncol = 9)
-rownames(ogdistmat) <- colnames(ogdistmat) <- as.character(c(1,10,36,54,56,58,76,91,100))
+ogdistmat <- matrix(0, nrow = 7, ncol = 7)
+rownames(ogdistmat) <- colnames(ogdistmat) <- latticemodel$deme
 
 #......................
 # spring
 #......................
-springmat <- ogdistmat
-springmat[is.na(springmat)] <- 0 # init
-springmat[5,] <- 2 # deme 56 has connections out only
-diag(springmat) <- 3 # slight preference for staying in home deme than moving
-
+spring <- ogdistmat
+spring[4,] <- 2 # middle deme has connections OUT only
+diag(spring) <- 1 # if not out, stat in home deme
+# liftover to rates
+spring <- spring/sum(spring)
 
 #......................
 # blackhole
 #......................
 blackhole <- ogdistmat
-blackhole[is.na(blackhole)] <- 0 # init
-blackhole[,5] <- 2 # deme 56 has connections in only
-diag(blackhole) <- 3 # slight preference for staying in home deme than moving
+blackhole[,4] <- 2 # middle deme has connections IN only
+diag(blackhole) <- 1 # if not out, stat in home deme
+# liftover to rates
+blackhole <- blackhole/sum(blackhole)
+
 
 #......................
 # radiate
 #......................
 radiate <- ogdistmat
-radiate[is.na(radiate)] <- 0 # init
-#TODO
-diag(radiate) <- 3 # slight preference for staying in home deme than moving
-
-
-
-# TODO NFB here
-
-
-
-#......................
-locatcomb <- readRDS("results/sim_data/locatcombo.rds")
-locatcombexpand <- locatcomb
-colnames(locatcombexpand) <- c("deme2", "deme1", "distval", "longnum.y", "latnum.y", "longnum.x", "latnum.x")
-locatcomb <- rbind.data.frame(locatcomb, locatcombexpand) %>%  # now have all pairwise possibilities
-  dplyr::filter(!duplicated(.)) # to remove self comparison duplications
-# downsize demes
-locats <- locatcomb %>%
-  dplyr::filter(deme1 %in% c(1,10,36,54,56,58,76,91,100) &
-                  deme2 %in% c(1,10,36,54,56,58,76,91,100)) %>%
-  dplyr::filter(!duplicated(.))
+# central radiate
+radiate[4,3] <- 2
+radiate[4,5] <- 2
+# left radiate
+radiate[3,1] <- 2
+radiate[3,2] <- 2
+# right radiate
+radiate[5,6] <- 2
+radiate[5,7] <- 2
+diag(radiate) <- 1 # if not out, stat in home deme
+# liftover to rates
+radiate <- radiate/sum(radiate)
 
 #......................
-# Location Sampling and migration rate calculations
-#   sample lattice locations
+# all-in-lover
 #......................
-locatcomb <- readRDS("results/sim_data/locatcombo.rds")
-locatcombexpand <- locatcomb
-colnames(locatcombexpand) <- c("deme2", "deme1", "distval", "longnum.y", "latnum.y", "longnum.x", "latnum.x")
-locatcomb <- rbind.data.frame(locatcomb, locatcombexpand) %>%  # now have all pairwise possibilities
-  dplyr::filter(!duplicated(.)) # to remove self comparison duplications
-# downsize demes
-locats <- locatcomb %>%
-  dplyr::filter(deme1 %in% c(1,10,36,54,56,58,76,91,100) &
-                  deme2 %in% c(1,10,36,54,56,58,76,91,100)) %>%
-  dplyr::filter(!duplicated(.))
+lovers <- ogdistmat
+diag(lovers) <- 1 # only connect w/ self
+# liftover to rates
+lovers <- lovers/sum(lovers)
 
-
-#### JUST SUM THE DISTANCE MATRIX AND SINK SOURCE MATRIC
-
+#............................................................
+# get locat distance for geodist needed for disc
+#...........................................................
 
 
 #............................................................
 #### PART 2: Run Simulations ####
-# Will run sWF simulator 100 times for each
-# migration scenario
 #...........................................................
-nreps <- 100
-simdat <- lapply(1:nreps, function(x){return(simdat)}) %>%
-  dplyr::bind_rows() %>%
-  dplyr::arrange(name) %>%
-  dplyr::group_by(name) %>%
-  dplyr::mutate(name = paste0(name, 1:dplyr::n())) %>%
-  dplyr::ungroup()
+simdat <- tibble::tibble(
+  modname = c("spring", "blackhole", "radiate", "lovers"),
+  migmat = list(spring, blackhole, radiate, lovers)
+)
 
 # magic numbers for simulator
 Nesize <- 25
@@ -118,16 +118,16 @@ swf_sim_wrapper <- function(migmat) {
   # from verity et al coi in the DRC: 2.23 (2.15– 2.31)
   # assuming deme size of 10 for ease
   # tlim at 10 generations as before from verity et al
-
+  nDemes <- nrow(migmat)
   #......................
   # run structured WF
   #......................
   swfsim <- polySimIBD::sim_swf(pos =       pos,
-                                migr_dist_mat = migmat,
-                                N =         rep(Nesize, nrow(migmat)),
-                                m =         rep(mscale, nrow(migmat)),
+                                migr_mat = migmat,
+                                N =         rep(Nesize, nDemes),
+                                m =         rep(mscale, nDemes),
                                 rho =       rho,
-                                mean_coi =  rep(verity_coi2, nrow(migmat)),
+                                mean_coi =  rep(verity_coi2, nDemes),
                                 tlim =      10)
   return(swfsim)
 }
@@ -135,19 +135,18 @@ swf_sim_wrapper <- function(migmat) {
 
 # get simulations
 simdat <- simdat %>%
-  dplyr::mutate(swfsim = purrr::map(distmat, swf_sim_wrapper))
+  dplyr::mutate(swfsim = purrr::map(migmat, swf_sim_wrapper))
 
 
 #............................................................
 #### PART 3: Pairwise IBD realizations ####
 #...........................................................
-
 # ibd wrapper
-get_ibd_wrapper <- function(swfsim, dwnsmplnum, locatcomb) {
+get_ibd_wrapper <- function(swfsim, dwnsmplnum, locatcomb, Nesize, nDemes, demeNames) {
   # downsample to "N" individuals per deme
   dwnsmpl <- mapply(function(x,y){sample(x:y, size = dwnsmplnum, replace = F)},
-                    x = seq(1, 225, by = 25),
-                    y = seq(25, 225, by = 25),
+                    x = seq(1, Nesize * nDemes, by = Nesize),
+                    y = seq(Nesize, Nesize * nDemes, by = Nesize),
                     SIMPLIFY = F)
   dwnsmpl <- sort(unlist(dwnsmpl))
   # get combinations
@@ -163,8 +162,10 @@ get_ibd_wrapper <- function(swfsim, dwnsmplnum, locatcomb) {
     magrittr::set_colnames(c("smpl1", "smpl2")) %>%
     dplyr::mutate(gendist = as.vector(unlist(ibd)))
   # memberships
-  membership_x <- tibble::tibble(smpl1 = 1:225, deme1 = sort(rep(c(1,10,36,54,56,58,76,91,100), 25)))
-  membership_y <- tibble::tibble(smpl2 = 1:225, deme2 = sort(rep(c(1,10,36,54,56,58,76,91,100), 25)))
+  membership_x <- tibble::tibble(smpl1 = 1:(Nesize * nDemes),
+                                 deme1 = unlist(sapply(demeNames, function(x) rep(x,Nesize), simplify = F)))
+  membership_y <- tibble::tibble(smpl2 = 1:(Nesize * nDemes),
+                                 deme2 = unlist(sapply(demeNames, function(x) rep(x,Nesize), simplify = F)))
   discdat <- comb_hosts_df %>%
     dplyr::left_join(., membership_x, by = "smpl1") %>%
     dplyr::left_join(., membership_y, by = "smpl2") %>%
@@ -180,7 +181,10 @@ get_ibd_wrapper <- function(swfsim, dwnsmplnum, locatcomb) {
 simdat <- simdat %>%
   dplyr::mutate(discdat = purrr::map(swfsim, get_ibd_wrapper,
                                      locatcomb = locatcomb,
-                                     dwnsmplnum = 5))
+                                     dwnsmplnum = 5,
+                                     Nesize = 25,
+                                     nDemes = 7,
+                                     demeNames = colnames(ogdistmat)))
 
 
 

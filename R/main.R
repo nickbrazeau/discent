@@ -47,11 +47,11 @@ deme_inbreeding_spcoef <- function(discdat,
     }
   }
 
-  locats <- names(start_params)[!grepl("m", names(start_params))]
+  locats <- names(start_params)[!grepl("^m$", names(start_params))]
   if (!all(unique(c(discdat$deme1, discdat$deme2)) %in% locats)) {
     stop("You have cluster names in your discdat dataframe that are not included in your start parameters")
   }
-  if (!any(grepl("m", names(start_params)))) {
+  if (!any(grepl("^m$", names(start_params)))) {
     stop("A m start parameter must be provided (i.e. there must be a vector element name m in your start parameter vector)")
   }
   assert_dataframe(discdat)
@@ -59,7 +59,7 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_length(start_params, n = (length(unique(c(discdat$deme1, discdat$deme2))) + 1),
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
-  sapply(start_params[!grepl("m", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
+  sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(f_learningrate)
   assert_single_numeric(m_learningrate)
   assert_single_numeric(momentum)
@@ -148,7 +148,7 @@ deme_inbreeding_spcoef <- function(discdat,
 
   args <- list(gendist = as.vector(gendist_arr),
                geodist = as.vector(geodist_mat),
-               fvec = unname( start_params[!grepl("m", names(start_params))] ),
+               fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
                n_Kpairmax = n_Kpairmax,
                m = unname(start_params["m"]),
                f_learningrate = f_learningrate,
