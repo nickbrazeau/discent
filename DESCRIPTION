@@ -19,6 +19,7 @@ LazyData: true
 Imports:
     Rcpp,
     dplyr,
+    broom,
     magrittr,
     tidyr,
     purrr,
