@@ -94,7 +94,7 @@ deme_inbreeding_spcoef <- function(discdat,
 
   # get genetic data by pairs through efficient nest
   gendist <- discdat %>%
-    discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
+    discent::expand_pairwise(.) %>% # get all pairwise for full matrix
     dplyr::select(c("deme1", "deme2", "gendist")) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%
     tidyr::nest(.) %>%
