@@ -5,5 +5,5 @@ manuscript: .
 ## Future Development
 In the future, we intend to incorporate the following extensions:  
 
-* Options for diffferent spatial covariances 
-* Gradient descent optimization "on the fly"
+* Options for different spatial covariances 
+* Simulated Annealing optimization 
