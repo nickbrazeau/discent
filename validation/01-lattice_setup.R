@@ -15,10 +15,6 @@ coords <- round(seq(1, nCell, by = 11))
 latticemodel <- expand.grid(coords, coords)
 plot(latticemodel)
 colnames(latticemodel) <- c("longnum", "latnum")
-
-# store, same approx order of mag as distance for migration
-#demeNames <- apply(combn(letters,5), 2, function(x){paste(x, collapse = "")})
-#demeNames <- sort(sample(demeNames, size = nrow(latticemodel), replace = F))
 demeNames <- 1:nrow(latticemodel)
 
 latticemodel <- latticemodel %>%
