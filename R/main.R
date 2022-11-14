@@ -1,10 +1,10 @@
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
 #' @param discdat dataframe; The genetic-geographic data by deme (K)
-#' @param start_params named numeric vector; vector of start parameters.
-#' @param f_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
-#' @param m_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
-#' @param momentum numeric; gamma parameter for momentum for adaptive learning rate
-#' @param steps numeric; the number of "steps" as we move down the gradient
+#' @param start_params named double vector; vector of start parameters.
+#' @param f_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
+#' @param m_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
+#' @param momentum double; gamma parameter for momentum for adaptive learning rate
+#' @param steps integer; the number of "steps" as we move down the gradient
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
