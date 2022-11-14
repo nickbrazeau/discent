@@ -7,6 +7,7 @@
 .Rproj.user
 .RData
 
+
 # Data files I'm generating
 sandbox/
 old/
@@ -15,3 +16,5 @@ todo.txt
 validation/data/sim_data/
 validation/validation.Rproj
 validation/analyses/sanbox/
+validation/nohup.out
+validation/run.Rout
