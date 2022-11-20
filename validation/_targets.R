@@ -36,10 +36,13 @@ list(
   tar_target(locatcomb, readRDS(file2)),
 
   # run polySimIBD simulations and get disc data
-  tar_target(discdat, swfsim_2_discdat_wrapper(sim_framework_df = sim_framework_df,
+  tar_target(prediscdat, swfsim_2_discdat_wrapper(sim_framework_df = sim_framework_df,
                                        reps = 100,
                                        dwnsmplnum = 5,
                                        locatcomb = locatcomb)),
+
+  # add in misspecified dist for cost
+  tar_target(discdat, add_misspec_dist(prediscdat),
 
   # run SA for each simulation type
   tar_target(SAoptimparms, get_SA_wrapper_start(discdat = discdat)),
