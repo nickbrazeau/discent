@@ -66,6 +66,11 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_single_int(steps)
   assert_single_logical(report_progress)
 
+  # no missing
+  if(sum(is.na(discdat)) != 0) {
+    stop("discdat dataframe cannot have missing values")
+  }
+
   #......................
   # check for self comparisons
   #......................
@@ -93,10 +98,10 @@ deme_inbreeding_spcoef <- function(discdat,
 
   # transform data w/ logit
   discdat <- discdat %>%
-    dplyr::mutate(gendist = discent:::logit(gendist),
-                  gendist = ifelse(gendist == Inf, 6, gendist), # reasonable bounds on logit
-                  gendist = ifelse(gendist == -Inf, -6, gendist) # reasonable bounds on logit
-    )
+    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
+                                   ifelse(gendist < 0.001, 0.001,
+                                          gendist))) %>% # reasonable bounds on logit
+    dplyr::mutate(gendist = discent:::logit(gendist))
   # transform start parameters w/ logit
   start_params[names(start_params) != "m"] <- discent:::logit(start_params[names(start_params) != "m"])
 
@@ -185,7 +190,7 @@ deme_inbreeding_spcoef <- function(discdat,
       cost = output_raw$cost,
       Final_Fis = discent:::expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m
-      )
+    )
 
   } else {
     output <- list(

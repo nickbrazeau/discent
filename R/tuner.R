@@ -233,7 +233,6 @@ find_grad_params <- function(discdat,
     accept <- u <= p
 
     ## UPDATES
-    # update current position and cost
     currprop <- if(accept){newprop}else{currprop}
     currcost <- if(accept){newcost}else{currcost}
     costrun[i] <- currcost
