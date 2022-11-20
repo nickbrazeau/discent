@@ -18,15 +18,15 @@ deme_inbreeding_spcoef(
 \arguments{
 \item{discdat}{dataframe; The genetic-geographic data by deme (K)}
 
-\item{start_params}{named numeric vector; vector of start parameters.}
+\item{start_params}{named double vector; vector of start parameters.}
 
-\item{f_learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients}
+\item{f_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients}
 
-\item{m_learningrate}{numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
+\item{m_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
 
-\item{momentum}{numeric; gamma parameter for momentum for adaptive learning rate}
+\item{momentum}{double; gamma parameter for momentum for adaptive learning rate}
 
-\item{steps}{numeric; the number of "steps" as we move down the gradient}
+\item{steps}{integer; the number of "steps" as we move down the gradient}
 
 \item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
 
