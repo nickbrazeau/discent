@@ -15,6 +15,8 @@
 library(targets)
 library(tarchetypes)
 library(tibble)
+library(here)
+setwd(here::here())
 
 # Set target options:
 tar_option_set(
@@ -22,25 +24,32 @@ tar_option_set(
   format = "rds" )
 
 # Run the R scripts in the R/ folder with your custom functions:
-tar_source("validation/R")
+tar_source("validation/Rvalidation")
 
 #............................................................
 # Target List
 #...........................................................
 list(
-  tar_target(file1, "validation/mkdata/simdata/migration_mat_models.RDS", format = "file"),
-  tar_target(migmat, readRDS(file1)),
+  tar_target(file1, "validation/mkdata/simulation_maestro.RDS", format = "file"),
+  tar_target(sim_framework_df, readRDS(file1)),
   tar_target(file2, "validation/mkdata/simdata/locatcombo.rds", format = "file"),
   tar_target(locatcomb, readRDS(file2)),
 
   # run polySimIBD simulations and get disc data
-  tar_target(discdat, get_disc_valid_data(migmat = migmat,
-                                          reps = 100,
-                                          locatcomb = locatcomb,
-                                          dwnsmplnum = 5,
-                                          Nesize = 25,
-                                          nDemes = 7,
-                                          demeNames = colnames(migmat$migmat[[1]])))
+  tar_target(discdat, swfsim_2_discdat_wrapper(sim_framework_df = sim_framework_df,
+                                       reps = 100,
+                                       dwnsmplnum = 5,
+                                       locatcomb = locatcomb)),
+
+  # run SA for each simulation type
+  tar_target(SAoptimparms, get_SA_wrapper_start(discdat = discdat)),
+
+  # run discent
+  tar_target(results, get_discentwrapper(discdat = discdat,
+                                         SAoptimparms = SAoptimparms)),
+
+  # make report
+  tar_render(report, "validation/validation_onering.Rmd")
 )
 
 
