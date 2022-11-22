@@ -22,6 +22,9 @@
 #'              (i.e. samples are sourced from the same location). The expected pairwise relationship
 #'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
 #'              coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
+#' @details Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
+#' logit transformation internally in the code. Similarly, the "m" global migration rate cannot be negative and is bounded to be positive by
+#' through taking the absolute value in every iteration.
 #' @export
 #'
 
