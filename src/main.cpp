@@ -167,8 +167,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
    // update M
   // m_update[step] = m_learningrate * mgrad;
    m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
-   // m = abs(m - m_update[step]); // bound m so that it can only explore distance isolation (repulsion versus attraction)
-   m = m - m_update[step];
+   m = abs(m - m_update[step]); // bound m so that it can only explore distance isolation (repulsion versus attraction)
    // store for out
    m_run[step] = m;
 
