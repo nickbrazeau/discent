@@ -147,8 +147,18 @@ test_that("Fi gradient by hand", {
   input <- dat %>%
     dplyr::filter(deme1 != deme2) %>%
     dplyr::filter(deme1 == 1 | deme2 == 1)
+
+  input <- input %>%
+    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
+                                   ifelse(gendist < 0.001, 0.001,
+                                          gendist))) %>% # reasonable bounds on logit
+    dplyr::mutate(gendist = discent:::logit(gendist))
+
+
   f1retgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], fgrad,
-                                   fi = 0.2, fj = 0.2, m = 1e-5)) # from start params
+                                   fi = discent:::logit(0.2),
+                                   fj = discent:::logit(0.2),
+                                   m = 1e-5)) # from start params
 
   # now run model
   inputdisc <- dat %>%
@@ -324,8 +334,18 @@ test_that("M gradient by hand", {
   colnames(datexpand) <- c("smpl2", "smpl1", "deme2", "deme1", "gendist", "geodist")
   input <- dplyr::bind_rows(dat, datexpand) %>%
     dplyr::filter(deme1 != deme2)
+  # logit transform
+  input <- input %>%
+    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
+                                   ifelse(gendist < 0.001, 0.001,
+                                          gendist))) %>% # reasonable bounds on logit
+    dplyr::mutate(gendist = discent:::logit(gendist))
+
+  # run grad by hand
   Mretgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], mgrad,
-                                  fi = 0.2, fj = 0.2, m = 1e-5)) # from start params
+                                  fi = discent:::logit(0.2),
+                                  fj = discent:::logit(0.2),
+                                  m = 1e-5)) # from start params
 
   # now run model
   inputdisc <- dat %>%
