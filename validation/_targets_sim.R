@@ -83,6 +83,9 @@ rettargets <- tar_combine(combined_disc,
                           polysimtargets,
                           command = dplyr::bind_rows(!!!.x))
 
+#......................
+# find optimal start parameters
+#......................
 # get start params setup
 ibd <- tar_target(ibdstartdat, sub_maestro(combined_disc, lvl = "IsoByDist"))
 lattice <- tar_target(latticestartdat, sub_maestro(combined_disc, lvl = "lattice"))
@@ -118,8 +121,17 @@ starttargets <- tar_combine(combined_start,
                           command = dplyr::bind_rows(!!!.x))
 
 
+# find best start params
+sp_target <- tar_target(startdisc, find_best_start_param(combined_start,
+                                                         discdat = rettargets))
+
+#......................
+# run full discent
+#......................
 # add in misspecified dist for cost
-misspecified <- tar_target(fulldiscdat, add_misspec_dist(combined_disc))
+misspecified <- tar_target(fullstartdiscdat, add_misspec_dist(startdisc))
+
+# get ready to run full discent
 
 # bring together
 list(polysimtargets, rettargets,
