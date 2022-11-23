@@ -5,36 +5,24 @@ expand_sim_framework_df <- function(sim_framework_df, reps) {
 }
 
 
-swfsim_2_discdat_wrapper <- function(sim_framework_df,
-                                     dwnsmplnum, locatcomb) {
-  #......................
-  # function to run sim and get IBD for storage limits
-  #......................
-  go_sim_frame_2_disc <- function(pos, N, m,
+swfsim_2_discdat_wrapper <- function(pos, N, m,
                                   rho, mean_coi, tlim,
                                   migr_mat,
                                   dwnsmplnum,
                                   demeNames, locatcomb) {
     # run swfsim
     swfsim <- polySimIBD::sim_swf(pos, N, m, rho, mean_coi, tlim, migr_mat)
-    # get ibd dat
-    ibddat <- get_swfsim_2_ibd(swfsim, N, dwnsmplnum)
-    # tidy to discent
-    ret <- IBDdat_tidy_out_2_discdat(N = N, demeNames = demeNames,
-                                     locatcomb = locatcomb,
-                                     IBDdat = ibddat)
-    # out
-    return(ret)
-  }
-  sim_framework_df$discdat <- purrr::pmap(sim_framework_df[,!colnames(sim_framework_df) %in% c("modname")],
-                                                 go_sim_frame_2_disc,
-                                                 locatcomb = locatcomb, dwnsmplnum = dwnsmplnum)
-
-  # out
-  ret <- sim_framework_df %>%
-    dplyr::select(c("modname", "discdat"))
-  return(ret)
-
+    # # get ibd dat
+    # ibddat <- get_swfsim_2_ibd(swfsim, N, dwnsmplnum)
+    # # tidy to discent
+    # ret <- IBDdat_tidy_out_2_discdat(N = N, demeNames = demeNames,
+    #                                  locatcomb = locatcomb,
+    #                                  IBDdat = ibddat)
+    # # out
+    # ret <- ret %>%
+    #   dplyr::select(c("modname", "discdat"))
+    # return(ret)
+    return(0)
 
 }
 

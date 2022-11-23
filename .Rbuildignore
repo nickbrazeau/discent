@@ -7,3 +7,5 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^validation$
+^\.covrignore$
+^\.github$

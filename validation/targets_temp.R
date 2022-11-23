@@ -32,7 +32,7 @@ tar_source("validation/Rvalidation")
 #............................................................
 # read in and make polysim IBD dataframe
 #...........................................................
-reps <- 2
+reps <- 100
 maestro <- readRDS("validation/mkdata/simulation_maestro.RDS")
 maestro <- lapply(1:reps, function(x){return(maestro)}) %>%
   dplyr::bind_rows()
@@ -72,12 +72,10 @@ search_grid <- search_grid %>%
 # WORK
 #...........................................................
 # run simulations
-polysimtargets <- tar_map(values = maestro,
+polysimtargets <- tar_map(value = maestro,
                           names = "sim",
                           tar_target(discdat,
-                                     swfsim_2_discdat_wrapper(pos, N, m,
-                                                              rho, mean_coi, tlim,
-                                                              migr_mat,
+                                     swfsim_2_discdat_wrapper(sim_framework_df = maestro,
                                                               dwnsmplnum = 5,
                                                               locatcomb = locatcomb)))
 # bring together discdat initial
@@ -85,7 +83,59 @@ rettargets <- tar_combine(combined_disc,
                           polysimtargets,
                           command = dplyr::bind_rows(!!!.x))
 
+#......................
+# find optimal start parameters
+#......................
+# get start params setup
+ibd <- tar_target(ibdstartdat, sub_maestro(combined_disc, lvl = "IsoByDist"))
+lattice <- tar_target(latticestartdat, sub_maestro(combined_disc, lvl = "lattice"))
+torus <- tar_target(torusstartdat, sub_maestro(combined_disc, lvl = "torus"))
+nevary <- tar_target(nevarystartdat, sub_maestro(combined_disc, lvl = "NeVary"))
+
+# run start params
+ibdstart <- tar_map(value = search_grid,
+                    names = "ibd",
+                    tar_target(ibdstartdat,
+                               get_GS_cost(searchgriddf = search_grid,
+                                           discdat = ibd)))
+latticestart <- tar_map(value = search_grid,
+                        names = "lattice",
+                        tar_target(latticestartdat,
+                                   get_GS_cost(searchgriddf = search_grid,
+                                               discdat = lattice)))
+torusstart <- tar_map(value = search_grid,
+                      names = "torus",
+                      tar_target(torusstartdat,
+                                 get_GS_cost(searchgriddf = search_grid,
+                                             discdat = torus)))
+nevarystart <- tar_map(value = search_grid,
+                       names = "nevary",
+                       tar_target(nevarystartdat,
+                                  get_GS_cost(searchgriddf = search_grid,
+                                              discdat = nevary)))
+
+
+# bring together start param results
+starttargets <- tar_combine(combined_start,
+                            ibdstart, latticestart, torusstart, nevarystart,
+                            command = dplyr::bind_rows(!!!.x))
+
+
+# find best start params
+sp_target <- tar_target(startdisc, find_best_start_param(combined_start,
+                                                         discdat = rettargets))
+
+#......................
+# run full discent
+#......................
+# add in misspecified dist for cost
+misspecified <- tar_target(fullstartdiscdat, add_misspec_dist(startdisc))
+
+# get ready to run full discent
 
 # bring together
-list(polysimtargets, rettargets)
+list(polysimtargets, rettargets,
+     ibd, lattice, torus, nevary,
+     ibdstart, latticestart, torusstart, nevarystart,
+     misspecified)
 
