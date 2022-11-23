@@ -2,7 +2,6 @@
 <!-- badges: start -->
 [![main_build](https://github.com/nickbrazeau/actions/discent/workflows/check-standard.yaml/badge.svg?branch=master) 
 [![main_build](https://github.com/nickbrazeau/actions/discent/workflows/check-standard.yaml/badge.svg?branch=develop) 
-[![R-CMD-check](https://github.com/nickbrazeau/discent/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/nickbrazeau/discent/actions/workflows/R-CMD-check.yaml)
 [![Code Coverage](https://github.com/nickbrazeau/actions/discent/workflows/test-coverage.yaml/badge.svg?branch=master)
 <!-- badges: end -->
 
