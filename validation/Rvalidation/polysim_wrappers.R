@@ -12,17 +12,16 @@ swfsim_2_discdat_wrapper <- function(pos, N, m,
                                   demeNames, locatcomb) {
     # run swfsim
     swfsim <- polySimIBD::sim_swf(pos, N, m, rho, mean_coi, tlim, migr_mat)
-    # # get ibd dat
-    # ibddat <- get_swfsim_2_ibd(swfsim, N, dwnsmplnum)
-    # # tidy to discent
-    # ret <- IBDdat_tidy_out_2_discdat(N = N, demeNames = demeNames,
-    #                                  locatcomb = locatcomb,
-    #                                  IBDdat = ibddat)
-    # # out
-    # ret <- ret %>%
-    #   dplyr::select(c("modname", "discdat"))
-    # return(ret)
-    return(0)
+    # get ibd dat
+    ibddat <- get_swfsim_2_ibd(swfsim, N, dwnsmplnum)
+    # tidy to discent
+    ret <- IBDdat_tidy_out_2_discdat(N = N, demeNames = demeNames,
+                                     locatcomb = locatcomb,
+                                     IBDdat = ibddat)
+    # out
+    ret <- ret %>%
+      dplyr::select(c("modname", "discdat"))
+    return(ret)
 }
 
 
