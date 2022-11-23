@@ -2,7 +2,7 @@
 #' @inheritParams deme_inbreeding_spcoef
 #' @param discsteps integer; the number of "steps" in the main `DISCent`
 #' algorithm" \link{deme_inbreeding_spcoef}
-#' @param temptstart_params named double vector; vector of start parameters to serve as template.
+#' @param tempstart_params named double vector; vector of start parameters to serve as template.
 #'
 #' @param fstartmin double; the minimum value for F inbreeding coefficient in the search grid
 #' @param fstartmax double; the maximum value for F inbreeding coefficient in the search grid
@@ -36,6 +36,7 @@ find_grad_params <- function(discdat,
                              tempstart_params = c(),
                              momentum = 0.9,
                              discsteps = 1e3,
+                             downsample = 1e3,
 
                              fstartmin = 0.1,
                              fstartmax = 0.9,
@@ -148,7 +149,7 @@ find_grad_params <- function(discdat,
     return(out)
   }
 
-  search_grid$cost <- furrr::future_pmap_dbl(search_grid, discent_wrapper,
+  search_grid$cost <- purrr::pmap_dbl(search_grid, discent_wrapper,
                                              discdat = discdat,
                                              steps = discsteps,
                                              momentum = momentum)
@@ -157,7 +158,3 @@ find_grad_params <- function(discdat,
   # out with search grid result
   return(search_grid)
 }
-
-
-
-

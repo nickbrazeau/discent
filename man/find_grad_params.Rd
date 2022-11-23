@@ -2,104 +2,74 @@
 % Please edit documentation in R/tuner.R
 \name{find_grad_params}
 \alias{find_grad_params}
-\title{Find Optimal Gradient Parameters}
+\title{Find Optimal Start Gradient Parameters using Grid Search}
 \usage{
 find_grad_params(
   discdat,
-  initstart_params = c(),
-  initf_learningrate = 1e-05,
-  initm_learningrate = 1e-10,
+  tempstart_params = c(),
   momentum = 0.9,
   discsteps = 1000,
-  initTemp = 1,
-  annealsteps = 1e+05,
-  SLratio = 0.5,
-  FMSratio = 0.5,
-  FMLratio = 0.5,
-  demeSwitchSize = 1,
+  downsample = 1000,
   fstartmin = 0.1,
   fstartmax = 0.9,
-  fstartsteps = 100,
+  fstartby = 100,
   mstartmin = 1e-15,
   mstartmax = 0.001,
-  mstartsteps = 100,
+  mstartby = 100,
   flearnmin = 1e-15,
   flearnmax = 0.01,
-  flearnsteps = 100,
+  flearnby = 100,
   mlearnmin = 1e-15,
   mlearnmax = 0.01,
-  mlearnsteps = 100
+  mlearnby = 100
 )
 }
 \arguments{
 \item{discdat}{dataframe; The genetic-geographic data by deme (K)}
 
-\item{initstart_params}{named double vector; vector of start parameters.}
-
-\item{initf_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients}
-
-\item{initm_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
+\item{tempstart_params}{named double vector; vector of start parameters to serve as template.}
 
 \item{momentum}{double; gamma parameter for momentum for adaptive learning rate}
 
 \item{discsteps}{integer; the number of "steps" in the main \code{DISCent}
 algorithm" \link{deme_inbreeding_spcoef}}
 
-\item{initTemp}{double; initial temperature for simulated annealer}
+\item{downsample}{integer; the subset, or the number of a smaller random set of values, that you want to search in the combination grid}
 
-\item{annealsteps}{integer; the number of "steps" for the simulated annealer
-to consider for identifying optimal start and learning parameters}
-
-\item{SLratio}{double; probability of searching for start parameters versus the
-learning rate}
-
-\item{FMSratio}{double; probability of searching for F start parameters versus the
-M start parameters}
-
-\item{FMLratio}{double; probability of searching for F learning rate versus the
-M learning rate}
-
-\item{demeSwitchSize}{integer; the number of demes to "move" in simulated annealing
-proposal step}
-
-\item{fstartmin}{double; the number of values of F inbreeding coefficient to explore in the search grid}
+\item{fstartmin}{double; the minimum value for F inbreeding coefficient in the search grid}
 
 \item{fstartmax}{double; the maximum value for F inbreeding coefficient in the search grid}
 
-\item{fstartsteps}{integer; the number of values between fstartmin and fstartmax to evaluate}
+\item{fstartby}{integer; the number of values between fstartmin and fstartmax to evaluate}
 
-\item{mstartmin}{double; the number of values of M global migration rate to explore in the search grid}
+\item{mstartmin}{double; the minimum value for M global migration rate in the search grid}
 
 \item{mstartmax}{double; the maximum value for M global migration rate in the search grid}
 
-\item{mstartsteps}{integer; the number of values between mstartmin and mstartmax to evaluate}
+\item{mstartby}{integer; the number of values between mstartmin and mstartmax to evaluate}
 
-\item{flearnmin}{double; the number of values of F learning rate to explore in the search grid}
+\item{flearnmin}{double; the minimum value for F learning rate in the search grid}
 
 \item{flearnmax}{double; the maximum value for F learning rate in the search grid}
 
-\item{flearnsteps}{integer; the number of values between flearnmin and flearnmax to evaluate}
+\item{flearnby}{integer; the number of values between flearnmin and flearnmax to evaluate}
 
-\item{mlearnmin}{double; the number of values of M learning rate to explore in the search grid}
+\item{mlearnmin}{double; the minimum value for M learning rate in the search grid}
 
 \item{mlearnmax}{double; the maximum value for M learning rate in the search grid}
 
-\item{mlearnsteps}{integer; the number of values between mlearnmin and mlearnmax to evaluate}
+\item{mlearnby}{integer; the number of values between mlearnmin and mlearnmax to evaluate}
 }
 \description{
-Find Optimal Gradient Parameters
+Find Optimal Start Gradient Parameters using Grid Search
 }
 \details{
-Using simulated annealing, identify the best start parameters for
+Using a discrete grid search, identify the best start parameters for
 inbreeding F values and M global migration parameter as well as the best
-learning rates. The simulated annealer assumes a discrete search grid
-and temperate decreases according to the rate:
-t = frac{t}{iter}
-The cost in the simulated annealer is given by the final cost after \emph{n} iterations of
+learning rates. We assume that each deme should have the same F start value for computational tractability.
+
+The final cost for each set of start parameters is given by the gradient descent cost after \emph{n} iterations of
 the main \code{DISCent} algorithm" \link{deme_inbreeding_spcoef}.
-The search grid is defined by the user specified min, max, and steps of the
+The search grid is defined by the user specified min, max, and steps ("by") of the
 aforementioned parameters.
-The various ratios of searching for the "X" parameters versus the "Y" parameters
-helps to prioritize exploring one set of parameters versus the other. The default
-value of 0.5 leads to equal probability of exploration.
 }

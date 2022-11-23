@@ -27,6 +27,7 @@ update_progress <- function(pb_list, name, i, max_i) {
 #------------------------------------------------
 #' @title logit transformation
 #' @noRd
+#' @export
 # no export because simple
 logit <- function(p){
   return( log(p/(1-p)) )
@@ -35,6 +36,7 @@ logit <- function(p){
 #------------------------------------------------
 #' @title expit transformation
 #' @noRd
+#' @export
 # no export because simple
 expit <- function(p){
   return(1/(1+exp(-p)))
@@ -45,6 +47,7 @@ expit <- function(p){
 #' @param discdf dataframe; that is specific to the DISCent framework. Must have colnames of: "smpl1", "smpl2", "deme1", "deme2", "gendist", "geodist" in correct order
 #' @details This is an internal function that largely lacks generalizability. Do not recommend external use.
 #' @export
+#' @noRd
 
 expand_pairwise <- function(discdf){
   #......................

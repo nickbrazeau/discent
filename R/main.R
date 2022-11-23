@@ -104,9 +104,9 @@ deme_inbreeding_spcoef <- function(discdat,
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
                                           gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = discent:::logit(gendist))
+    dplyr::mutate(gendist = discent::logit(gendist))
   # transform start parameters w/ logit
-  start_params[names(start_params) != "m"] <- discent:::logit(start_params[names(start_params) != "m"])
+  start_params[names(start_params) != "m"] <- discent::logit(start_params[names(start_params) != "m"])
 
 
   # get genetic data by pairs through efficient nest
@@ -135,7 +135,7 @@ deme_inbreeding_spcoef <- function(discdat,
 
   # put geo information into distance matrix
   geodist <- discdat %>%
-    discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
+    discent::expand_pairwise(.) %>% # get all pairwise for full matrix
     dplyr::select(c("deme1", "deme2", "geodist")) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%
     tidyr::nest(.) %>%
@@ -187,11 +187,11 @@ deme_inbreeding_spcoef <- function(discdat,
     output <- list(
       deme_key = keyi,
       m_run = output_raw$m_run,
-      fi_run = discent:::expit(do.call("rbind", output_raw$fi_run)),
+      fi_run = discent::expit(do.call("rbind", output_raw$fi_run)),
       m_update = output_raw$m_update,
       fi_update = do.call("rbind", output_raw$fi_update),
       cost = output_raw$cost,
-      Final_Fis = discent:::expit(output_raw$Final_Fis),
+      Final_Fis = discent::expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m
     )
 
@@ -199,7 +199,7 @@ deme_inbreeding_spcoef <- function(discdat,
     output <- list(
       deme_key = keyi,
       cost = output_raw$cost,
-      Final_Fis = discent:::expit(output_raw$Final_Fis),
+      Final_Fis = discent::expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)
   }
 

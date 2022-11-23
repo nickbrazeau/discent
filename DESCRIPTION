@@ -19,21 +19,17 @@ LazyData: true
 Imports:
     Rcpp,
     dplyr,
-    broom,
     magrittr,
     tidyr,
     purrr,
-    broom,
-    tibble,
-    crayon,
-    stats,
-    utils,
-    ggplot2,
-    scales,
-    testthat (>= 2.1.0)
 Suggests: 
+    utils,
+    stats,
+    broom,
     knitr,
     rmarkdown,
+    testthat (>= 2.1.0),
+    tibble,
     covr
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)

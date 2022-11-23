@@ -152,12 +152,12 @@ test_that("Fi gradient by hand", {
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
                                           gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = discent:::logit(gendist))
+    dplyr::mutate(gendist = discent::logit(gendist))
 
 
   f1retgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], fgrad,
-                                   fi = discent:::logit(0.2),
-                                   fj = discent:::logit(0.2),
+                                   fi = discent::logit(0.2),
+                                   fj = discent::logit(0.2),
                                    m = 1e-5)) # from start params
 
   # now run model
@@ -339,12 +339,12 @@ test_that("M gradient by hand", {
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
                                           gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = discent:::logit(gendist))
+    dplyr::mutate(gendist = discent::logit(gendist))
 
   # run grad by hand
   Mretgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], mgrad,
-                                  fi = discent:::logit(0.2),
-                                  fj = discent:::logit(0.2),
+                                  fi = discent::logit(0.2),
+                                  fj = discent::logit(0.2),
                                   m = 1e-5)) # from start params
 
   # now run model
