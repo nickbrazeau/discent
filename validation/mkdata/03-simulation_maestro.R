@@ -28,7 +28,7 @@ rho <- 7.4e-7
 pflen <- 1.664e6
 # assuming single chromosome for ease
 # assuming 1e3 loci
-pos <- sort(sample(1.664e6, 1e3))
+pos <- sort(sample(pflen, 1e3))
 
 
 #............................................................

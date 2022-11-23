@@ -22,9 +22,8 @@ swfsim_2_discdat_wrapper <- function(sim_framework_df, reps,
     # out
     return(ret)
   }
-  sim_framework_df$discdat <- furrr::future_pmap(sim_framework_df[,!colnames(sim_framework_df) %in% c("modname")],
+  sim_framework_df$discdat <- purrr::pmap(sim_framework_df[,!colnames(sim_framework_df) %in% c("modname")],
                                                  go_sim_frame_2_disc,
-                                                 .options = furrr::furrr_options(seed = 48),
                                                  locatcomb = locatcomb, dwnsmplnum = dwnsmplnum)
 
   # out
@@ -85,10 +84,10 @@ IBDdat_tidy_out_2_discdat <- function(N, demeNames, locatcomb, IBDdat){
     locatcomb <- locatcomb %>%
       dplyr::mutate(deme1 = as.character(deme1),
                     deme2 = as.character(deme2)) %>%
-      dplyr::select(c("deme1", "deme2", "distval"))
+      dplyr::select(c("deme1", "deme2", "geodist"))
 
     locatcombexpand <- locatcomb
-    colnames(locatcombexpand) <- c("deme2", "deme1", "distval")
+    colnames(locatcombexpand) <- c("deme2", "deme1", "geodist")
     locatcomb <- dplyr::bind_rows(locatcomb, locatcombexpand)
 
     #......................
@@ -98,7 +97,6 @@ IBDdat_tidy_out_2_discdat <- function(N, demeNames, locatcomb, IBDdat){
       dplyr::left_join(., membership_x, by = "smpl1") %>%
       dplyr::left_join(., membership_y, by = "smpl2") %>%
       dplyr::left_join(., locatcomb, by = c("deme1", "deme2")) %>%
-      dplyr::rename(geodist = distval) %>%
       dplyr::select(c("smpl1", "smpl2", "deme1", "deme2", "gendist", "geodist"))
     return(discdat)
   }
