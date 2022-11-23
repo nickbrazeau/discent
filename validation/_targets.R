@@ -42,7 +42,7 @@ list(
                                        locatcomb = locatcomb)),
 
   # add in misspecified dist for cost
-  tar_target(discdat, add_misspec_dist(prediscdat),
+  tar_target(discdat, add_misspec_dist(prediscdat)),
 
   # run SA for each simulation type
   tar_target(SAoptimparms, get_SA_wrapper_start(discdat = discdat)),

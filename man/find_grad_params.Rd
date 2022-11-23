@@ -47,6 +47,9 @@ algorithm" \link{deme_inbreeding_spcoef}}
 
 \item{initTemp}{double; initial temperature for simulated annealer}
 
+\item{annealsteps}{integer; the number of "steps" for the simulated annealer
+to consider for identifying optimal start and learning parameters}
+
 \item{SLratio}{double; probability of searching for start parameters versus the
 learning rate}
 
@@ -63,20 +66,25 @@ proposal step}
 
 \item{fstartmax}{double; the maximum value for F inbreeding coefficient in the search grid}
 
+\item{fstartsteps}{integer; the number of values between fstartmin and fstartmax to evaluate}
+
 \item{mstartmin}{double; the number of values of M global migration rate to explore in the search grid}
 
 \item{mstartmax}{double; the maximum value for M global migration rate in the search grid}
+
+\item{mstartsteps}{integer; the number of values between mstartmin and mstartmax to evaluate}
 
 \item{flearnmin}{double; the number of values of F learning rate to explore in the search grid}
 
 \item{flearnmax}{double; the maximum value for F learning rate in the search grid}
 
+\item{flearnsteps}{integer; the number of values between flearnmin and flearnmax to evaluate}
+
 \item{mlearnmin}{double; the number of values of M learning rate to explore in the search grid}
 
 \item{mlearnmax}{double; the maximum value for M learning rate in the search grid}
 
-\item{annealstep}{integer; the number of "steps" for the simulated annealer
-to consider for identifying optimal start and learning parameters}
+\item{mlearnsteps}{integer; the number of values between mlearnmin and mlearnmax to evaluate}
 }
 \description{
 Find Optimal Gradient Parameters
