@@ -48,3 +48,8 @@ jobs:
         with:
           name: coverage-test-failures
           path: ${{ runner.temp }}/package
+
+ignore:
+  "src/misc_v2.cpp"
+  "R/assertions.R"
+  "R/utils.R"
