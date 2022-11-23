@@ -12,6 +12,7 @@ library(targets)
 #............................................................
 # actual run
 #...........................................................
+setwd("/proj/ideel/meshnick/users/NickB/Projects/discent")
 targets::tar_make_clustermq(workers = 128,
                             script = "validation/_targets_sim.R",
                             store = "validation")
