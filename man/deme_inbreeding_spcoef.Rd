@@ -51,4 +51,8 @@ columns do not matter but the names of the columns must match.
 The start_params vector names must match the cluster names (i.e. clusters must be
 have a name that we can match on for the starting relatedness paramerts). In addition,
 you must provide a start parameter for "m".
+
+Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
+logit transformation internally in the code. Similarly, the "m" global migration rate cannot be negative and is bounded to be positive by
+through taking the absolute value in every iteration.
 }
