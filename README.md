@@ -2,6 +2,7 @@
 <!-- badges: start -->
 [![Travis build status](https://travis-ci.com/nickbrazeau/discent.svg?branch=main)](https://travis-ci.com/nickbrazeau/discent)
 [![Codecov test coverage](https://codecov.io/gh/nickbrazeau/discent/branch/master/graph/badge.svg)](https://codecov.io/gh/nickbrazeau/discent?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/nickbrazeau/discent/branch/main/graph/badge.svg)](https://app.codecov.io/gh/nickbrazeau/discent?branch=main)
 <!-- badges: end -->
 
 <description>
