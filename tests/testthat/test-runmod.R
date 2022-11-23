@@ -141,7 +141,7 @@ test_that("model runs works", {
   # run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  mod <- discent::deme_inbreeding_spcoef(discdat = inputdisc,
+  mod <- deme_inbreeding_spcoef(discdat = inputdisc,
                                          start_params = our_start_params,
                                          f_learningrate = 1e-5,
                                          m_learningrate = 1e-10,

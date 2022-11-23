@@ -18,7 +18,7 @@ NULL
 # max_i = max value of bar (close when reach this value)
 #' @noRd
 update_progress <- function(pb_list, name, i, max_i) {
-  setTxtProgressBar(pb_list[[name]], i)
+  utils::setTxtProgressBar(pb_list[[name]], i)
   if (i == max_i) {
     close(pb_list[[name]])
   }
@@ -26,8 +26,10 @@ update_progress <- function(pb_list, name, i, max_i) {
 
 #------------------------------------------------
 #' @title logit transformation
+#' @param p numeric vecotr
+#' @description Standard expit formula
+#' @noMd
 #' @noRd
-#' @export
 # no export because simple
 logit <- function(p){
   return( log(p/(1-p)) )
@@ -35,8 +37,10 @@ logit <- function(p){
 
 #------------------------------------------------
 #' @title expit transformation
+#' @param p numeric vecotr
+#' @description Standard expit formula
+#' @noMd
 #' @noRd
-#' @export
 # no export because simple
 expit <- function(p){
   return(1/(1+exp(-p)))
@@ -45,8 +49,8 @@ expit <- function(p){
 #------------------------------------------------
 #' @title Simple function for expanding a pairwise matrix
 #' @param discdf dataframe; that is specific to the DISCent framework. Must have colnames of: "smpl1", "smpl2", "deme1", "deme2", "gendist", "geodist" in correct order
-#' @details This is an internal function that largely lacks generalizability. Do not recommend external use.
-#' @export
+#' @description This is an internal function that largely lacks generalizability. Do not recommend external use.
+#' @noMd
 #' @noRd
 
 expand_pairwise <- function(discdf){

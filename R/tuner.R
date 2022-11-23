@@ -138,7 +138,7 @@ find_grad_params <- function(discdat,
                               momentum,
                               steps){
 
-    out <- discent::deme_inbreeding_spcoef(discdat,
+    out <- deme_inbreeding_spcoef(discdat,
                                            start_params,
                                            f_learningrate,
                                            m_learningrate,

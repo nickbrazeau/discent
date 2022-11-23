@@ -22,8 +22,8 @@ Imports:
     magrittr,
     tidyr,
     purrr,
-Suggests: 
     utils,
+Suggests: 
     stats,
     broom,
     knitr,

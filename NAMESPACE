@@ -2,10 +2,7 @@
 
 export("%>%")
 export(deme_inbreeding_spcoef)
-export(expand_pairwise)
-export(expit)
 export(find_grad_params)
-export(logit)
 importFrom(Rcpp,sourceCpp)
 importFrom(magrittr,"%>%")
 useDynLib(discent, .registration = TRUE)

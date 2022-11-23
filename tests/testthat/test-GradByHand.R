@@ -152,18 +152,18 @@ test_that("Fi gradient by hand", {
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
                                           gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = discent::logit(gendist))
+    dplyr::mutate(gendist = logit(gendist))
 
 
   f1retgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], fgrad,
-                                   fi = discent::logit(0.2),
-                                   fj = discent::logit(0.2),
+                                   fi = logit(0.2),
+                                   fj = logit(0.2),
                                    m = 1e-5)) # from start params
 
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  ret <- discent::deme_inbreeding_spcoef(discdat = inputdisc,
+  ret <- deme_inbreeding_spcoef(discdat = inputdisc,
                                          start_params = our_start_params,
                                          f_learningrate = 1e-5,
                                          m_learningrate = 1e-10,
@@ -339,18 +339,18 @@ test_that("M gradient by hand", {
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
                                           gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = discent::logit(gendist))
+    dplyr::mutate(gendist = logit(gendist))
 
   # run grad by hand
   Mretgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], mgrad,
-                                  fi = discent::logit(0.2),
-                                  fj = discent::logit(0.2),
+                                  fi = logit(0.2),
+                                  fj = logit(0.2),
                                   m = 1e-5)) # from start params
 
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  ret <- discent::deme_inbreeding_spcoef(discdat = inputdisc,
+  ret <- deme_inbreeding_spcoef(discdat = inputdisc,
                                          start_params = our_start_params,
                                          f_learningrate = 1e-5,
                                          m_learningrate = 1e-10,

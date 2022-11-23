@@ -58,7 +58,7 @@ get_SA_wrapper_start <- function(discdat,
   SAdat <- SAdat %>%
     dplyr::mutate(discdat = purrr::map(discdat, rm_internal_compar)) %>%
     dplyr::mutate(SAoptimparms = purrr::map(discdat,
-                                                   discent::find_grad_params,
+                                                   find_grad_params,
                                                    initstart_params = our_start_params,
                                                    initf_learningrate = initf_learningrate,
                                                    initm_learningrate = initm_learningrate,
@@ -101,7 +101,7 @@ get_discentwrapper <- function(discdat = discdat, SAoptimparms = SAoptimparms) {
 
   # discent wrapper
   run_discent <- function(discdat, SAoptimparms) {
-    discent::deme_inbreeding_spcoef(discdat = discdat,
+    deme_inbreeding_spcoef(discdat = discdat,
                                     start_params = SAoptimparms$optimalParams$start_params,
                                     f_learningrate = SAoptimparms$optimalParams$f_learn,
                                     m_learningrate = SAoptimparms$optimalParams$m_learn,
