@@ -1,8 +1,8 @@
 # DISCent
 <!-- badges: start -->
-[![main_build](https://github.com/nickbrazeau/discent/actions/workflows/check-standard.yaml/badge.svg?branch=master) 
-[![main_build](https://github.com/nickbrazeau/discent/actions/workflows/check-standard.yaml/badge.svg?branch=develop) 
-[![Code Coverage](https://github.com/nickbrazeau/discent/actions/workflows/test-coverage.yaml/badge.svg?branch=master)
+![main_build](https://github.com/nickbrazeau/discent/actions/workflows/check-standard.yaml/badge.svg?branch=master) 
+![main_build](https://github.com/nickbrazeau/discent/actions/workflows/check-standard.yaml/badge.svg?branch=develop) 
+![Code Coverage](https://github.com/nickbrazeau/discent/actions/workflows/test-coverage.yaml/badge.svg?branch=master)
 <!-- badges: end -->
 
 <description>
