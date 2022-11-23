@@ -1,8 +1,12 @@
-swfsim_2_discdat_wrapper <- function(sim_framework_df, reps,
-                                     dwnsmplnum, locatcomb) {
-  # expand out reps
-  sim_framework_df <- dplyr::bind_rows(lapply(1:reps, function(x){return(sim_framework_df)}))
+# expand out reps
+expand_sim_framework_df <- function(sim_framework_df, reps) {
+  out <- dplyr::bind_rows(lapply(1:reps, function(x){return(sim_framework_df)}))
+  return(out)
+}
 
+
+swfsim_2_discdat_wrapper <- function(sim_framework_df,
+                                     dwnsmplnum, locatcomb) {
   #......................
   # function to run sim and get IBD for storage limits
   #......................

@@ -10,15 +10,12 @@
 #'
 #' @param mstartmin double; the minimum value for M global migration rate in the search grid
 #' @param mstartmax double; the maximum value for M global migration rate in the search grid
-#' @param mstartby integer; the number of values between mstartmin and mstartmax to evaluate
 #'
 #' @param flearnmin double; the minimum value for F learning rate in the search grid
 #' @param flearnmax double; the maximum value for F learning rate in the search grid
-#' @param flearnby integer; the number of values between flearnmin and flearnmax to evaluate
 #'
 #' @param mlearnmin double; the minimum value for M learning rate in the search grid
 #' @param mlearnmax double; the maximum value for M learning rate in the search grid
-#' @param mlearnby integer; the number of values between mlearnmin and mlearnmax to evaluate
 #'
 #' @param downsample integer; the subset, or the number of a smaller random set of values, that you want to search in the combination grid
 #'
@@ -30,6 +27,7 @@
 #' the main `DISCent` algorithm" \link{deme_inbreeding_spcoef}.
 #' The search grid is defined by the user specified min, max, and steps ("by") of the
 #' aforementioned parameters.
+#' Rates are parameterized as 10^-seq(min,max)
 #' @export
 
 find_grad_params <- function(discdat,
@@ -90,25 +88,22 @@ find_grad_params <- function(discdat,
 
   assert_single_numeric(mstartmin)
   assert_single_numeric(mstartmax)
-  assert_single_int(mstartby)
 
   assert_single_numeric(flearnmin)
   assert_single_numeric(flearnmax)
-  assert_single_int(flearnby)
 
   assert_single_numeric(mlearnmin)
   assert_single_numeric(mlearnmax)
-  assert_single_int(mlearnby)
 
   #............................................................
   # look up tables
   #...........................................................
-  fstartsvec <- seq(from = fstartmin, to = fstartmax, length.out = fstartby)
-  mstartsvec <- seq(from = mstartmin, to = mstartmax, length.out = mstartby)
-  flearnsvec <- seq(from = flearnmin, to = flearnmax, length.out = flearnby)
-  mlearnsvec <- seq(from = mlearnmin, to = mlearnmax, length.out = mlearnby)
+  fstartsvec <- seq(from = fstartmin, to = fstartmax, by = fstartby)
+  mstartsvec <- 10^-seq(from = mstartmin, to = mstartmax)
+  flearnsvec <- 10^-seq(from = flearnmin, to = flearnmax)
+  mlearnsvec <- 10^-seq(from = mlearnmin, to = mlearnmax)
   search_grid <- expand.grid(fstartsvec, mstartsvec, flearnsvec, mlearnsvec)
-  colnames(search_grid) <- c("fstarts", "mstart", "f_learn", "m_learn")
+  colnames(search_grid) <- c("fstart", "mstart", "f_learn", "m_learn")
   # check downsmaple
   assert_bounded(downsample, left = 1, right = nrow(search_grid), inclusive_left = TRUE, inclusive_right = TRUE,
                  message = "Downsample must consider at least 1 search grid parameter, or be less than or equal to the total number of potential search grid combinations")
@@ -116,14 +111,14 @@ find_grad_params <- function(discdat,
   search_grid <- search_grid[sample(1:nrow(search_grid), size  = downsample, replace = F), ]
 
   # liftover to start param format
-  liftover_start_params <- function(fstarts, mstarts, start_param_template) {
+  liftover_start_params <- function(fstart, mstart, start_param_template) {
     out <- start_param_template
-    out[names(out) != "m"] <- fstarts
-    out[names(out) == "m"] <- mstarts
+    out[names(out) != "m"] <- fstart
+    out[names(out) == "m"] <- mstart
     return(out)
   }
   search_grid <- search_grid %>%
-    dplyr::mutate(start_params = purrr::map2(fstarts, mstarts, liftover_start_params,
+    dplyr::mutate(start_params = purrr::map2(fstart, mstart, liftover_start_params,
                                              start_param_template = tempstart_params)) %>%
     dplyr::select(c("start_params", "f_learn", "m_learn"))
 
