@@ -1,85 +1,57 @@
-#' @title Find Optimal Gradient Parameters
+#' @title Find Optimal Start Gradient Parameters using Grid Search
 #' @inheritParams deme_inbreeding_spcoef
 #' @param discsteps integer; the number of "steps" in the main `DISCent`
 #' algorithm" \link{deme_inbreeding_spcoef}
-#' @param initstart_params named double vector; vector of start parameters.
-#' @param initf_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
-#' @param initm_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
-#' @param initTemp double; initial temperature for simulated annealer
-#' @param annealsteps integer; the number of "steps" for the simulated annealer
-#' to consider for identifying optimal start and learning parameters
-#' @param SLratio double; probability of searching for start parameters versus the
-#' learning rate
-#' @param FMSratio double; probability of searching for F start parameters versus the
-#' M start parameters
-#' @param FMLratio double; probability of searching for F learning rate versus the
-#' M learning rate
-#' @param demeSwitchSize integer; the number of demes to "move" in simulated annealing
-#' proposal step
+#' @param temptstart_params named double vector; vector of start parameters to serve as template.
 #'
 #' @param fstartmin double; the minimum value for F inbreeding coefficient in the search grid
 #' @param fstartmax double; the maximum value for F inbreeding coefficient in the search grid
-#' @param fstartmin double; the number of values of F inbreeding coefficient to explore in the search grid
-#' @param fstartsteps integer; the number of values between fstartmin and fstartmax to evaluate
+#' @param fstartby integer; the number of values between fstartmin and fstartmax to evaluate
 #'
 #' @param mstartmin double; the minimum value for M global migration rate in the search grid
 #' @param mstartmax double; the maximum value for M global migration rate in the search grid
-#' @param mstartmin double; the number of values of M global migration rate to explore in the search grid
-#' @param mstartsteps integer; the number of values between mstartmin and mstartmax to evaluate
+#' @param mstartby integer; the number of values between mstartmin and mstartmax to evaluate
 #'
 #' @param flearnmin double; the minimum value for F learning rate in the search grid
 #' @param flearnmax double; the maximum value for F learning rate in the search grid
-#' @param flearnmin double; the number of values of F learning rate to explore in the search grid
-#' @param flearnsteps integer; the number of values between flearnmin and flearnmax to evaluate
+#' @param flearnby integer; the number of values between flearnmin and flearnmax to evaluate
 #'
 #' @param mlearnmin double; the minimum value for M learning rate in the search grid
 #' @param mlearnmax double; the maximum value for M learning rate in the search grid
-#' @param mlearnmin double; the number of values of M learning rate to explore in the search grid
-#' @param mlearnsteps integer; the number of values between mlearnmin and mlearnmax to evaluate
+#' @param mlearnby integer; the number of values between mlearnmin and mlearnmax to evaluate
 #'
-#' @details Using simulated annealing, identify the best start parameters for
+#' @param downsample integer; the subset, or the number of a smaller random set of values, that you want to search in the combination grid
+#'
+#' @details Using a discrete grid search, identify the best start parameters for
 #' inbreeding F values and M global migration parameter as well as the best
-#' learning rates. The simulated annealer assumes a discrete search grid
-#' and temperate decreases according to the rate:
-#' t = frac{t}{iter}
-#' The cost in the simulated annealer is given by the final cost after _n_ iterations of
+#' learning rates. We assume that each deme should have the same F start value for computational tractability.
+#'
+#' The final cost for each set of start parameters is given by the gradient descent cost after _n_ iterations of
 #' the main `DISCent` algorithm" \link{deme_inbreeding_spcoef}.
-#' The search grid is defined by the user specified min, max, and steps of the
+#' The search grid is defined by the user specified min, max, and steps ("by") of the
 #' aforementioned parameters.
-#' The various ratios of searching for the "X" parameters versus the "Y" parameters
-#' helps to prioritize exploring one set of parameters versus the other. The default
-#' value of 0.5 leads to equal probability of exploration.
 #' @export
 
 find_grad_params <- function(discdat,
-                             initstart_params = c(),
-                             initf_learningrate = 1e-5,
-                             initm_learningrate = 1e-10,
+                             tempstart_params = c(),
                              momentum = 0.9,
                              discsteps = 1e3,
 
-                             initTemp = 1,
-                             annealsteps = 1e5,
-                             SLratio = 0.5,
-                             FMSratio = 0.5,
-                             FMLratio = 0.5,
-                             demeSwitchSize = 1,
-
                              fstartmin = 0.1,
                              fstartmax = 0.9,
-                             fstartsteps = 100,
+                             fstartby = 100,
 
                              mstartmin = 1e-15,
                              mstartmax = 1e-3,
-                             mstartsteps = 100,
+                             mstartby = 100,
 
                              flearnmin = 1e-15,
                              flearnmax = 1e-2,
-                             flearnsteps = 100,
+                             flearnby = 100,
 
                              mlearnmin = 1e-15,
                              mlearnmax = 1e-2,
-                             mlearnsteps = 100) {
+                             mlearnby = 100) {
 
   #..............................................................
   # Assertions & Catches
@@ -94,165 +66,96 @@ find_grad_params <- function(discdat,
     }
   }
 
-  locats <- names(initstart_params)[!grepl("^m$", names(initstart_params))]
+  locats <- names(tempstart_params)[!grepl("^m$", names(tempstart_params))]
   if (!all(unique(c(discdat$deme1, discdat$deme2)) %in% locats)) {
     stop("You have cluster names in your discdat dataframe that are not included in your start parameters")
   }
-  if (!any(grepl("^m$", names(initstart_params)))) {
+  if (!any(grepl("^m$", names(tempstart_params)))) {
     stop("A m start parameter must be provided (i.e. there must be a vector element name m in your start parameter vector)")
   }
   assert_dataframe(discdat)
-  assert_vector(initstart_params)
-  assert_length(initstart_params, n = (length(unique(c(discdat$deme1, discdat$deme2))) + 1),
+  assert_vector(tempstart_params)
+  assert_length(tempstart_params, n = (length(unique(c(discdat$deme1, discdat$deme2))) + 1),
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
-  sapply(initstart_params[!grepl("^m$", names(initstart_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
-  assert_single_numeric(initf_learningrate)
-  assert_single_numeric(initm_learningrate)
+  sapply(tempstart_params[!grepl("^m$", names(tempstart_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(momentum)
   assert_single_int(discsteps)
 
-  assert_single_int(annealsteps)
-  assert_single_numeric(initTemp)
-  assert_single_numeric(SLratio)
-  assert_single_numeric(FMSratio)
-  assert_single_numeric(FMLratio)
-  assert_single_int(demeSwitchSize)
+  assert_single_int(downsample)
 
   assert_single_numeric(fstartmin)
   assert_single_numeric(fstartmax)
-  assert_single_int(fstartsteps)
+  assert_single_int(fstartby)
 
   assert_single_numeric(mstartmin)
   assert_single_numeric(mstartmax)
-  assert_single_int(mstartsteps)
+  assert_single_int(mstartby)
 
   assert_single_numeric(flearnmin)
   assert_single_numeric(flearnmax)
-  assert_single_int(flearnsteps)
+  assert_single_int(flearnby)
 
   assert_single_numeric(mlearnmin)
   assert_single_numeric(mlearnmax)
-  assert_single_int(mlearnsteps)
+  assert_single_int(mlearnby)
 
   #............................................................
   # look up tables
   #...........................................................
-  fstarts <- seq(from = fstartmin, to = fstartmax, length.out = fstartsteps)
-  mstarts <- seq(from = mstartmin, to = mstartmax, length.out = mstartsteps)
-  flearns <- seq(from = flearnmin, to = flearnmax, length.out = flearnsteps)
-  mlearns <- seq(from = mlearnmin, to = mlearnmax, length.out = mlearnsteps)
+  fstartsvec <- seq(from = fstartmin, to = fstartmax, length.out = fstartby)
+  mstartsvec <- seq(from = mstartmin, to = mstartmax, length.out = mstartby)
+  flearnsvec <- seq(from = flearnmin, to = flearnmax, length.out = flearnby)
+  mlearnsvec <- seq(from = mlearnmin, to = mlearnmax, length.out = mlearnby)
+  search_grid <- expand.grid(fstartsvec, mstartsvec, flearnsvec, mlearnsvec)
+  colnames(search_grid) <- c("fstarts", "mstart", "f_learn", "m_learn")
+  # check downsmaple
+  assert_bounded(downsample, left = 1, right = nrow(search_grid), inclusive_left = TRUE, inclusive_right = TRUE,
+                 message = "Downsample must consider at least 1 search grid parameter, or be less than or equal to the total number of potential search grid combinations")
+  # down sample
+  search_grid <- search_grid[sample(1:nrow(search_grid), size  = downsample, replace = F), ]
 
-  #............................................................
-  # proposal function
-  #...........................................................
-  propose <- function(fstarts, mstarts, flearns, mlearns,
-                      start_params, f_learn, m_learn,
-                      SLratio, FMSratio, FMLratio, demeSwitchSize) {
-    #......................
-    # store
-    #......................
-    start_params <- start_params
-    f_learn <- f_learn
-    m_learn <- m_learn
+  # liftover to start param format
+  liftover_start_params <- function(fstarts, mstarts, start_param_template) {
+    out <- start_param_template
+    out[names(out) != "m"] <- fstarts
+    out[names(out) == "m"] <- mstarts
+    return(out)
+  }
+  search_grid <- search_grid %>%
+    dplyr::mutate(start_params = purrr::map2(fstarts, mstarts, liftover_start_params,
+                                             start_param_template = tempstart_params)) %>%
+    dplyr::select(c("start_params", "f_learn", "m_learn"))
 
-    #......................
-    # determine what is changing and make changes
-    #......................
-    if (rbinom(1, 1, SLratio)) { # change START params
-      if (rbinom(1, 1, FMSratio)) { # change F start
-        ds <- sample(names(start_params)[!grepl("^m$", names(start_params))],
-                     size = demeSwitchSize,
-                     replace = F)
-        start_params[names(start_params) %in% ds] <- sample(fstarts,
-                                                            size = demeSwitchSize,
-                                                            replace = T)
-      } else { # change M start
-        start_params[names(start_params) == "^m$"] <- sample(mstarts,
-                                                             size = 1)
-      }
+  #......................
+  # wrap discent
+  #......................
+  discent_wrapper <- function(discdat,
+                              start_params,
+                              f_learningrate,
+                              m_learningrate,
+                              momentum,
+                              steps){
 
-    } else { # change LEARNING rates
-      if (rbinom(1, 1, FMLratio)) { # change f learning rate
-        f_learn <- sample(flearns, 1)
-      } else { # change m learning rate
-        m_learn <- sample(mlearns, 1)
-      }
-    }
-
-    #......................
-    # send out
-    #......................
-    out <- list(
-      start_params = start_params,
-      f_learn = f_learn,
-      m_learn = m_learn
-    )
+    out <- discent::deme_inbreeding_spcoef(discdat,
+                                           start_params,
+                                           f_learningrate,
+                                           m_learningrate,
+                                           momentum,
+                                           steps,
+                                           report_progress = FALSE,
+                                           return_verbose = FALSE)$cost[discsteps]
     return(out)
   }
 
+  search_grid$cost <- furrr::future_pmap_dbl(search_grid, discent_wrapper,
+                                             discdat = discdat,
+                                             steps = discsteps,
+                                             momentum = momentum)
 
-  #............................................................
-  # simulated annealer
-  #...........................................................
-  # STORAGE
-  costrun <- rep(NA, annealsteps)
-  # INIT
-  Temp <- initTemp
-  currprop <- list(start_params = initstart_params,
-                   f_learn = initf_learningrate,
-                   m_learn = initm_learningrate)
-  currcost <- discent::deme_inbreeding_spcoef(discdat,
-                                              start_params = currprop$start_params,
-                                              f_learningrate = currprop$f_learn,
-                                              m_learningrate = currprop$m_learn,
-                                              momentum = momentum,
-                                              steps = discsteps,
-                                              report_progress = FALSE,
-                                              return_verbose = FALSE)$cost[discsteps]
 
-  # RUN
-  for(i in 1:annealsteps) {
-    # PROPOSE
-    newprop <- propose(start_params = currprop$start_params,
-                       f_learn = currprop$f_learn,
-                       m_learn = currprop$m_learn, # NB currprop here is only for storage
-                       fstarts, mstarts, flearns, mlearns, # R scoping takes care of this redundancy
-                       SLratio, FMSratio, FMLratio, demeSwitchSize)
-    # CALC COST
-    newcost <- discent::deme_inbreeding_spcoef(discdat,
-                                               start_params = newprop$start_params,
-                                               f_learningrate = newprop$f_learn,
-                                               m_learningrate = newprop$m_learn,
-                                               momentum = momentum,
-                                               steps = discsteps,
-                                               report_progress = FALSE,
-                                               return_verbose = FALSE)$cost[discsteps]
-    # ACCEPT MOVE?
-    u <- runif(1)
-    p <- min(
-      exp(-(newcost-currcost))/Temp,
-      1)
-    accept <- u <= p
-
-    ## UPDATES
-    currprop <- if(accept){newprop}else{currprop}
-    currcost <- if(accept){newcost}else{currcost}
-    costrun[i] <- currcost
-    # update temp
-    Temp <- initTemp/i
-
-  }
-
-  #............................................................
-  # return
-  #...........................................................
-  out <- list(
-    optimalParams = currprop,
-    costrun = costrun
-  )
-
-  return(out)
+  # out with search grid result
+  return(search_grid)
 }
 
 
