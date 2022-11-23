@@ -6,7 +6,7 @@
 #' @param initf_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
 #' @param initm_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
 #' @param initTemp double; initial temperature for simulated annealer
-#' @param annealstep integer; the number of "steps" for the simulated annealer
+#' @param annealsteps integer; the number of "steps" for the simulated annealer
 #' to consider for identifying optimal start and learning parameters
 #' @param SLratio double; probability of searching for start parameters versus the
 #' learning rate
@@ -20,19 +20,22 @@
 #' @param fstartmin double; the minimum value for F inbreeding coefficient in the search grid
 #' @param fstartmax double; the maximum value for F inbreeding coefficient in the search grid
 #' @param fstartmin double; the number of values of F inbreeding coefficient to explore in the search grid
+#' @param fstartsteps integer; the number of values between fstartmin and fstartmax to evaluate
 #'
 #' @param mstartmin double; the minimum value for M global migration rate in the search grid
 #' @param mstartmax double; the maximum value for M global migration rate in the search grid
 #' @param mstartmin double; the number of values of M global migration rate to explore in the search grid
+#' @param mstartsteps integer; the number of values between mstartmin and mstartmax to evaluate
 #'
 #' @param flearnmin double; the minimum value for F learning rate in the search grid
 #' @param flearnmax double; the maximum value for F learning rate in the search grid
 #' @param flearnmin double; the number of values of F learning rate to explore in the search grid
+#' @param flearnsteps integer; the number of values between flearnmin and flearnmax to evaluate
 #'
 #' @param mlearnmin double; the minimum value for M learning rate in the search grid
 #' @param mlearnmax double; the maximum value for M learning rate in the search grid
 #' @param mlearnmin double; the number of values of M learning rate to explore in the search grid
-#'
+#' @param mlearnsteps integer; the number of values between mlearnmin and mlearnmax to evaluate
 #'
 #' @details Using simulated annealing, identify the best start parameters for
 #' inbreeding F values and M global migration parameter as well as the best
@@ -237,7 +240,8 @@ find_grad_params <- function(discdat,
     currcost <- if(accept){newcost}else{currcost}
     costrun[i] <- currcost
     # update temp
-    Temp <- Temp/i
+    Temp <- initTemp/i
+
   }
 
   #............................................................
