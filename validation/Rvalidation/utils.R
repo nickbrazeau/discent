@@ -8,7 +8,7 @@ sub_maestro <- function(rettargets, lvl) {
 
 
 #' @title Basic utility function to pull together start param results
-find_best_start_param <- function(combined_start) {
+find_best_start_param <- function(combined_start, discdat) {
   optimstart <- combined_start %>%
     dplyr::group_by(modname) %>%
     dplyr::filter(cost == min(cost))
