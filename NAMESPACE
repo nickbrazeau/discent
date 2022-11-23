@@ -2,8 +2,8 @@
 
 export("%>%")
 export(deme_inbreeding_spcoef)
-export(drawDistMat)
-export(sim_IBDIBD)
+export(expand_pairwise)
+export(find_grad_params)
 importFrom(Rcpp,sourceCpp)
 importFrom(magrittr,"%>%")
 useDynLib(discent, .registration = TRUE)

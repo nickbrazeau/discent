@@ -1,9 +1,7 @@
-test_that("model runs works", {
-
+test_that("Simulated Annealer Tuner works as expected", {
   #............................................................
   # simulator that is not generalizable
   #...........................................................
-  #------------------------------------------------
   #' @title Truncated Normal Distrubtion
   #' @noRd
   rnorm_interval <- function(mean, sd, a=0, b=1) {
@@ -31,7 +29,6 @@ test_that("model runs works", {
     ret <- ret + a
     return(ret)
   }
-
 
 
 
@@ -126,27 +123,63 @@ test_that("model runs works", {
 
   }
 
+
   #............................................................
   # actual test
   #...........................................................
-  # set seed
-  set.seed(48)
-  # sim data
-  dat <- sim_IBDIBD(demesize = c(5,5), distmat = matrix(c(0,1e4,1e4,0), nrow = 2),
-                    rate = 1e-3, Ft = 0.5)
-  # start params
-  our_start_params <- rep(0.2, 2)
-  names(our_start_params) <- 1:2
-  our_start_params <- c(our_start_params, "m" = 1e-3)
-  # run model
-  inputdisc <- dat %>%
+  # sim dat
+  distmatsim <- matrix(runif(9, min = 0, max = 1e2), nrow = 3)
+  diag(distmatsim) <- 0
+  distmatsim[lower.tri(distmatsim)] <- t(distmatsim)[lower.tri(distmatsim)]
+  dat <- sim_IBDIBD(demesize = c(2,2,2), distmat = distmatsim,
+                    rate = 1e-2, Ft = 0.3)
+  dat <- dat %>%
     dplyr::filter(deme1 != deme2)
-  mod <- discent::deme_inbreeding_spcoef(discdat = inputdisc,
-                                         start_params = our_start_params,
-                                         f_learningrate = 1e-5,
-                                         m_learningrate = 1e-10,
-                                         momentum = 0.9,
-                                         steps = 1e2,
-                                         report_progress = TRUE)
-  testthat::expect_length(mod, 4)
+  # start params
+  our_start_params <- rep(0.2, 3)
+  names(our_start_params) <- 1:3
+  our_start_params <- c(our_start_params, "m" = 1e-5)
+
+  #......................
+  # simulated annealer
+  #......................
+  ret <- discent::find_grad_params(discdat = dat,
+                                   initstart_params = our_start_params,
+                                   initf_learningrate = 1e-5,
+                                   initm_learningrate = 1e-10,
+                                   momentum = 0.9,
+                                   discsteps = 1e1,
+
+                                   initTemp = 1,
+                                   annealstep = 1e1,
+                                   SLratio = 0.8,
+                                   FMSratio = 0.8,
+                                   FMLratio = 0.5,
+                                   demeSwitchSize = 3,
+
+                                   fstartmin = 0.1,
+                                   fstartmax = 0.9,
+                                   fstartsteps = 100,
+
+                                   mstartmin = 1e-6,
+                                   mstartmax = 1,
+                                   mstartsteps = 100,
+
+                                   flearnmin = 1e-15,
+                                   flearnmax = 1e-2,
+                                   flearnsteps = 100,
+
+                                   mlearnmin = 1e-20,
+                                   mlearnmax = 1e-8,
+                                   mlearnsteps = 100)
+
+  testthat::expect_length(ret, 2)
+  testthat::expect_vector(ret$optimalParams$start_params)
+  testthat::expect_gte(min(ret$optimalParams$start_params[!grepl("^m$", names(ret$optimalParams$start_params))]),
+                       0)
+  testthat::expect_type(ret$optimalParams$start_params[grepl("^m$", names(ret$optimalParams$start_params))],
+                        "double")
+  testthat::expect_gte(ret$optimalParams$f_learn, 0)
+  testthat::expect_gte(ret$optimalParams$m_learn, 0)
+
 })

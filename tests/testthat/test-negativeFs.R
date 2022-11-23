@@ -1,9 +1,13 @@
-test_that("model runs works", {
+test_that("No More negative Fs with logit", {
+  ## .................................................................................
+  ## Notes: Produced negative value with seed on previous versions
+  ## .................................................................................
+
+
 
   #............................................................
   # simulator that is not generalizable
   #...........................................................
-  #------------------------------------------------
   #' @title Truncated Normal Distrubtion
   #' @noRd
   rnorm_interval <- function(mean, sd, a=0, b=1) {
@@ -31,7 +35,6 @@ test_that("model runs works", {
     ret <- ret + a
     return(ret)
   }
-
 
 
 
@@ -126,27 +129,43 @@ test_that("model runs works", {
 
   }
 
+
+
   #............................................................
   # actual test
   #...........................................................
   # set seed
   set.seed(48)
-  # sim data
-  dat <- sim_IBDIBD(demesize = c(5,5), distmat = matrix(c(0,1e4,1e4,0), nrow = 2),
-                    rate = 1e-3, Ft = 0.5)
-  # start params
-  our_start_params <- rep(0.2, 2)
-  names(our_start_params) <- 1:2
-  our_start_params <- c(our_start_params, "m" = 1e-3)
-  # run model
-  inputdisc <- dat %>%
+  #......................
+  # sim
+  #......................
+  distmat <- matrix(c(0,100,200,100,0,300,200,300,0), nrow = 3, ncol = 3)
+  input <-  sim_IBDIBD(demesize = c(3,5,5),
+                                distmat = distmat,
+                                rate = 1e-2,
+                                Ft = 0.3)
+  input <- input %>%
     dplyr::filter(deme1 != deme2)
-  mod <- discent::deme_inbreeding_spcoef(discdat = inputdisc,
+
+  #......................
+  # run discent
+  #......................
+  our_start_params <- rep(0.2, 3)
+  names(our_start_params) <- 1:3
+  our_start_params <- c(our_start_params, "m" = 1e-5)
+  ret <- discent::deme_inbreeding_spcoef(discdat = input,
                                          start_params = our_start_params,
                                          f_learningrate = 1e-5,
                                          m_learningrate = 1e-10,
                                          momentum = 0.9,
-                                         steps = 1e2,
-                                         report_progress = TRUE)
-  testthat::expect_length(mod, 4)
+                                         steps = 1e4,
+                                         report_progress = T,
+                                         return_verbose = T)
+
+  # Fis all positive
+  testthat::expect_gte(min(ret$Final_Fis), 0)
+
+
+
+
 })

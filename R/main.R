@@ -1,10 +1,10 @@
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
 #' @param discdat dataframe; The genetic-geographic data by deme (K)
-#' @param start_params named numeric vector; vector of start parameters.
-#' @param f_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
-#' @param m_learningrate numeric; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
-#' @param momentum numeric; gamma parameter for momentum for adaptive learning rate
-#' @param steps numeric; the number of "steps" as we move down the gradient
+#' @param start_params named double vector; vector of start parameters.
+#' @param f_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
+#' @param m_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
+#' @param momentum double; gamma parameter for momentum for adaptive learning rate
+#' @param steps integer; the number of "steps" as we move down the gradient
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
@@ -22,6 +22,9 @@
 #'              (i.e. samples are sourced from the same location). The expected pairwise relationship
 #'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
 #'              coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
+#' @details Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
+#' logit transformation internally in the code. Similarly, the "m" global migration rate cannot be negative and is bounded to be positive by
+#' through taking the absolute value in every iteration.
 #' @export
 #'
 
@@ -47,11 +50,11 @@ deme_inbreeding_spcoef <- function(discdat,
     }
   }
 
-  locats <- names(start_params)[!grepl("m", names(start_params))]
+  locats <- names(start_params)[!grepl("^m$", names(start_params))]
   if (!all(unique(c(discdat$deme1, discdat$deme2)) %in% locats)) {
     stop("You have cluster names in your discdat dataframe that are not included in your start parameters")
   }
-  if (!any(grepl("m", names(start_params)))) {
+  if (!any(grepl("^m$", names(start_params)))) {
     stop("A m start parameter must be provided (i.e. there must be a vector element name m in your start parameter vector)")
   }
   assert_dataframe(discdat)
@@ -59,12 +62,17 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_length(start_params, n = (length(unique(c(discdat$deme1, discdat$deme2))) + 1),
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
-  sapply(start_params[!grepl("m", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
+  sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(f_learningrate)
   assert_single_numeric(m_learningrate)
   assert_single_numeric(momentum)
   assert_single_int(steps)
   assert_single_logical(report_progress)
+
+  # no missing
+  if(sum(is.na(discdat)) != 0) {
+    stop("discdat dataframe cannot have missing values")
+  }
 
   #......................
   # check for self comparisons
@@ -93,17 +101,17 @@ deme_inbreeding_spcoef <- function(discdat,
 
   # transform data w/ logit
   discdat <- discdat %>%
-    dplyr::mutate(gendist = discent:::logit(gendist),
-                  gendist = ifelse(gendist == Inf, 6, gendist), # reasonable bounds on logit
-                  gendist = ifelse(gendist == -Inf, -6, gendist) # reasonable bounds on logit
-    )
+    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
+                                   ifelse(gendist < 0.001, 0.001,
+                                          gendist))) %>% # reasonable bounds on logit
+    dplyr::mutate(gendist = discent:::logit(gendist))
   # transform start parameters w/ logit
   start_params[names(start_params) != "m"] <- discent:::logit(start_params[names(start_params) != "m"])
 
 
   # get genetic data by pairs through efficient nest
   gendist <- discdat %>%
-    discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
+    discent::expand_pairwise(.) %>% # get all pairwise for full matrix
     dplyr::select(c("deme1", "deme2", "gendist")) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%
     tidyr::nest(.) %>%
@@ -157,7 +165,7 @@ deme_inbreeding_spcoef <- function(discdat,
 
   args <- list(gendist = as.vector(gendist_arr),
                geodist = as.vector(geodist_mat),
-               fvec = unname( start_params[!grepl("m", names(start_params))] ),
+               fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
                n_Kpairmax = n_Kpairmax,
                m = unname(start_params["m"]),
                f_learningrate = f_learningrate,
@@ -185,7 +193,7 @@ deme_inbreeding_spcoef <- function(discdat,
       cost = output_raw$cost,
       Final_Fis = discent:::expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m
-      )
+    )
 
   } else {
     output <- list(
