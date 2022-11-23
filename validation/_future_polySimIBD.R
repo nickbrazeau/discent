@@ -11,16 +11,15 @@ library(tidyverse)
 library(furrr)
 library(future)
 library(future.batchtools)
-library(here)
 library(polySimIBD)
-source("validation/Rvalidation/polysim_wrappers.R")
-source("validation/Rvalidation/utils.R")
+source("Rvalidation/polysim_wrappers.R")
+source("Rvalidation/utils.R")
 
 #............................................................
 # read in and make polysim IBD dataframe
 #...........................................................
 reps <- 100
-maestro <- readRDS("validation/mkdata/simulation_maestro.RDS")
+maestro <- readRDS("mkdata/simulation_maestro.RDS")
 maestro <- lapply(1:reps, function(x){
   maestro <- maestro %>%
     dplyr::mutate(rep = x) %>%
@@ -28,7 +27,7 @@ maestro <- lapply(1:reps, function(x){
   return(maestro)}
 ) %>%
   dplyr::bind_rows()
-locatcomb <- readRDS("validation/mkdata/simdata/locatcombo.rds")
+locatcomb <- readRDS("mkdata/simdata/locatcombo.rds")
 
 
 #............................................................
