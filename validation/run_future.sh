@@ -9,5 +9,8 @@
 #SBATCH --time=36:00:00              # Wall time limit (days-hrs:min:sec)
 #SBATCH --output=polysim_%j.log     # Path to the standard output and error files
 
-R CMD BATCH _future_polySimIBD.R
+## Uncomment line to run each step of future
+## R CMD BATCH _future_polySimIBD.R
+## R CMD BATCH _future_searchgrid.R
+## R CMD BATCH _future_discent.R
 
