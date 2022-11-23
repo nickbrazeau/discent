@@ -44,7 +44,7 @@ simulation_df$demeNames <- list(colnames(simulation_df$migmat[[1]]))
 
 # varying params
 Nbasic <- rep(25, nDemes)
-Nvary <- rep(c(5,10,25,50,100), sqrt(nDemes))
+Nvary <- rep(c(5,10,18,25,50,75,100,150,225,300), sqrt(nDemes))
 simulation_df$N <- NA
 simulation_df$N[1:3] <- list(Nbasic)
 simulation_df$N[4] <- list(Nvary)

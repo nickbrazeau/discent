@@ -20,8 +20,8 @@ migmatdf <- tibble::tibble(modname = c("IsoByDist",
 #............................................................
 ##### PART 0: Make a Square Matrix #####
 #...........................................................
-nCell <- 25
-coords <- round(seq(1, nCell, by = 5))
+nCell <- 100
+coords <- round(seq(1, nCell, by = 10))
 latticemodel <- expand.grid(coords, coords)
 plot(latticemodel)
 colnames(latticemodel) <- c("longnum", "latnum")
@@ -71,7 +71,7 @@ locatcomb <- locatcomb %>%
   dplyr::left_join(., latticemodel_y, by = "deme2")
 
 # expect this to be lower tri + upper tri + diagonals
-goodegg:::assert_eq(nrow(locatcomb), choose(25,2)*2 + 25)
+goodegg:::assert_eq(nrow(locatcomb), choose(100,2)*2 + 100)
 # save out for downstream
 dir.create("validation/mkdata/simdata/", recursive = T)
 saveRDS(locatcomb, "validation/mkdata/simdata/locatcombo.rds")
@@ -108,7 +108,7 @@ migmatdf$migmat[migmatdf$modname == "IsoByDist"] <- list(1/make_wide_dist_mat(lo
 #............................................................
 ##### PART 2: Lattice Matrix #####
 #...........................................................
-nInds <- 25
+nInds <- 100
 nMov <- sqrt(nInds)
 latticemigmat <- matrix(0, nInds, nInds)
 # deme looks up = row + sqrt(nInds) in square
