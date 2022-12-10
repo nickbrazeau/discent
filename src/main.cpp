@@ -1,5 +1,6 @@
 #include "main.h"
-#include "misc_v2.h"
+#include "misc_v15.h"
+#include "probability_v17.h"
 using namespace std;
 
 
@@ -47,6 +48,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   int steps = rcpp_to_int(args["steps"]);
   double f_learningrate = rcpp_to_double(args["f_learningrate"]);
   double m_learningrate = rcpp_to_double(args["m_learningrate"]);
+  double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
+  double m_upperbound = rcpp_to_double(args["m_upperbound"]);
   double momentum = rcpp_to_double(args["momentum"]);
   bool report_progress = rcpp_to_bool(args["report_progress"]);
   Rcpp::Function update_progress = args_functions["update_progress"];
@@ -167,7 +170,19 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
    // update M
   // m_update[step] = m_learningrate * mgrad;
    m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
-   m = abs(m - m_update[step]); // bound m so that it can only explore distance isolation (repulsion versus attraction)
+   // check bounds on m
+   // will reflect with normal based on magnitude + standard normal sd it is off to proper interval; NB also want to bound m so that it can only explore distance isolation (repulsion versus attraction)
+   if (m < m_lowerbound) {
+     m = rnorm1_interval(m, 1, m_lowerbound, m+m_lowerbound); // m is lt lower bound, so can never be gr than upper bound
+   }
+   if (m > m_upperbound) {
+     double a;
+     a = m_upperbound * (1/(m - m_upperbound)); // fraction will always be lt one
+     if (a < m_lowerbound) { // catch too small
+       a = m_lowerbound;
+     }
+     m = rnorm1_interval(m, 1, a, m_upperbound);
+   }
    // store for out
    m_run[step] = m;
 
