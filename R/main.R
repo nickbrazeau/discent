@@ -5,6 +5,8 @@
 #' @param m_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
 #' @param momentum double; gamma parameter for momentum for adaptive learning rate
 #' @param steps integer; the number of "steps" as we move down the gradient
+#' @param m_lowerbound double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
+#' @param m_upperbound double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
@@ -32,6 +34,8 @@ deme_inbreeding_spcoef <- function(discdat,
                                    start_params = c(),
                                    f_learningrate = 1e-5,
                                    m_learningrate = 1e-10,
+                                   m_lowerbound = 0,
+                                   m_upperbound = Inf,
                                    momentum = 0.9,
                                    steps = 1e3,
                                    report_progress = TRUE,
@@ -66,6 +70,9 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_single_numeric(f_learningrate)
   assert_single_numeric(m_learningrate)
   assert_single_numeric(momentum)
+  assert_single_numeric(m_lowerbound)
+  assert_single_numeric(m_upperbound)
+  assert_gr(m_upperbound, m_lowerbound)
   assert_single_int(steps)
   assert_single_logical(report_progress)
 
@@ -170,6 +177,8 @@ deme_inbreeding_spcoef <- function(discdat,
                m = unname(start_params["m"]),
                f_learningrate = f_learningrate,
                m_learningrate = m_learningrate,
+               m_lowerbound = m_lowerbound,
+               m_upperbound = m_upperbound,
                momentum = momentum,
                steps = steps,
                report_progress = report_progress
