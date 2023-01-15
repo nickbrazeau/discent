@@ -3,7 +3,6 @@
 #include "probability_v17.h"
 using namespace std;
 
-
 //------------------------------------------------
 // Perform gradient descent to calculate deme Fi's
 // [[Rcpp::export]]
@@ -167,7 +166,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
      // store for out
      fi_run[step][i] = fvec[i];
    }
-   // update M
+   // Calculate the update for M
   // m_update[step] = m_learningrate * mgrad;
    m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
    // check bounds on m
@@ -183,6 +182,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
      }
      m = rnorm1_interval(m, 1, a, m_upperbound);
    }
+   // Apply M update
+    m = m - m_update[step];
    // store for out
    m_run[step] = m;
 
