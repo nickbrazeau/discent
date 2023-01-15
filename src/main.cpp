@@ -8,7 +8,7 @@ using namespace std;
 // [[Rcpp::export]]
 Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
   // overflow cost parameter
-  const double OVERFLO_DOUBLE = DBL_MAX/1000000.0;
+  const double OVERFLO_DOUBLE = DBL_MAX/1000.0;
   // extract proposed proposed Inb. Coeff. (Fis) for each K (deme)
   vector<double> fvec = rcpp_to_vector_double(args["fvec"]);
   // extract proposed global M of migration
@@ -166,7 +166,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
      // store for out
      fi_run[step][i] = fvec[i];
    }
-   // Calculate the update for M
+   // calculate the update for M
   // m_update[step] = m_learningrate * mgrad;
    m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
    // check bounds on m
@@ -182,7 +182,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
      }
      m = rnorm1_interval(m, 1, a, m_upperbound);
    }
-   // Apply M update
+   // apply M update
     m = m - m_update[step];
    // store for out
    m_run[step] = m;
