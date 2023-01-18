@@ -137,7 +137,7 @@ test_that("M is properly bounded", {
   # start params
   our_start_params <- rep(0.2, 2)
   names(our_start_params) <- 1:2
-  our_start_params <- c(our_start_params, "m" = 1e-3)
+  our_start_params <- c(our_start_params, "m" = 1e-2)
   # run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
@@ -145,11 +145,13 @@ test_that("M is properly bounded", {
                                 start_params = our_start_params,
                                 f_learningrate = 1e-5,
                                 m_learningrate = 1e-8,
-                                m_lowerbound = 0.98,
+                                m_lowerbound = 1e-3,
                                 m_upperbound = 1,
                                 momentum = 0.9,
                                 steps = 1e2,
-                                report_progress = TRUE)
-  testthat::expect_gte(min(mod$m_run), 0.98)
+                                report_progress = TRUE,
+                                return_verbose = TRUE)
+  testthat::expect_gte(min(mod$m_run), 1e-3)
   testthat::expect_lte(max(mod$m_run), 1)
+  testthat::expect_gt(length(unique(mod$m_run)), 1)
 })
