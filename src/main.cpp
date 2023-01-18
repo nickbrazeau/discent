@@ -1,6 +1,5 @@
 #include "main.h"
 #include "misc_v15.h"
-#include "probability_v17.h"
 using namespace std;
 
 //------------------------------------------------
@@ -158,58 +157,47 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // https://towardsdatascience.com/gradient-descent-explained-9b953fc0d2c
     //-------------------------------
     // update F
-   for (int i = 0; i < n_Demes; i++){
-     // update fs
-     // fi_update[step][i] = f_learningrate * fgrad[i];
-     fi_update[step][i] = f_learningrate * fgrad[i] + momentum * fi_update[step-1][i];
-     fvec[i] = fvec[i] - fi_update[step][i];
-     // store for out
-     fi_run[step][i] = fvec[i];
-   }
-   // calculate the update for M
-  // m_update[step] = m_learningrate * mgrad;
-   m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
-   // check bounds on m
-   // will reflect with normal based on magnitude + standard normal sd it is off to proper interval; NB also want to bound m so that it can only explore distance isolation (repulsion versus attraction)
-   if (m < m_lowerbound) {
-     m = rnorm1_interval(m, 1, m_lowerbound, m+m_lowerbound); // m is lt lower bound, so can never be gr than upper bound
-   }
-   if (m > m_upperbound) {
-     double a;
-     a = m_upperbound * (1/(m - m_upperbound)); // fraction will always be lt one
-     if (a < m_lowerbound) { // catch too small
-       a = m_lowerbound;
-     }
-     m = rnorm1_interval(m, 1, a, m_upperbound);
-   }
-   // apply M update
+    for (int i = 0; i < n_Demes; i++){
+      // update fs
+      // fi_update[step][i] = f_learningrate * fgrad[i];
+      fi_update[step][i] = f_learningrate * fgrad[i] + momentum * fi_update[step-1][i];
+      fvec[i] = fvec[i] - fi_update[step][i];
+      // store for out
+      fi_run[step][i] = fvec[i];
+    }
+    // calculate the update for M
+    // m_update[step] = m_learningrate * mgrad;
+    m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
+    // apply M update
     m = m - m_update[step];
-   // store for out
-   m_run[step] = m;
+    // check bounds on m
+    // will reflect with normal based on magnitude + standard normal sd it is off to proper interval; NB also want to bound m so that it can only explore distance isolation (repulsion versus attraction)
+    if (m < m_lowerbound) {
+      m = m_lowerbound;
+    } else if (m > m_upperbound) {
+      m = m_upperbound;
+    }
+    // store for out
+    m_run[step] = m;
 
-
-   //-------------------------------
-   // get updated cost for given F and M
-   //-------------------------------
-   // cost is for every pair in the upper triangle
-   for (int i = 0; i < (n_Demes-1); i++) {
-     for (int j = i+1; j < n_Demes; j++) {
-       for (int k = 0; k < n_Kpairmax; k++){
-         if (gendist_arr[i][j][k] != -1) {
-           cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-             exp(-m*geodist_mat[i][j])), 2);
-         }
-       }
-     }
-   }
-   // Catch and Cap Extreme Costs
-   if (cost[step] > OVERFLO_DOUBLE) {
-     cost[step] = OVERFLO_DOUBLE;
-   }
-
-
-
-
+    //-------------------------------
+    // get updated cost for given F and M
+    //-------------------------------
+    // cost is for every pair in the upper triangle
+    for (int i = 0; i < (n_Demes-1); i++) {
+      for (int j = i+1; j < n_Demes; j++) {
+        for (int k = 0; k < n_Kpairmax; k++){
+          if (gendist_arr[i][j][k] != -1) {
+            cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
+              exp(-m*geodist_mat[i][j])), 2);
+          }
+        }
+      }
+    }
+    // Catch and Cap Extreme Costs
+    if (cost[step] > OVERFLO_DOUBLE) {
+      cost[step] = OVERFLO_DOUBLE;
+    }
   } // end steps
 
   //-------------------------------
