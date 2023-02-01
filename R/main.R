@@ -199,6 +199,8 @@ deme_inbreeding_spcoef <- function(discdat,
       fi_run = expit(do.call("rbind", output_raw$fi_run)),
       m_update = output_raw$m_update,
       fi_update = do.call("rbind", output_raw$fi_update),
+      m_gradtraj = output_raw$m_gradtraj,
+      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj),
       cost = output_raw$cost,
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m
