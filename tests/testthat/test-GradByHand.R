@@ -148,6 +148,7 @@ test_that("Fi gradient by hand", {
     dplyr::filter(deme1 != deme2) %>%
     dplyr::filter(deme1 == 1 | deme2 == 1)
 
+
   input <- input %>%
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
@@ -169,6 +170,7 @@ test_that("Fi gradient by hand", {
                                          m_learningrate = 1e-15,
                                          momentum = 0.9,
                                          steps = 1e3,
+                                         standardize_geodist = F,
                                          report_progress = T,
                                          return_verbose = T)
   # back out gradient for F1
@@ -356,6 +358,7 @@ test_that("M gradient by hand", {
                                          m_learningrate = 1e-15,
                                          momentum = 0.9,
                                          steps = 1e3,
+                                         standardize_geodist = F,
                                          report_progress = T,
                                          return_verbose = T)
   # back out gradient for M
