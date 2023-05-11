@@ -7,6 +7,7 @@
 #' @param steps integer; the number of "steps" as we move down the gradient
 #' @param m_lowerbound double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param m_upperbound double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
+#' @param standardize_geodist boolean; whether geographic distances between demes should be (mean-) standardized. Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
@@ -38,6 +39,7 @@ deme_inbreeding_spcoef <- function(discdat,
                                    m_upperbound = Inf,
                                    momentum = 0.9,
                                    steps = 1e3,
+                                   standardize_geodist = TRUE,
                                    report_progress = TRUE,
                                    return_verbose = FALSE){
 
@@ -75,6 +77,7 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_gr(m_upperbound, m_lowerbound)
   assert_single_int(steps)
   assert_single_logical(report_progress)
+  assert_single_logical(standardize_geodist)
 
   # no missing
   if(sum(is.na(discdat)) != 0) {
@@ -88,7 +91,6 @@ deme_inbreeding_spcoef <- function(discdat,
          message = "No within-deme sample comparisons allowed. Geodistance should not be 0")
   mapply(assert_neq, discdat$deme1, discdat$deme2,
          message = "No within-deme sample comparisons allowed. Locat names should not be the same")
-
 
   #..............................................................
   # setup and create progress bars
@@ -138,6 +140,13 @@ deme_inbreeding_spcoef <- function(discdat,
   gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
   for (i in 1:nrow(gendist)) {
     gendist_arr[gendist$i[i], gendist$j[i], 1:nrow(gendist$data[[i]])] <- unname(unlist(gendist$data[[i]]))
+  }
+
+  # standardize geodistances per user; NB have already removed self comparisons, so no 0s
+  if (standardize_geodist) {
+    mndist <- mean(discdat$geodist)
+    discdat <- discdat %>%
+      dplyr::mutate(geodist = geodist/mndist)
   }
 
   # put geo information into distance matrix
@@ -199,6 +208,8 @@ deme_inbreeding_spcoef <- function(discdat,
       fi_run = expit(do.call("rbind", output_raw$fi_run)),
       m_update = output_raw$m_update,
       fi_update = do.call("rbind", output_raw$fi_update),
+      m_gradtraj = output_raw$m_gradtraj,
+      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj),
       cost = output_raw$cost,
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m

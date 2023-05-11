@@ -60,6 +60,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   vector<double> cost(steps);
   vector<double> m_run(steps);
   vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
+  vector<double> m_gradtraj(steps);
+  vector<vector<double>> fi_gradtraj(steps, vector<double>(n_Demes));
 
   //-------------------------------
   // initialize storage vectors
@@ -161,6 +163,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       fvec[i] = fvec[i] - fi_update[step][i];
       // store for out
       fi_run[step][i] = fvec[i];
+      fi_gradtraj[step][i] = fgrad[i];
     }
     // calculate the update for M
     // m_update[step] = m_learningrate * mgrad;
@@ -176,7 +179,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     }
     // store for out
     m_run[step] = m;
-
+    m_gradtraj[step] = mgrad;
     //-------------------------------
     // get updated cost for given F and M
     //-------------------------------
@@ -205,6 +208,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
                             Rcpp::Named("fi_run") = fi_run,
                             Rcpp::Named("m_update") = m_update,
                             Rcpp::Named("fi_update") = fi_update,
+                            Rcpp::Named("m_gradtraj") = m_gradtraj,
+                            Rcpp::Named("fi_gradtraj") = fi_gradtraj,
                             Rcpp::Named("cost") = cost,
                             Rcpp::Named("Final_Fis") = fvec,
                             Rcpp::Named("Final_m") = m);
