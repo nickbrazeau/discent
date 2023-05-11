@@ -140,7 +140,7 @@ test_that("Fi gradient by hand", {
 
   # manual gradient
   fgrad <- function(gendist, geodist, fi, fj, m) {
-    -gendist * exp(-geodist * m) + ((fi+fj)/2)*exp(-2*geodist*m)
+    -gendist * exp(-geodist/m) + ((fi+fj)/2) * exp(-2*geodist/m)
   }
 
   # tidy date and calculate gradient for F1
@@ -324,8 +324,8 @@ test_that("M gradient by hand", {
 
   # manual gradient
   mgrad <- function(gendist, geodist, fi, fj, m) {
-    2*gendist*geodist * ((fi+fj)/2)*exp(-geodist*m) -
-      2*geodist*((fi^2 + 2*fi*fj + fj^2)/4)*exp(-2*geodist*m)
+    (-2*gendist*geodist)/(m^2) * ((fi+fj)/2) * exp(-geodist/m) -
+      (2*geodist)/(m^2) * ((fi^2 + 2*fi*fj + fj^2)/4) * exp(-2*geodist/m)
   }
 
   # tidy date and calculate gradient for M
