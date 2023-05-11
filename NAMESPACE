@@ -2,7 +2,6 @@
 
 export("%>%")
 export(deme_inbreeding_spcoef)
-export(find_grad_params)
 importFrom(Rcpp,sourceCpp)
 importFrom(magrittr,"%>%")
 useDynLib(discent, .registration = TRUE)

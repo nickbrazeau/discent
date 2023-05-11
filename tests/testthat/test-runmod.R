@@ -149,5 +149,5 @@ test_that("model runs works", {
                                          steps = 1e2,
                                          report_progress = TRUE,
                                          return_verbose = TRUE)
-  testthat::expect_length(mod, 8)
+  testthat::expect_length(mod, 10)
 })
