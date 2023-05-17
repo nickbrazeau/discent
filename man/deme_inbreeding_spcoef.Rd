@@ -7,11 +7,13 @@
 deme_inbreeding_spcoef(
   discdat,
   start_params = c(),
-  f_learningrate = 1e-05,
-  m_learningrate = 1e-10,
+  f_learningrate = 0.001,
+  m_learningrate = 1e-06,
   m_lowerbound = 0,
   m_upperbound = Inf,
-  momentum = 0.9,
+  b1 = 0.9,
+  b2 = 0.999,
+  e = 1e-08,
   steps = 1000,
   standardize_geodist = TRUE,
   report_progress = TRUE,
@@ -31,7 +33,11 @@ deme_inbreeding_spcoef(
 
 \item{m_upperbound}{double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
 
-\item{momentum}{double; gamma parameter for momentum for adaptive learning rate}
+\item{b1}{double; Exponential decay rates for the first moment estimate}
+
+\item{b2}{double; Exponential decay rates for the second moment estimate}
+
+\item{e}{double; Epsilon (error) for stability in the Adam optimization algorithm}
 
 \item{steps}{integer; the number of "steps" as we move down the gradient}
 
@@ -62,6 +68,8 @@ have a name that we can match on for the starting relatedness paramerts). In add
 you must provide a start parameter for "m".
 
 Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
-logit transformation internally in the code. Similarly, the "m" global migration rate cannot be negative and is bounded to be positive by
-through taking the absolute value in every iteration.
+logit transformation internally in the code.
+
+Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
+for moment decay rates, epsilon, and learning rates are taken from DP Kingma, 2014.
 }
