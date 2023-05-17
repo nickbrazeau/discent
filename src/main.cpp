@@ -156,7 +156,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
               mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
-              2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
+                2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
             }
           }
         }
@@ -178,6 +178,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
 
       // calculate and apply fs upate
       fvec[i] = fvec[i] - f_learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
+
       // store for out
       fi_run[step][i] = fvec[i];
       fi_gradtraj[step][i] = fgrad[i];
@@ -210,7 +211,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
             cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-              exp(-m*geodist_mat[i][j])), 2);
+              exp(-geodist_mat[i][j] / m)), 2);
           }
         }
       }
