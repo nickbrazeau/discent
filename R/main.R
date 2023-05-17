@@ -9,7 +9,7 @@
 #' @param steps integer; the number of "steps" as we move down the gradient
 #' @param m_lowerbound double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param m_upperbound double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
-#' @param standardize_geodist boolean; whether geographic distances between demes should be (mean-) standardized. Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.
+#' @param normalize_geodist boolean; whether geographic distances between demes should be normalized (i.e. rescaled to \code{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
@@ -43,7 +43,7 @@ deme_inbreeding_spcoef <- function(discdat,
                                    b2 = 0.999,
                                    e = 1e-8,
                                    steps = 1e3,
-                                   standardize_geodist = TRUE,
+                                   normalize_geodist = TRUE,
                                    report_progress = TRUE,
                                    return_verbose = FALSE){
 
@@ -83,7 +83,7 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_gr(m_upperbound, m_lowerbound)
   assert_single_int(steps)
   assert_single_logical(report_progress)
-  assert_single_logical(standardize_geodist)
+  assert_single_logical(normalize_geodist)
 
   # no missing
   if(sum(is.na(discdat)) != 0) {
@@ -148,17 +148,18 @@ deme_inbreeding_spcoef <- function(discdat,
     gendist_arr[gendist$i[i], gendist$j[i], 1:nrow(gendist$data[[i]])] <- unname(unlist(gendist$data[[i]]))
   }
 
-  # standardize geodistances per user; NB have already removed self comparisons, so no 0s
-  if (standardize_geodist) {
-    mndist <- mean(discdat$geodist)
+  # normalize geodistances per user; NB have already removed self comparisons, so no 0s
+  if (normalize_geodist) {
+    mingeodist <- min(discdat$geodist)
+    maxgeodist <- max(discdat$geodist)
     discdat <- discdat %>%
-      dplyr::mutate(geodist = geodist/mndist)
+      dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
   }
   # catch accidental bad M start if user is standardizing distances
-  if (standardize_geodist & (start_params[names(start_params) == "m"] > 10) ) {
-    warning("You have selected to standardize geographic distances, but your
+  if (normalize_geodist & (start_params[names(start_params) == "m"] > 50) ) {
+    warning("You have selected to normalize geographic distances, but your
             migration rate parameter is large. Please consider placing it on a
-            similar scale to your standardized geographic distances for stability.")
+            similar scale to your normalized geographic distances for stability.")
   }
 
 
