@@ -48,20 +48,31 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   double m_learningrate = rcpp_to_double(args["m_learningrate"]);
   double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
   double m_upperbound = rcpp_to_double(args["m_upperbound"]);
-  double momentum = rcpp_to_double(args["momentum"]);
+  double b1 = rcpp_to_double(args["b1"]);
+  double b2 = rcpp_to_double(args["b2"]);
+  double e = rcpp_to_double(args["e"]);
   bool report_progress = rcpp_to_bool(args["report_progress"]);
   Rcpp::Function update_progress = args_functions["update_progress"];
-
-  // items for momentum
-  vector<vector<double>> fi_update(steps, vector<double>(n_Demes));
-  vector<double> m_update(steps);
 
   // items of interest to keep track of
   vector<double> cost(steps);
   vector<double> m_run(steps);
   vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
-  vector<double> m_gradtraj(steps);
-  vector<vector<double>> fi_gradtraj(steps, vector<double>(n_Demes));
+  vector<double> m_gradtraj(steps); // m gradient storage
+  vector<vector<double>> fi_gradtraj(steps, vector<double>(n_Demes)); // fi storage gradient
+
+  // moments for Adam
+  // https://arxiv.org/pdf/1412.6980
+  vector<double> m1t_m(steps); // first moment
+  vector<double> v2t_m(steps); // second moment (v)
+  double m1t_m_hat; // first moment bias corrected
+  double v2t_m_hat; // second moment (v) bias corrected
+
+  vector<vector<double>> m1t_fi(steps, vector<double>(n_Demes)); // first moment
+  vector<vector<double>> v2t_fi(steps, vector<double>(n_Demes)); // second moment (v)
+  vector<double> m1t_fi_hat(n_Demes); // first moment bias corrected
+  vector<double> v2t_fi_hat(n_Demes); // second moment (v) bias corrected
+
 
   //-------------------------------
   // initialize storage vectors
@@ -69,10 +80,16 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   //-------------------------------
   for (int i = 0; i < n_Demes; i++) {
     fi_run[0][i] = fvec[i];
-    fi_update[0][i] = 0.0;
+    fi_gradtraj[0][i] = 0.0;
+    m1t_fi[0][i] = 0.0;
+    v2t_fi[0][i] = 0.0;
   }
+
   m_run[0] = m;
-  m_update[0] = 0.0;
+  m_gradtraj[0] = 0.0;
+  m1t_m[0] = 0.0;
+  v2t_m[0] = 0.0;
+
   // cost is for every pair in the upper triangle
   for (int i = 0; i < (n_Demes-1); i++) {
     for (int j = i+1; j < n_Demes; j++) {
@@ -124,6 +141,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       }
     }
 
+
     //-------------------------------
     // M gradient
     // N.B. all terms included here, easier sum -- longer partial derivative
@@ -137,8 +155,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
         if (i != j) { // redundant w/ R catch and -1 below, but extra protective
           for (int k = 0; k < n_Kpairmax; k++){
             if (gendist_arr[i][j][k] != -1) {
-              mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) + 
-              2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
+              mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
+                2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
             }
           }
         }
@@ -146,30 +164,34 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     }
 
 
+
     //-------------------------------
     // Update F and M
-    // Momentum takes into account prior updates to help move gradient out of local minima or saddle points
-    // w_current = w_prior - update_current
-    // update_current = momentum * update_prior + learning_rate * g(t), where g(t) is gradient
-    // https://towardsdatascience.com/gradient-descent-with-momentum-59420f626c8f
-    // https://machinelearningmastery.com/gradient-descent-with-momentum-from-scratch/
-    // https://towardsdatascience.com/gradient-descent-explained-9b953fc0d2c
     //-------------------------------
     // update F
     for (int i = 0; i < n_Demes; i++){
-      // update fs
-      // fi_update[step][i] = f_learningrate * fgrad[i];
-      fi_update[step][i] = f_learningrate * fgrad[i] + momentum * fi_update[step-1][i];
-      fvec[i] = fvec[i] - fi_update[step][i];
+      // get F moments for Adam
+      m1t_fi[step][i] = b1 * m1t_fi[step-1][i] + (1-b1) * fgrad[i];
+      v2t_fi[step][i] = b2 * v2t_fi[step-1][i] + (1-b2) * pow(fgrad[i], 2);
+      m1t_fi_hat[i] = m1t_fi[step][i] / (1-pow(b1, step));
+      v2t_fi_hat[i] = v2t_fi[step][i] / (1-pow(b2, step));
+
+      // calculate and apply fs upate
+      fvec[i] = fvec[i] - f_learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
+
       // store for out
       fi_run[step][i] = fvec[i];
       fi_gradtraj[step][i] = fgrad[i];
     }
-    // calculate the update for M
-    // m_update[step] = m_learningrate * mgrad;
-    m_update[step] = m_learningrate * mgrad + momentum * m_update[step-1];
-    // apply M update
-    m = m - m_update[step];
+
+    // get M moments for Adam
+    m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * mgrad;
+    v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * pow(mgrad, 2);
+    m1t_m_hat = m1t_m[step] / (1-pow(b1, step));
+    v2t_m_hat = v2t_m[step] / (1-pow(b2, step));
+
+    // calculate and apply the update for M
+    m = m - m_learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
     // check bounds on m
     // will reflect with normal based on magnitude + standard normal sd it is off to proper interval; NB also want to bound m so that it can only explore distance isolation (repulsion versus attraction)
     if (m < m_lowerbound) {
@@ -189,7 +211,7 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
             cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-              exp(-m*geodist_mat[i][j])), 2);
+              exp(-geodist_mat[i][j] / m)), 2);
           }
         }
       }
@@ -206,8 +228,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
   // return as Rcpp object
   return Rcpp::List::create(Rcpp::Named("m_run") = m_run,
                             Rcpp::Named("fi_run") = fi_run,
-                            Rcpp::Named("m_update") = m_update,
-                            Rcpp::Named("fi_update") = fi_update,
                             Rcpp::Named("m_gradtraj") = m_gradtraj,
                             Rcpp::Named("fi_gradtraj") = fi_gradtraj,
                             Rcpp::Named("cost") = cost,
