@@ -236,8 +236,8 @@ deme_inbreeding_spcoef <- function(discdat,
       Final_m = output_raw$Final_m)
   }
 
-  # return list
+  # add S3 class structure
+  attr(output, "class") <- "DISCresult"
   return(output)
-
 }
 

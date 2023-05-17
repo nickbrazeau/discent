@@ -23,6 +23,7 @@ Imports:
     tidyr,
     purrr,
     utils,
+    crayon
 Suggests: 
     stats,
     broom,
