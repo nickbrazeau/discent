@@ -3,7 +3,9 @@
 #' @param start_params named double vector; vector of start parameters.
 #' @param f_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
 #' @param m_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
-#' @param momentum double; gamma parameter for momentum for adaptive learning rate
+#' @param b1 double; Exponential decay rates for the first moment estimate
+#' @param b2 double; Exponential decay rates for the second moment estimate
+#' @param e double; Epsilon (error) for stability in the Adam optimization algorithm
 #' @param steps integer; the number of "steps" as we move down the gradient
 #' @param m_lowerbound double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param m_upperbound double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
@@ -26,18 +28,20 @@
 #'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
 #'              coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
 #' @details Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
-#' logit transformation internally in the code. Similarly, the "m" global migration rate cannot be negative and is bounded to be positive by
-#' through taking the absolute value in every iteration.
-#' @export
+#' logit transformation internally in the code.
+#' @details Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
+#' for moment decay rates, epsilon, and learning rates are taken from DP Kingma, 2014.
 #'
 
 deme_inbreeding_spcoef <- function(discdat,
                                    start_params = c(),
-                                   f_learningrate = 1e-5,
-                                   m_learningrate = 1e-10,
+                                   f_learningrate = 1e-3,
+                                   m_learningrate = 1e-6,
                                    m_lowerbound = 0,
                                    m_upperbound = Inf,
-                                   momentum = 0.9,
+                                   b1 = 0.9,
+                                   b2 = 0.999,
+                                   e = 1e-8,
                                    steps = 1e3,
                                    standardize_geodist = TRUE,
                                    report_progress = TRUE,
@@ -71,7 +75,9 @@ deme_inbreeding_spcoef <- function(discdat,
   sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(f_learningrate)
   assert_single_numeric(m_learningrate)
-  assert_single_numeric(momentum)
+  assert_single_numeric(b1)
+  assert_single_numeric(b2)
+  assert_single_numeric(e)
   assert_single_numeric(m_lowerbound)
   assert_single_numeric(m_upperbound)
   assert_gr(m_upperbound, m_lowerbound)
@@ -188,7 +194,9 @@ deme_inbreeding_spcoef <- function(discdat,
                m_learningrate = m_learningrate,
                m_lowerbound = m_lowerbound,
                m_upperbound = m_upperbound,
-               momentum = momentum,
+               b1 = b1,
+               b2 = b2,
+               e = e,
                steps = steps,
                report_progress = report_progress
   )
@@ -206,8 +214,6 @@ deme_inbreeding_spcoef <- function(discdat,
       deme_key = keyi,
       m_run = output_raw$m_run,
       fi_run = expit(do.call("rbind", output_raw$fi_run)),
-      m_update = output_raw$m_update,
-      fi_update = do.call("rbind", output_raw$fi_update),
       m_gradtraj = output_raw$m_gradtraj,
       fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj),
       cost = output_raw$cost,
