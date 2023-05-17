@@ -31,7 +31,7 @@
 #' logit transformation internally in the code.
 #' @details Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
 #' for moment decay rates, epsilon, and learning rates are taken from DP Kingma, 2014.
-#'
+#' @export
 
 deme_inbreeding_spcoef <- function(discdat,
                                    start_params = c(),
@@ -154,6 +154,13 @@ deme_inbreeding_spcoef <- function(discdat,
     discdat <- discdat %>%
       dplyr::mutate(geodist = geodist/mndist)
   }
+  # catch accidental bad M start if user is standardizing distances
+  if (standardize_geodist & (start_params[names(start_params) == "m"] > 10) ) {
+    warning("You have selected to standardize geographic distances, but your
+            migration rate parameter is large. Please consider placing it on a
+            similar scale to your standardized geographic distances for stability.")
+  }
+
 
   # put geo information into distance matrix
   geodist <- discdat %>%
