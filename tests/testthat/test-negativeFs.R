@@ -141,9 +141,9 @@ test_that("No More negative Fs with logit", {
   #......................
   distmat <- matrix(c(0,100,200,100,0,300,200,300,0), nrow = 3, ncol = 3)
   input <-  sim_IBDIBD(demesize = c(3,5,5),
-                                distmat = distmat,
-                                rate = 1e-2,
-                                Ft = 0.3)
+                       distmat = distmat,
+                       rate = 1e-2,
+                       Ft = 0.3)
   input <- input %>%
     dplyr::filter(deme1 != deme2)
 
@@ -152,15 +152,17 @@ test_that("No More negative Fs with logit", {
   #......................
   our_start_params <- rep(0.2, 3)
   names(our_start_params) <- 1:3
-  our_start_params <- c(our_start_params, "m" = 1e-5)
+  our_start_params <- c(our_start_params, "m" = 1e3)
   ret <- deme_inbreeding_spcoef(discdat = input,
-                                         start_params = our_start_params,
-                                         f_learningrate = 1e-5,
-                                         m_learningrate = 1e-10,
-                                         momentum = 0.9,
-                                         steps = 1e4,
-                                         report_progress = T,
-                                         return_verbose = T)
+                                start_params = our_start_params,
+                                f_learningrate = 1e-3,
+                                m_learningrate = 1e-5,
+                                b1 = 0.9,
+                                b2 = 0.999,
+                                e = 1e-8,
+                                steps = 1e4,
+                                report_progress = T,
+                                return_verbose = T)
 
   # Fis all positive
   testthat::expect_gte(min(ret$Final_Fis), 0)

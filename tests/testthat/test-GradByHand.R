@@ -136,7 +136,7 @@ test_that("Fi gradient by hand", {
   # start params
   our_start_params <- rep(0.2, 2)
   names(our_start_params) <- 1:2
-  our_start_params <- c(our_start_params, "m" = 1e-5)
+  our_start_params <- c(our_start_params, "m" = 1e3)
 
   # manual gradient
   fgrad <- function(gendist, geodist, fi, fj, m) {
@@ -159,23 +159,25 @@ test_that("Fi gradient by hand", {
   f1retgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], fgrad,
                                    fi = logit(0.2),
                                    fj = logit(0.2),
-                                   m = 1e-5)) # from start params
+                                   m = 1e3)) # from start params
 
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
   ret <- deme_inbreeding_spcoef(discdat = inputdisc,
-                                         start_params = our_start_params,
-                                         f_learningrate = 1e-10,
-                                         m_learningrate = 1e-15,
-                                         momentum = 0.9,
-                                         steps = 1e3,
-                                         standardize_geodist = F,
-                                         report_progress = T,
-                                         return_verbose = T)
+                                start_params = our_start_params,
+                                f_learningrate = 1e-3,
+                                m_learningrate = 1e-5,
+                                b1 = 0.9,
+                                b2 = 0.999,
+                                e = 1e-8,
+                                steps = 1e3,
+                                standardize_geodist = F,
+                                report_progress = T,
+                                return_verbose = T)
   # back out gradient for F1
-  # NB velocity set to 0 at first iter, so the additional momentum term cancels out
-  discF1 <- ret$fi_update[2,1]/1e-10
+  # NBset to 0 at first iter, so the additional adam term cancels out
+  discF1 <- ret$fi_gradtraj[2,1]
 
   # test out
   testthat::expect_equal(f1retgrad, discF1)
@@ -322,11 +324,11 @@ test_that("M gradient by hand", {
   # start params
   our_start_params <- rep(0.2, 2)
   names(our_start_params) <- 1:2
-  our_start_params <- c(our_start_params, "m" = 1e-5)
+  our_start_params <- c(our_start_params, "m" = 1e3)
 
   # manual gradient
   mgrad <- function(gendist, geodist, fi, fj, m) {
-    (-2*gendist*geodist)/(m^2) * ((fi+fj)/2) * exp(-geodist/m) -
+    (-2*gendist*geodist)/(m^2) * ((fi+fj)/2) * exp(-geodist/m) +
       (2*geodist)/(m^2) * ((fi^2 + 2*fi*fj + fj^2)/4) * exp(-2*geodist/m)
   }
 
@@ -347,25 +349,28 @@ test_that("M gradient by hand", {
   Mretgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], mgrad,
                                   fi = logit(0.2),
                                   fj = logit(0.2),
-                                  m = 1e-5)) # from start params
+                                  m = 1e3)) # from start params
 
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
   ret <- deme_inbreeding_spcoef(discdat = inputdisc,
-                                         start_params = our_start_params,
-                                         f_learningrate = 1e-10,
-                                         m_learningrate = 1e-15,
-                                         momentum = 0.9,
-                                         steps = 1e3,
-                                         standardize_geodist = F,
-                                         report_progress = T,
-                                         return_verbose = T)
+                                start_params = our_start_params,
+                                f_learningrate = 1e-3,
+                                m_learningrate = 1e-5,
+                                b1 = 0.9,
+                                b2 = 0.999,
+                                e = 1e-8,
+                                steps = 1e3,
+                                standardize_geodist = F,
+                                report_progress = T,
+                                return_verbose = T)
   # back out gradient for M
-  # NB velocity set to 0 at first iter, so the additional momentum term cancels out
-  discM <- ret$m_update[2]/1e-15
+  # NB  set to 0 at first iter, so the additional adam term cancels out
+  discM <- ret$m_gradtraj[2]
 
   # test out
   testthat::expect_equal(Mretgrad, discM)
 
 })
+

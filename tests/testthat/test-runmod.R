@@ -142,12 +142,14 @@ test_that("model runs works", {
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
   mod <- deme_inbreeding_spcoef(discdat = inputdisc,
-                                         start_params = our_start_params,
-                                         f_learningrate = 1e-5,
-                                         m_learningrate = 1e-1,
-                                         momentum = 0.9,
-                                         steps = 1e2,
-                                         report_progress = TRUE,
-                                         return_verbose = TRUE)
-  testthat::expect_length(mod, 10)
+                                start_params = our_start_params,
+                                f_learningrate = 1e-3,
+                                m_learningrate = 1e-5,
+                                b1 = 0.9,
+                                b2 = 0.999,
+                                e = 1e-8,
+                                steps = 1e2,
+                                report_progress = TRUE,
+                                return_verbose = FALSE)
+  testthat::expect_length(mod, 4)
 })
