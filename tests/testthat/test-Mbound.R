@@ -20,6 +20,7 @@ test_that("M is properly bounded", {
                                  e = 1e-8,
                                  steps = 1e2,
                                  report_progress = TRUE,
+                                 normalize_geodist = FALSE,
                                  return_verbose = TRUE)
   testthat::expect_gte(min(mod1$m_run), 999)
   testthat::expect_lte(max(mod1$m_run), 1001)
@@ -37,6 +38,7 @@ test_that("M is properly bounded", {
                                 b2 = 0.999,
                                 e = 1e-8,
                                 steps = 1e2,
+                                normalize_geodist = FALSE,
                                 report_progress = TRUE,
                                 return_verbose = TRUE)
   testthat::expect_gte(min(mod2$m_run[2:length(mod2$m_run)]), 99) # offset for init param

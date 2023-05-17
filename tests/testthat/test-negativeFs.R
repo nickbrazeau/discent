@@ -21,6 +21,7 @@ test_that("No More negative Fs with logit", {
                                 b2 = 0.999,
                                 e = 1e-8,
                                 steps = 1e4,
+                                normalize_geodist = F,
                                 report_progress = T,
                                 return_verbose = T)
 

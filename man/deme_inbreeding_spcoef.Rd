@@ -15,7 +15,7 @@ deme_inbreeding_spcoef(
   b2 = 0.999,
   e = 1e-08,
   steps = 1000,
-  standardize_geodist = TRUE,
+  normalize_geodist = TRUE,
   report_progress = TRUE,
   return_verbose = FALSE
 )
@@ -41,7 +41,7 @@ deme_inbreeding_spcoef(
 
 \item{steps}{integer; the number of "steps" as we move down the gradient}
 
-\item{standardize_geodist}{boolean; whether geographic distances between demes should be (mean-) standardized. Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
+\item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. rescaled to \code{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 
 \item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
 
