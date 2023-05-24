@@ -15,6 +15,7 @@ deme_inbreeding_spcoef(
   b2 = 0.999,
   e = 1e-08,
   steps = 1000,
+  thin = 1,
   normalize_geodist = TRUE,
   report_progress = TRUE,
   return_verbose = FALSE
@@ -40,6 +41,8 @@ deme_inbreeding_spcoef(
 \item{e}{double; Epsilon (error) for stability in the Adam optimization algorithm}
 
 \item{steps}{integer; the number of "steps" as we move down the gradient}
+
+\item{thin}{integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
 
 \item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. rescaled to \code{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 

@@ -7,6 +7,7 @@
 #' @param b2 double; Exponential decay rates for the second moment estimate
 #' @param e double; Epsilon (error) for stability in the Adam optimization algorithm
 #' @param steps integer; the number of "steps" as we move down the gradient
+#' @param thin integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)
 #' @param m_lowerbound double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param m_upperbound double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param normalize_geodist boolean; whether geographic distances between demes should be normalized (i.e. rescaled to \code{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.
@@ -43,6 +44,7 @@ deme_inbreeding_spcoef <- function(discdat,
                                    b2 = 0.999,
                                    e = 1e-8,
                                    steps = 1e3,
+                                   thin = 1,
                                    normalize_geodist = TRUE,
                                    report_progress = TRUE,
                                    return_verbose = FALSE){
@@ -82,6 +84,7 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_single_numeric(m_upperbound)
   assert_gr(m_upperbound, m_lowerbound)
   assert_single_int(steps)
+  assert_single_int(thin)
   assert_single_logical(report_progress)
   assert_single_logical(normalize_geodist)
 
@@ -215,16 +218,21 @@ deme_inbreeding_spcoef <- function(discdat,
   args_functions <- list(update_progress = update_progress)
   output_raw <- deme_inbreeding_coef_cpp(args, args_functions, args_progress)
 
+
+  # set up thinning
+  thin_its <- seq(1, steps, by = thin)
+  thin_its <- unique(c(thin_its, steps)) # always include last iteration
+
   # process output
   colnames(keyi) <- c("Deme", "key")
   if (return_verbose) {
     output <- list(
       deme_key = keyi,
-      m_run = output_raw$m_run,
-      fi_run = expit(do.call("rbind", output_raw$fi_run)),
+      m_run = output_raw$m_run[thin_its],
+      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
       m_gradtraj = output_raw$m_gradtraj,
-      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj),
-      cost = output_raw$cost,
+      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
+      cost = output_raw$cost[thin_its],
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m
     )
@@ -232,7 +240,7 @@ deme_inbreeding_spcoef <- function(discdat,
   } else {
     output <- list(
       deme_key = keyi,
-      cost = output_raw$cost,
+      cost = output_raw$cost[thin_its],
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m)
   }
