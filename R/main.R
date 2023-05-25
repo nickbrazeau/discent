@@ -159,7 +159,7 @@ deme_inbreeding_spcoef <- function(discdat,
       dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
   }
   # catch accidental bad M start if user is standardizing distances
-  if (normalize_geodist & (start_params[names(start_params) == "m"] > 50) ) {
+  if (normalize_geodist & (start_params[names(start_params) == "m"] > 500) ) {
     warning("You have selected to normalize geographic distances, but your
             migration rate parameter is large. Please consider placing it on a
             similar scale to your normalized geographic distances for stability.")
