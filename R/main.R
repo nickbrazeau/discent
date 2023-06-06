@@ -85,6 +85,7 @@ deme_inbreeding_spcoef <- function(discdat,
   assert_gr(m_upperbound, m_lowerbound)
   assert_single_int(steps)
   assert_single_int(thin)
+  assert_greq(thin, 1, message = "Must be at least 1")
   assert_single_logical(report_progress)
   assert_single_logical(normalize_geodist)
 
@@ -230,8 +231,12 @@ deme_inbreeding_spcoef <- function(discdat,
       deme_key = keyi,
       m_run = output_raw$m_run[thin_its],
       fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
-      m_gradtraj = output_raw$m_gradtraj,
+      m_gradtraj = output_raw$m_gradtraj[thin_its],
       fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
+      m_1moment = output_raw$m_firstmoment[thin_its],
+      m_2moment = output_raw$m_secondmoment[thin_its],
+      fi_1moment = do.call("rbind", output_raw$fi_firstmoment)[thin_its, ],
+      fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m
