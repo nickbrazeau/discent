@@ -184,14 +184,16 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       fi_gradtraj[step][i] = fgrad[i];
     }
 
-    // get M moments for Adam
-    m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * mgrad;
-    v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * pow(mgrad, 2);
-    m1t_m_hat = m1t_m[step] / (1-pow(b1, step));
-    v2t_m_hat = v2t_m[step] / (1-pow(b2, step));
-
-    // calculate and apply the update for M
-    m = m - m_learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
+    // // get M moments for Adam
+    // m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * mgrad;
+    // v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * pow(mgrad, 2);
+    // m1t_m_hat = m1t_m[step] / (1-pow(b1, step));
+    // v2t_m_hat = v2t_m[step] / (1-pow(b2, step));
+    //
+    // // calculate and apply the update for M
+    // m = m - m_learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
+    // vanilla GD
+    m = m - m_learningrate * mgrad;
     // check bounds on m
     // will reflect with normal based on magnitude + standard normal sd it is off to proper interval; NB also want to bound m so that it can only explore distance isolation (repulsion versus attraction)
     if (m < m_lowerbound) {
