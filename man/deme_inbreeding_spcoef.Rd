@@ -7,10 +7,16 @@
 deme_inbreeding_spcoef(
   discdat,
   start_params = c(),
-  f_learningrate = 1e-05,
-  m_learningrate = 1e-10,
-  momentum = 0.9,
+  f_learningrate = 0.001,
+  m_learningrate = 1e-06,
+  m_lowerbound = 0,
+  m_upperbound = Inf,
+  b1 = 0.9,
+  b2 = 0.999,
+  e = 1e-08,
   steps = 1000,
+  thin = 1,
+  normalize_geodist = TRUE,
   report_progress = TRUE,
   return_verbose = FALSE
 )
@@ -24,9 +30,21 @@ deme_inbreeding_spcoef(
 
 \item{m_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
 
-\item{momentum}{double; gamma parameter for momentum for adaptive learning rate}
+\item{m_lowerbound}{double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+
+\item{m_upperbound}{double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+
+\item{b1}{double; Exponential decay rates for the first moment estimate}
+
+\item{b2}{double; Exponential decay rates for the second moment estimate}
+
+\item{e}{double; Epsilon (error) for stability in the Adam optimization algorithm}
 
 \item{steps}{integer; the number of "steps" as we move down the gradient}
+
+\item{thin}{integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
+
+\item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. rescaled to \code{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 
 \item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
 
@@ -53,6 +71,8 @@ have a name that we can match on for the starting relatedness paramerts). In add
 you must provide a start parameter for "m".
 
 Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
-logit transformation internally in the code. Similarly, the "m" global migration rate cannot be negative and is bounded to be positive by
-through taking the absolute value in every iteration.
+logit transformation internally in the code.
+
+Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
+for moment decay rates, epsilon, and learning rates are taken from DP Kingma, 2014.
 }

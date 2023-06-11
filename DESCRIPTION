@@ -23,6 +23,7 @@ Imports:
     tidyr,
     purrr,
     utils,
+    crayon
 Suggests: 
     stats,
     broom,
@@ -33,7 +34,7 @@ Suggests:
     covr
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 LinkingTo: 
     Rcpp
 SystemRequirements: C++11
