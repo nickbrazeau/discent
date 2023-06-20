@@ -21,6 +21,6 @@ test_that("model runs", {
                                 normalize_geodist = T,
                                 report_progress = T,
                                 return_verbose = F)
-  testthat::expect_length(mod, 4)
+  testthat::expect_length(mod, 6)
 })
 
