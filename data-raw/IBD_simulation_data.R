@@ -131,6 +131,9 @@ IBD_simulation_data <- sim_IBDIBD(demesize = c(3,3,4), distmat = matrix(c(0,500,
                                                              100,750,0), nrow = 3),
                      rate = 1e-3, Ft = 0.3)
 
+# drop within deme
+IBD_simulation_data <- IBD_simulation_data[IBD_simulation_data$geodist > 0, ]
+
 #............................................................
 # out
 #...........................................................
