@@ -10,22 +10,20 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// deme_inbreeding_coef_cpp
-Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress);
-RcppExport SEXP _discent_deme_inbreeding_coef_cpp(SEXP argsSEXP, SEXP args_functionsSEXP, SEXP args_progressSEXP) {
+// vanilla_deme_inbreeding_coef_cpp
+Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args);
+RcppExport SEXP _discent_vanilla_deme_inbreeding_coef_cpp(SEXP argsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type args(argsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type args_functions(args_functionsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type args_progress(args_progressSEXP);
-    rcpp_result_gen = Rcpp::wrap(deme_inbreeding_coef_cpp(args, args_functions, args_progress));
+    rcpp_result_gen = Rcpp::wrap(vanilla_deme_inbreeding_coef_cpp(args));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_discent_deme_inbreeding_coef_cpp", (DL_FUNC) &_discent_deme_inbreeding_coef_cpp, 3},
+    {"_discent_vanilla_deme_inbreeding_coef_cpp", (DL_FUNC) &_discent_vanilla_deme_inbreeding_coef_cpp, 1},
     {NULL, NULL, 0}
 };
 

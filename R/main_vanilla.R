@@ -1,4 +1,4 @@
-#' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
+#' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space (Vanilla)
 #' @param discdat dataframe; The genetic-geographic data by deme (K)
 #' @param start_params named double vector; vector of start parameters.
 #' @param f_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
@@ -14,6 +14,12 @@
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
+#' @description The purpose of this statistic is to identify an inbreeding coefficient, or degree of
+#'              relatedness, for a given location in space. We assume that locations in spaces can be
+#'              represented as "demes," such that multiple individuals live in the same deme
+#'              (i.e. samples are sourced from the same location). The expected pairwise relationship
+#'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
+#'              coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
 #' @details The gen.geo.dist dataframe must be named with the following columns:
 #'          "smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
 #'          Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
@@ -22,32 +28,27 @@
 #' @details The start_params vector names must match the cluster names (i.e. clusters must be
 #'          have a name that we can match on for the starting relatedness paramerts). In addition,
 #'          you must provide a start parameter for "m".
-#' @description The purpose of this statistic is to identify an inbreeding coefficient, or degree of
-#'              relatedness, for a given location in space. We assume that locations in spaces can be
-#'              represented as "demes," such that multiple individuals live in the same deme
-#'              (i.e. samples are sourced from the same location). The expected pairwise relationship
-#'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
-#'              coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
 #' @details Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
 #' logit transformation internally in the code.
 #' @details Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
-#' for moment decay rates, epsilon, and learning rates are taken from DP Kingma, 2014.
+#' for moment decay rates, epsilon, and learning rates are taken from \cite{DP Kingma, 2014}.
+#' @details The "vanilla" method does not attempt to optimize start parameters.
 #' @export
 
-deme_inbreeding_spcoef <- function(discdat,
-                                   start_params = c(),
-                                   f_learningrate = 1e-3,
-                                   m_learningrate = 1e-6,
-                                   m_lowerbound = 0,
-                                   m_upperbound = Inf,
-                                   b1 = 0.9,
-                                   b2 = 0.999,
-                                   e = 1e-8,
-                                   steps = 1e3,
-                                   thin = 1,
-                                   normalize_geodist = TRUE,
-                                   report_progress = TRUE,
-                                   return_verbose = FALSE){
+deme_inbreeding_spcoef_vanilla <- function(discdat,
+                                           start_params = c(),
+                                           f_learningrate = 1e-3,
+                                           m_learningrate = 1e-6,
+                                           m_lowerbound = 0,
+                                           m_upperbound = Inf,
+                                           b1 = 0.9,
+                                           b2 = 0.999,
+                                           e = 1e-8,
+                                           steps = 1e3,
+                                           thin = 1,
+                                           normalize_geodist = TRUE,
+                                           report_progress = TRUE,
+                                           return_verbose = FALSE){
 
   #..............................................................
   # Assertions & Catches
@@ -101,13 +102,6 @@ deme_inbreeding_spcoef <- function(discdat,
          message = "No within-deme sample comparisons allowed. Geodistance should not be 0")
   mapply(assert_neq, discdat$deme1, discdat$deme2,
          message = "No within-deme sample comparisons allowed. Locat names should not be the same")
-
-  #..............................................................
-  # setup and create progress bars
-  #..............................................................
-  pb <- utils::txtProgressBar(min = 0, max = steps-1, initial = NA, style = 3)
-  args_progress <- list(pb = pb)
-
 
   #............................................................
   # R manipulations before C++
@@ -213,11 +207,8 @@ deme_inbreeding_spcoef <- function(discdat,
                report_progress = report_progress
   )
 
-  # create progress bars
-  pb <- txtProgressBar(min = 0, max = steps, initial = NA, style = 3)
-  args_progress <- list(pb = pb)
-  args_functions <- list(update_progress = update_progress)
-  output_raw <- deme_inbreeding_coef_cpp(args, args_functions, args_progress)
+  # run
+  output_raw <- vanilla_deme_inbreeding_coef_cpp(args)
 
 
   # set up thinning
@@ -253,7 +244,7 @@ deme_inbreeding_spcoef <- function(discdat,
   }
 
   # add S3 class structure
-  attr(output, "class") <- "DISCresult"
+  attr(output, "class") <- "vanillaDISCresult"
   return(output)
 }
 

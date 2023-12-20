@@ -10,7 +10,7 @@ test_that("model runs", {
   # run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  mod <- deme_inbreeding_spcoef(discdat = inputdisc,
+  mod <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                 start_params = our_start_params,
                                 f_learningrate = 1e-5,
                                 m_learningrate = 1e-1,
@@ -19,7 +19,7 @@ test_that("model runs", {
                                 e = 1e-8,
                                 steps = 1e3,
                                 normalize_geodist = T,
-                                report_progress = T,
+                                report_progress = F,
                                 return_verbose = F)
   testthat::expect_length(mod, 6)
 })
