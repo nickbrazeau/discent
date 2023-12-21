@@ -9,7 +9,8 @@ using namespace std;
 //------------------------------------------------
 // [[Rcpp::export]]
 Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
-
+  // overflow cost parameter
+  const double OVERFLO_DOUBLE = DBL_MAX/1000.0;
   //-------------------------------
   // unpack inputs
   //-------------------------------
@@ -62,6 +63,7 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // initialize and fill in params
   //-------------------------------
   Particle discParticle;
+  discParticle.OVERFLO_DOUBLE = OVERFLO_DOUBLE;
   discParticle.steps = steps;
   discParticle.n_Demes = n_Demes;
   discParticle.n_Kpairmax = n_Kpairmax;

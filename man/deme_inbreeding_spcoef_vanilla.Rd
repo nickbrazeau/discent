@@ -2,7 +2,7 @@
 % Please edit documentation in R/main_vanilla.R
 \name{deme_inbreeding_spcoef_vanilla}
 \alias{deme_inbreeding_spcoef_vanilla}
-\title{Identify Deme Inbreeding Spatial Coefficients in Continuous Space}
+\title{Identify Deme Inbreeding Spatial Coefficients in Continuous Space (Vanilla)}
 \usage{
 deme_inbreeding_spcoef_vanilla(
   discdat,
@@ -74,5 +74,7 @@ Note: We have implemented coding decisions to not allow the "f" inbreeding coeff
 logit transformation internally in the code.
 
 Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
-for moment decay rates, epsilon, and learning rates are taken from DP Kingma, 2014.
+for moment decay rates, epsilon, and learning rates are taken from \cite{DP Kingma, 2014}.
+
+The "vanilla" method does not attempt to optimize start parameters.
 }

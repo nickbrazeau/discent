@@ -1,4 +1,4 @@
-test_that("model runs", {
+test_that("Vanilla model runs", {
 
   # sim data
   data("IBD_simulation_data", package = "discent")
