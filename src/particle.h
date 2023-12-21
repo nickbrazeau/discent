@@ -40,6 +40,8 @@ public:
   std::vector<std::vector<double>> v2t_fi;
   std::vector<double> m1t_fi_hat;
   std::vector<double> v2t_fi_hat;
+  // for pso model
+  std::vector<double> particle_p_best;
 
   // PUBLIC FUNCTIONS
   // constructors

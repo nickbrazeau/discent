@@ -1,16 +1,24 @@
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space with
 #' Particle Swarm Meta-Optimization
 #' @inheritParams deme_inbreeding_spcoef_vanilla
-#' @param
+#' @param  fi_lowerbound
+#' @param  fi_upperbound
+#' @param  flearn_lowerbound
+#' @param  flearn_upperbound
+#' @param  mlearn_lowerbound
+#' @param  mlearn_upperbound
+#' @param  c1
+#' @param  c2
+#' @param  w
+#' @param  swarmsize
+#' @param  swarmsteps
+#' @param  babysteps
 #' @inherit description deme_inbreeding_spcoef_vanilla
 #' @details The gen.geo.dist dataframe must be named with the following columns:
 #'          "smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
 #'          Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
 #'          Pairwise Genetic Distance; Pairwise Geographpic Distance. Note, the order of the
 #'          columns do not matter but the names of the columns must match.
-#' @details The start_params vector names must match the cluster names (i.e. clusters must be
-#'          have a name that we can match on for the starting relatedness paramerts). In addition,
-#'          you must provide a start parameter for "m".
 #' @details We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
 #' logit transformation internally in the code.
 #' @details Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
@@ -21,15 +29,24 @@
 #' @export
 
 deme_inbreeding_spcoef_pso <- function(discdat,
-                                       start_params = c(),
-                                       f_learningrate = 1e-3,
-                                       m_learningrate = 1e-6,
-                                       m_lowerbound = 0,
+                                       m_lowerbound = 1e-10,
                                        m_upperbound = Inf,
+                                       fi_lowerbound= 1e-3,
+                                       fi_upperbound = 0.3,
+                                       flearn_lowerbound = 1e-10,
+                                       flearn_upperbound = 1e-2,
+                                       mlearn_lowerbound = 1e-15,
+                                       mlearn_upperbound = 1e-8,
+                                       c1 = 0.1,
+                                       c2 = 0.1,
+                                       w = 0.25,
                                        b1 = 0.9,
                                        b2 = 0.999,
                                        e = 1e-8,
                                        steps = 1e3,
+                                       babysteps = 1e2,
+                                       swarmsteps = 50,
+                                       swarmsize = 25,
                                        thin = 1,
                                        normalize_geodist = TRUE,
                                        report_progress = TRUE,
@@ -48,27 +65,25 @@ deme_inbreeding_spcoef_pso <- function(discdat,
     }
   }
 
-  locats <- names(start_params)[!grepl("^m$", names(start_params))]
-  if (!all(unique(c(discdat$deme1, discdat$deme2)) %in% locats)) {
-    stop("You have cluster names in your discdat dataframe that are not included in your start parameters")
-  }
-  if (!any(grepl("^m$", names(start_params)))) {
-    stop("A m start parameter must be provided (i.e. there must be a vector element name m in your start parameter vector)")
-  }
   assert_dataframe(discdat)
-  assert_vector(start_params)
-  assert_length(start_params, n = (length(unique(c(discdat$deme1, discdat$deme2))) + 1),
-                message = "Start params length not correct. You must specificy a start parameter
-                           for each deme and the migration parameter, m")
-  sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
-  assert_single_numeric(f_learningrate)
-  assert_single_numeric(m_learningrate)
   assert_single_numeric(b1)
   assert_single_numeric(b2)
   assert_single_numeric(e)
+  assert_single_numeric(c1)
+  assert_single_numeric(c2)
+  assert_single_numeric(w)
   assert_single_numeric(m_lowerbound)
   assert_single_numeric(m_upperbound)
   assert_gr(m_upperbound, m_lowerbound)
+  assert_single_numeric(fi_lowerbound)
+  assert_single_numeric(fi_upperbound)
+  assert_gr(fi_upperbound, fi_lowerbound)
+  assert_single_numeric(flearn_lowerbound)
+  assert_single_numeric(flearn_upperbound)
+  assert_gr(flearn_upperbound, flearn_lowerbound)
+  assert_single_numeric(mlearn_lowerbound)
+  assert_single_numeric(mlearn_upperbound)
+  assert_gr(mlearn_upperbound, mlearn_lowerbound)
   assert_single_int(steps)
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")
@@ -103,9 +118,6 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                                    ifelse(gendist < 0.001, 0.001,
                                           gendist))) %>% # reasonable bounds on logit
     dplyr::mutate(gendist = logit(gendist))
-  # transform start parameters w/ logit
-  start_params[names(start_params) != "m"] <- logit(start_params[names(start_params) != "m"])
-
 
   # get genetic data by pairs through efficient nest
   gendist <- discdat %>%
@@ -126,7 +138,7 @@ deme_inbreeding_spcoef_pso <- function(discdat,
   # This approach wastes memory but allows for a structured array
   # versus a list with varying sizes (and eventually a more efficient for-loop)
   n_Kpairmax <- max(purrr::map_dbl(gendist$data, nrow))
-  gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
+  gendist_arr <- array(data = -1, dim = c(length(demes), length(demes), n_Kpairmax))
   for (i in 1:nrow(gendist)) {
     gendist_arr[gendist$i[i], gendist$j[i], 1:nrow(gendist$data[[i]])] <- unname(unlist(gendist$data[[i]]))
   }
@@ -139,9 +151,9 @@ deme_inbreeding_spcoef_pso <- function(discdat,
       dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
   }
   # catch accidental bad M start if user is standardizing distances
-  if (normalize_geodist & (start_params[names(start_params) == "m"] > 500) ) {
+  if (normalize_geodist & (m_upperbound > 500) ) {
     warning("You have selected to normalize geographic distances, but your
-            migration rate start parameter is large. Please consider placing it on a
+            migration rate upper bound parameter is large. Please consider placing it on a
             similar scale to your normalized geographic distances for stability.")
   }
 
@@ -166,7 +178,7 @@ deme_inbreeding_spcoef_pso <- function(discdat,
   )
 
   # upper tri
-  geodist_mat <- matrix(data = -1, nrow = length(locats), ncol = length(locats))
+  geodist_mat <- matrix(data = -1, nrow = length(demes), ncol = length(demes))
   for (i in 1:nrow(geodist)) {
     geodist_mat[geodist$i[i], geodist$j[i]] <- geodist$data[i]
   }
@@ -178,22 +190,31 @@ deme_inbreeding_spcoef_pso <- function(discdat,
 
   args <- list(gendist = as.vector(gendist_arr),
                geodist = as.vector(geodist_mat),
-               fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
+               n_Demes = length(demes),
                n_Kpairmax = n_Kpairmax,
-               m = unname(start_params["m"]),
-               f_learningrate = f_learningrate,
-               m_learningrate = m_learningrate,
                m_lowerbound = m_lowerbound,
                m_upperbound = m_upperbound,
+               fi_lowerbound = logit( fi_lowerbound ),
+               fi_upperbound = logit( fi_upperbound ),
+               flearn_lowerbound = flearn_lowerbound,
+               flearn_upperbound = flearn_upperbound,
+               mlearn_lowerbound = mlearn_lowerbound,
+               mlearn_upperbound = mlearn_upperbound,
                b1 = b1,
                b2 = b2,
                e = e,
+               c1 = c1,
+               c2 = c2,
+               w = w,
+               swarmsteps = swarmsteps,
+               swarmsize = swarmsize,
+               babysteps = babysteps,
                steps = steps,
                report_progress = report_progress
   )
 
   # run
-  output_raw <- vanilla_deme_inbreeding_coef_cpp(args)
+  output_raw <- pso_deme_inbreeding_coef_cpp(args)
 
 
   # set up thinning
