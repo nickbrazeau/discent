@@ -76,44 +76,28 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   discParticle.e = e;
   discParticle.m = m;
   discParticle.fvec = fvec;
-  discParticle.gendist_arr = gendist_arr;
-  discParticle.geodist_mat = geodist_mat;
+
   //-------------------------------
   // storage and ADAM items
   //-------------------------------
-  vector<double> cost(steps);
-  vector<double> m_run(steps);
-  vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
-  vector<double> m_gradtraj(steps); // m gradient storage
-  vector<vector<double>> fi_gradtraj(steps, vector<double>(n_Demes)); // fi storage gradient
-  // moments for Adam
-  // https://arxiv.org/pdf/1412.6980
-  vector<double> m1t_m(steps); // first moment
-  vector<double> v2t_m(steps); // second moment (v)
-  double m1t_m_hat; // first moment bias corrected
-  double v2t_m_hat; // second moment (v) bias corrected
-  vector<vector<double>> m1t_fi(steps, vector<double>(n_Demes)); // first moment
-  vector<vector<double>> v2t_fi(steps, vector<double>(n_Demes)); // second moment (v)
-  vector<double> m1t_fi_hat(n_Demes); // first moment bias corrected
-  vector<double> v2t_fi_hat(n_Demes); // second moment (v) bias corrected
-  // fill in for class
-  discParticle.cost = cost;
-  discParticle.m_run = m_run;
-  discParticle.fi_run = fi_run;
-  discParticle.m_gradtraj = m_gradtraj;
-  discParticle.fi_gradtraj = fi_gradtraj;
-  discParticle.m1t_m = m1t_m;
-  discParticle.v2t_m = v2t_m;
-  discParticle.m1t_m_hat = m1t_m_hat;
-  discParticle.v2t_m_hat = v2t_m_hat;
-  discParticle.m1t_fi = m1t_fi;
-  discParticle.v2t_fi = v2t_fi;
-  discParticle.m1t_fi_hat = m1t_fi_hat;
-  discParticle.v2t_fi_hat = v2t_fi_hat;
+  discParticle.cost = vector<double>(steps);
+  discParticle.m_run = vector<double>(steps);
+  discParticle.fi_run = vector<vector<double>>(steps, vector<double>(n_Demes));
+  discParticle.m_gradtraj = vector<double>(steps); // m gradient storage;
+  discParticle.fi_gradtraj =   vector<vector<double>>(steps, vector<double>(n_Demes)); // fi storage gradient;
+  discParticle.m1t_m = vector<double>(steps); // first m moment;
+  discParticle.v2t_m =   vector<double>(steps); // second m moment (v);
+  discParticle.m1t_m_hat = double();
+  discParticle.v2t_m_hat = double();
+  discParticle.m1t_fi = vector<vector<double>>(steps, vector<double>(n_Demes)); // first fi moment;
+  discParticle.v2t_fi = vector<vector<double>>(steps, vector<double>(n_Demes)); // second fi moment (v);
+  discParticle.m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
+  discParticle.v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
+
   //-------------------------------
   // run GD
   //-------------------------------
-  discParticle.performGD(report_progress);
+  discParticle.performGD(report_progress, gendist_arr, geodist_mat);
 
   //-------------------------------
   // Out: return as Rcpp object

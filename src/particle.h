@@ -24,8 +24,7 @@ public:
   int n_Kpairmax;
   double m;
   std::vector<double> fvec;
-  std::vector<std::vector<std::vector<double>>> gendist_arr;
-  std::vector<std::vector<double>> geodist_mat;
+
   // storage
   std::vector<double> cost;
   std::vector<double> m_run;
@@ -49,6 +48,6 @@ public:
   // constructors
   Particle() {};
   // member functions
-  void performGD(bool report_progress);
+  void performGD(bool report_progress, std::vector<std::vector<std::vector<double>>> &gendist_arr, std::vector<std::vector<double>> &geodist_mat);
   void print_particle();
 };

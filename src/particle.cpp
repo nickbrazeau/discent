@@ -6,7 +6,7 @@ using namespace std;
 
 //------------------------------------------------
 // run ADAM gradient descent host
-void Particle::performGD(bool report_progress) {
+void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &gendist_arr, vector<vector<double>> &geodist_mat) {
 
   //-------------------------------
   // initialize storage vectors

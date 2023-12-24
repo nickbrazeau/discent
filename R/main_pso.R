@@ -237,7 +237,8 @@ deme_inbreeding_spcoef_pso <- function(discdat,
       fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
       Final_Fis = expit(output_raw$Final_Fis),
-      Final_m = output_raw$Final_m
+      Final_m = output_raw$Final_m,
+      swarm = output_raw$swarm
     )
 
   } else {
