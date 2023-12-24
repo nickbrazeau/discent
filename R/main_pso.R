@@ -12,7 +12,7 @@
 #' @param  w
 #' @param  swarmsize
 #' @param  swarmsteps
-#' @param  babysteps
+#' @param  searchsteps
 #' @inherit description deme_inbreeding_spcoef_vanilla
 #' @details The gen.geo.dist dataframe must be named with the following columns:
 #'          "smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
@@ -44,7 +44,7 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                                        b2 = 0.999,
                                        e = 1e-8,
                                        steps = 1e3,
-                                       babysteps = 1e2,
+                                       searchsteps = 1e2,
                                        swarmsteps = 50,
                                        swarmsize = 25,
                                        thin = 1,
@@ -208,9 +208,10 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                w = w,
                swarmsteps = swarmsteps,
                swarmsize = swarmsize,
-               babysteps = babysteps,
+               searchsteps = searchsteps,
                steps = steps,
-               report_progress = report_progress
+               report_progress = report_progress,
+               return_verbose = return_verbose
   )
 
   # run

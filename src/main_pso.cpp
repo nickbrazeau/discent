@@ -48,14 +48,14 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
 
   // items for grad descent
   int steps = rcpp_to_int(args["steps"]);
-  int babysteps = rcpp_to_int(args["babysteps"]);
+  int searchsteps = rcpp_to_int(args["searchsteps"]);
   double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
   double m_upperbound = rcpp_to_double(args["m_upperbound"]);
   double b1 = rcpp_to_double(args["b1"]);
   double b2 = rcpp_to_double(args["b2"]);
   double e = rcpp_to_double(args["e"]);
   bool report_progress = rcpp_to_bool(args["report_progress"]);
-
+  bool return_verbose = rcpp_to_bool(args["return_verbose"]);
   // items for particle swarm
   int swarmsize = rcpp_to_int(args["swarmsize"]);
   int swarmsteps = rcpp_to_int(args["swarmsteps"]);
@@ -70,21 +70,19 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   double mlearn_lowerbound = rcpp_to_double(args["mlearn_lowerbound"]);
   double mlearn_upperbound = rcpp_to_double(args["mlearn_upperbound"]);
   // catch infs
-  m_lowerbound = (m_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE :  m_lowerbound;
   fi_lowerbound = (fi_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : fi_lowerbound;
+  m_lowerbound = (m_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE :  m_lowerbound;
   flearn_lowerbound = (flearn_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : flearn_lowerbound;
   mlearn_lowerbound = (mlearn_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : mlearn_lowerbound;
-  m_upperbound = (m_upperbound<OVERFLO_DOUBLE) ? m_upperbound : OVERFLO_DOUBLE;
-  fi_upperbound = (fi_upperbound<OVERFLO_DOUBLE) ? fi_upperbound : OVERFLO_DOUBLE;
-  flearn_upperbound = (m_upperbound<OVERFLO_DOUBLE) ? flearn_upperbound : OVERFLO_DOUBLE;
-  mlearn_upperbound = (m_upperbound<OVERFLO_DOUBLE) ? mlearn_upperbound : OVERFLO_DOUBLE;
+  fi_upperbound = (fi_upperbound < OVERFLO_DOUBLE) ? fi_upperbound : OVERFLO_DOUBLE;
+  m_upperbound = (m_upperbound < OVERFLO_DOUBLE) ? m_upperbound : OVERFLO_DOUBLE;
+  flearn_upperbound = (flearn_upperbound < OVERFLO_DOUBLE) ? flearn_upperbound : OVERFLO_DOUBLE;
+  mlearn_upperbound = (mlearn_upperbound < OVERFLO_DOUBLE) ? mlearn_upperbound : OVERFLO_DOUBLE;
 
   // storage
-  vector<double> g_swarm_pos(4); // global best of swarm based on our 4 start param for search
-  vector<vector<double>> fi_search(swarmsteps, vector<double>(swarmsize));
-  vector<vector<double>> m_search(swarmsteps, vector<double>(swarmsize));
-  vector<vector<double>> flearn_search(swarmsteps, vector<double>(swarmsize));
-  vector<vector<double>> mlearn_search(swarmsteps, vector<double>(swarmsize));
+  // NB order for vector pos will be fi, m, flearn, mlearn
+  vector<double> g_best_swarm_pos(5); // global best of swarm based on our 4 start param & cost for search
+  fill(g_best_swarm_pos.begin(), g_best_swarm_pos.end(), OVERFLO_DOUBLE); // minimalization problem
   // nested vectors, first over time, then particles
   vector<vector<Particle>> swarm(swarmsteps, vector<Particle>(swarmsize));
   //---------------------------------------------------
@@ -94,140 +92,202 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // init PSO
   //-----------------------------
   for (int i = 0; i < swarmsize; i++) {
-    // rand start params
-    fi_search[0][i] = runif1(fi_lowerbound, fi_upperbound);
-    m_search[0][i] = runif1(m_lowerbound, m_upperbound);
-    flearn_search[0][i] = runif1(flearn_lowerbound, flearn_upperbound);
-    mlearn_search[0][i] = runif1(mlearn_lowerbound, mlearn_upperbound);
     // fill in particles
     vector<double> fvec(n_Demes);
-    fill(fvec.begin(), fvec.end(), fi_search[0][i]);
+    double ffill = runif1(fi_lowerbound, fi_upperbound); // rand fi start param
+    fill(fvec.begin(), fvec.end(), ffill);
     swarm[0][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
-    swarm[0][i].steps = babysteps;
+    swarm[0][i].steps = searchsteps;
     swarm[0][i].n_Demes = n_Demes;
     swarm[0][i].n_Kpairmax = n_Kpairmax;
-    swarm[0][i].f_learningrate = flearn_search[0][i];
-    swarm[0][i].m_learningrate = mlearn_search[0][i];
+    swarm[0][i].m = runif1(m_lowerbound, m_upperbound);
+    swarm[0][i].f_learningrate = runif1(flearn_lowerbound, flearn_upperbound);
+    swarm[0][i].m_learningrate = runif1(mlearn_lowerbound, mlearn_upperbound);
     swarm[0][i].m_lowerbound = m_lowerbound;
     swarm[0][i].m_upperbound = m_upperbound;
     swarm[0][i].b1 = b1;
     swarm[0][i].b2 = b2;
     swarm[0][i].e = e;
-    swarm[0][i].m = mlearn_search[0][i];
     swarm[0][i].fvec = fvec;
     swarm[0][i].gendist_arr = gendist_arr;
     swarm[0][i].geodist_mat = geodist_mat;
 
     // storage and ADAM items
-    vector<double> cost(babysteps);
-    vector<double> m_run(babysteps);
-    vector<vector<double>> fi_run(babysteps, vector<double>(n_Demes));
-    vector<double> m_gradtraj(babysteps); // m gradient storage
-    vector<vector<double>> fi_gradtraj(babysteps, vector<double>(n_Demes)); // fi storage gradient
-    vector<double> m1t_m(babysteps); // first moment
-    vector<double> v2t_m(babysteps); // second moment (v)
-    double m1t_m_hat; // first moment bias corrected
-    double v2t_m_hat; // second moment (v) bias corrected
-    vector<vector<double>> m1t_fi(babysteps, vector<double>(n_Demes)); // first moment
-    vector<vector<double>> v2t_fi(babysteps, vector<double>(n_Demes)); // second moment (v)
-    vector<double> m1t_fi_hat(n_Demes); // first moment bias corrected
-    vector<double> v2t_fi_hat(n_Demes); // second moment (v) bias corrected
-
-    // fill in for class
-    swarm[0][i].cost = cost;
-    swarm[0][i].m_run = m_run;
-    swarm[0][i].fi_run = fi_run;
-    swarm[0][i].m_gradtraj = m_gradtraj;
-    swarm[0][i].fi_gradtraj = fi_gradtraj;
-    swarm[0][i].m1t_m = m1t_m;
-    swarm[0][i].v2t_m = v2t_m;
-    swarm[0][i].m1t_m_hat = m1t_m_hat;
-    swarm[0][i].v2t_m_hat = v2t_m_hat;
-    swarm[0][i].m1t_fi = m1t_fi;
-    swarm[0][i].v2t_fi = v2t_fi;
-    swarm[0][i].m1t_fi_hat = m1t_fi_hat;
-    swarm[0][i].v2t_fi_hat = v2t_fi_hat;
+    swarm[0][i].cost = vector<double>(searchsteps);
+    swarm[0][i].m_run = vector<double>(searchsteps);;
+    swarm[0][i].fi_run = vector<vector<double>>(searchsteps, vector<double>(n_Demes));;
+    swarm[0][i].m_gradtraj = vector<double>(searchsteps); // m gradient storage;
+    swarm[0][i].fi_gradtraj =   vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // fi storage gradient;
+    swarm[0][i].m1t_m = vector<double>(searchsteps); // first m moment;
+    swarm[0][i].v2t_m =   vector<double>(searchsteps); // second m moment (v);
+    swarm[0][i].m1t_m_hat = double(); // first moment bias corrected
+    swarm[0][i].v2t_m_hat = double();  // second moment (v) bias corrected
+    swarm[0][i].m1t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // first fi moment;
+    swarm[0][i].v2t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // second fi moment (v);
+    swarm[0][i].m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
+    swarm[0][i].v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
     // run GD
     swarm[0][i].performGD(false);
-    // store personal best
-    vector<double> init_p_best(4);
-    swarm[0][i].particle_p_best = init_p_best;
-    swarm[0][i].particle_p_best[0] = fi_search[0][i];
-    swarm[0][i].particle_p_best[1] = m_search[0][i];
-    swarm[0][i].particle_p_best[2] = flearn_search[0][i];
-    swarm[0][i].particle_p_best[3] = mlearn_search[0][i];
+    // store current position, personal best, and velocity
+    vector<double> init_p0(4);
+    vector<double> init_velocity0(4);
+    fill(init_velocity0.begin(), init_velocity0.end(),0); // decision to start with an initial velocity of zero, slow-start/conservative
+    swarm[0][i].particle_pbest = swarm[0][i].particle_pcurr = init_p0;
+    g_best_swarm_pos[0] = swarm[0][i].particle_pbest[0] = swarm[0][i].particle_pcurr[0] = ffill;
+    g_best_swarm_pos[1] = swarm[0][i].particle_pbest[1] = swarm[0][i].particle_pcurr[1] = swarm[0][i].m;
+    g_best_swarm_pos[2] = swarm[0][i].particle_pbest[2] = swarm[0][i].particle_pcurr[2] = swarm[0][i].f_learningrate;
+    g_best_swarm_pos[3] = swarm[0][i].particle_pbest[3] = swarm[0][i].particle_pcurr[3] = swarm[0][i].m_learningrate;
+    swarm[0][i].particle_velocity = init_velocity0;
+    // update global best
+    g_best_swarm_pos[4] = swarm[0][i].cost[searchsteps-1];
   }
-   cout << "made it";
-   return(0);
- }
 
-  // //-----------------------------
-  // // Remaining Steps of PSO
-  // //-----------------------------
-  // for (int t = 1; t < swarmsteps; t++) {
-  //
-  // }
-  //
-  //
-  //
-  // //-------------------------------
-  // // SECTION 3: Run Long Chain of Grad Descent based on global best start parameters
-  // //-------------------------------
-  // // initialize and fill in params
-  // vector<double> fvecfinal(n_Demes);
-  // fill(fvecfinal.begin(), fvecfinal.end(), g_swarm_pos[3]);
-  // Particle discParticle;
-  // discParticle.steps = steps;
-  // discParticle.n_Demes = n_Demes;
-  // discParticle.n_Kpairmax = n_Kpairmax;
-  // discParticle.f_learningrate = g_swarm_pos[0];
-  // discParticle.m_learningrate = g_swarm_pos[1];
-  // discParticle.m_lowerbound = m_lowerbound;
-  // discParticle.m_upperbound = m_upperbound;
-  // discParticle.b1 = b1;
-  // discParticle.b2 = b2;
-  // discParticle.e = e;
-  // discParticle.m = g_swarm_pos[2];
-  // discParticle.fvec = fvecfinal;
-  // discParticle.gendist_arr = gendist_arr;
-  // discParticle.geodist_mat = geodist_mat;
-  // // storage and ADAM items
-  // vector<double> cost(steps);
-  // vector<double> m_run(steps);
-  // vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
-  // vector<double> m_gradtraj(steps); // m gradient storage
-  // vector<vector<double>> fi_gradtraj(steps, vector<double>(n_Demes)); // fi storage gradient
-  // // moments for Adam
-  // // https://arxiv.org/pdf/1412.6980
-  // vector<double> m1t_m(steps); // first moment
-  // vector<double> v2t_m(steps); // second moment (v)
-  // double m1t_m_hat; // first moment bias corrected
-  // double v2t_m_hat; // second moment (v) bias corrected
-  // vector<vector<double>> m1t_fi(steps, vector<double>(n_Demes)); // first moment
-  // vector<vector<double>> v2t_fi(steps, vector<double>(n_Demes)); // second moment (v)
-  // vector<double> m1t_fi_hat(n_Demes); // first moment bias corrected
-  // vector<double> v2t_fi_hat(n_Demes); // second moment (v) bias corrected
-  // // fill in for class
-  // discParticle.cost = cost;
-  // discParticle.m_run = m_run;
-  // discParticle.fi_run = fi_run;
-  // discParticle.m_gradtraj = m_gradtraj;
-  // discParticle.fi_gradtraj = fi_gradtraj;
-  // discParticle.m1t_m = m1t_m;
-  // discParticle.v2t_m = v2t_m;
-  // discParticle.m1t_m_hat = m1t_m_hat;
-  // discParticle.v2t_m_hat = v2t_m_hat;
-  // discParticle.m1t_fi = m1t_fi;
-  // discParticle.v2t_fi = v2t_fi;
-  // discParticle.m1t_fi_hat = m1t_fi_hat;
-  // discParticle.v2t_fi_hat = v2t_fi_hat;
-  // // run GD
-  // discParticle.performGD(report_progress);
-  //
+
+
+  //-----------------------------
+  // Remaining Steps of PSO
+  //-----------------------------
+  for (int t = 1; t < swarmsteps; t++) {
+    for (int i = 1; i < swarmsize; i++) {
+      // initialize swarm pieces for below
+      vector<double> init_p(4);
+      vector<double> init_velocity(4);
+      swarm[t][i].particle_pbest = swarm[t][i].particle_pcurr = init_p;
+      swarm[t][i].particle_velocity = init_velocity;
+      // calculate new velocity and position for each disc param
+      for (int d = 0; d < 4; d++) {
+        // breaking velocity calculation into inertia, cognitive, and social componentns
+        double inert = w * swarm[t-1][i].particle_velocity[d];
+        double cog = c1 * runif_0_1() * (swarm[t-1][i].particle_pbest[d] - swarm[t-1][i].particle_pcurr[d]);
+        double soc = c2 * runif_0_1() * (g_best_swarm_pos[d] - swarm[t-1][i].particle_pcurr[d]);
+        // update velocity
+        swarm[t][i].particle_velocity[d] = inert + cog + soc;
+        // update current position
+        swarm[t][i].particle_pcurr[d] = swarm[t-1][i].particle_pcurr[d] + swarm[t][i].particle_velocity[d];
+      } // end update of params
+
+      //-------------------------
+      // now run particle for new positions
+      //-------------------------
+      vector<double> fvec(n_Demes);
+      fill(fvec.begin(), fvec.end(), swarm[t][i].particle_pcurr[0]);
+      swarm[t][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
+      swarm[t][i].steps = searchsteps;
+      swarm[t][i].n_Demes = n_Demes;
+      swarm[t][i].n_Kpairmax = n_Kpairmax;
+      swarm[t][i].m = swarm[t][i].particle_pcurr[1];
+      swarm[t][i].f_learningrate = swarm[t][i].particle_pcurr[2];
+      swarm[t][i].m_learningrate = swarm[t][i].particle_pcurr[3];
+      swarm[t][i].m_lowerbound = m_lowerbound;
+      swarm[t][i].m_upperbound = m_upperbound;
+      swarm[t][i].b1 = b1;
+      swarm[t][i].b2 = b2;
+      swarm[t][i].e = e;
+      swarm[t][i].fvec = fvec;
+      swarm[t][i].gendist_arr = gendist_arr;
+      swarm[t][i].geodist_mat = geodist_mat;
+
+      // storage and ADAM items
+      swarm[t][i].cost = vector<double>(searchsteps);
+      swarm[t][i].m_run = vector<double>(searchsteps);;
+      swarm[t][i].fi_run = vector<vector<double>>(searchsteps, vector<double>(n_Demes));;
+      swarm[t][i].m_gradtraj = vector<double>(searchsteps); // m gradient storage;
+      swarm[t][i].fi_gradtraj =   vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // fi storage gradient;
+      swarm[t][i].m1t_m = vector<double>(searchsteps); // first m moment;
+      swarm[t][i].v2t_m =   vector<double>(searchsteps); // second m moment (v);
+      swarm[t][i].m1t_m_hat = double();
+      swarm[t][i].v2t_m_hat = double();  
+      swarm[t][i].m1t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // first fi moment;
+      swarm[t][i].v2t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // second fi moment (v);
+      swarm[t][i].m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
+      swarm[t][i].v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
+      // run GD
+      swarm[t][i].performGD(false);
+
+      // update particle best and global best
+      if (swarm[t][i].cost[searchsteps-1] < swarm[t-1][i].cost[searchsteps-1]) {
+        swarm[t][i].particle_pbest[0] = swarm[t][i].particle_pcurr[0];
+        swarm[t][i].particle_pbest[1] = swarm[t][i].particle_pcurr[1];
+        swarm[t][i].particle_pbest[2] = swarm[t][i].particle_pcurr[2];
+        swarm[t][i].particle_pbest[3] = swarm[t][i].particle_pcurr[3];
+
+        // particle best must be better than curr, otherwise wouldn't make threshold for global (save if/then eval freq)
+        if (swarm[t][i].cost[searchsteps-1] < g_best_swarm_pos[4]) {
+          g_best_swarm_pos[0] = swarm[t][i].particle_pcurr[0];
+          g_best_swarm_pos[1] = swarm[t][i].particle_pcurr[1];
+          g_best_swarm_pos[2] = swarm[t][i].particle_pcurr[2];
+          g_best_swarm_pos[3] = swarm[t][i].particle_pcurr[3];
+        }
+      }
+      // end updates
+
+    }
+  }
+
+
+  //-------------------------------
+  // SECTION 3: Run Long Chain of Grad Descent based on global best start parameters
+  //-------------------------------
+  // initialize and fill in params
+  vector<double> fvecfinal(n_Demes);
+  fill(fvecfinal.begin(), fvecfinal.end(), g_best_swarm_pos[0]);
+  Particle discParticle;
+  discParticle.steps = steps;
+  discParticle.n_Demes = n_Demes;
+  discParticle.n_Kpairmax = n_Kpairmax;
+  discParticle.m = g_best_swarm_pos[1];
+  discParticle.f_learningrate = g_best_swarm_pos[2];
+  discParticle.m_learningrate = g_best_swarm_pos[3];
+  discParticle.m_lowerbound = m_lowerbound;
+  discParticle.m_upperbound = m_upperbound;
+  discParticle.b1 = b1;
+  discParticle.b2 = b2;
+  discParticle.e = e;
+  discParticle.fvec = fvecfinal;
+  discParticle.gendist_arr = gendist_arr;
+  discParticle.geodist_mat = geodist_mat;
+  // storage and ADAM items
+  vector<double> cost(steps);
+  vector<double> m_run(steps);
+  vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
+  vector<double> m_gradtraj(steps); // m gradient storage
+  vector<vector<double>> fi_gradtraj(steps, vector<double>(n_Demes)); // fi storage gradient
+  // moments for Adam
+  // https://arxiv.org/pdf/1412.6980
+  vector<double> m1t_m(steps); // first moment
+  vector<double> v2t_m(steps); // second moment (v)
+  double m1t_m_hat; // first moment bias corrected
+  double v2t_m_hat; // second moment (v) bias corrected
+  vector<vector<double>> m1t_fi(steps, vector<double>(n_Demes)); // first moment
+  vector<vector<double>> v2t_fi(steps, vector<double>(n_Demes)); // second moment (v)
+  vector<double> m1t_fi_hat(n_Demes); // first moment bias corrected
+  vector<double> v2t_fi_hat(n_Demes); // second moment (v) bias corrected
+  // fill in for class
+  discParticle.cost = cost;
+  discParticle.m_run = m_run;
+  discParticle.fi_run = fi_run;
+  discParticle.m_gradtraj = m_gradtraj;
+  discParticle.fi_gradtraj = fi_gradtraj;
+  discParticle.m1t_m = m1t_m;
+  discParticle.v2t_m = v2t_m;
+  discParticle.m1t_m_hat = m1t_m_hat;
+  discParticle.v2t_m_hat = v2t_m_hat;
+  discParticle.m1t_fi = m1t_fi;
+  discParticle.v2t_fi = v2t_fi;
+  discParticle.m1t_fi_hat = m1t_fi_hat;
+  discParticle.v2t_fi_hat = v2t_fi_hat;
+  // run GD
+  discParticle.performGD(report_progress);
+
+  cout << "made it";
+  return(0);
+  }
+
   // //-------------------------------
   // // Out: return as Rcpp object
   // //-------------------------------
-  // return Rcpp::List::create(Rcpp::Named("m_run") = discParticle.m_run,
+  // return Rcpp::List::create(Rcpp::Named("swarm") = swarm,
+  //                           Rcpp::Named("m_run") = discParticle.m_run,
   //                           Rcpp::Named("fi_run") = discParticle.fi_run,
   //                           Rcpp::Named("m_gradtraj") = discParticle.m_gradtraj,
   //                           Rcpp::Named("fi_gradtraj") = discParticle.fi_gradtraj,

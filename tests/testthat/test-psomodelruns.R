@@ -22,7 +22,7 @@ test_that("PSO modelruns", {
                                     b2 = 0.999,
                                     e = 1e-8,
                                     steps = 1e3,
-                                    babysteps = 1e1,
+                                    searchsteps = 1e1,
                                     swarmsize = 5,
                                     swarmsteps = 10,
                                     normalize_geodist = F,
