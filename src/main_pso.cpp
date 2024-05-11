@@ -269,8 +269,8 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   //-------------------------------
   if (return_verbose) {
     vector<vector<vector<double>>> swarmfill(swarmsteps, vector<vector<double>>(swarmsize, vector<double>(5)));
-    for (int t = 0; t < swarmsteps; t++) {
-      for (int i = 0; i < swarmsize; i++) {
+    for (int t = 1; t < swarmsteps; t++) {
+      for (int i = 1; i < swarmsize; i++) {
         for (int d = 0; d < 4; d++) {
           swarmfill[t][i][d] = swarm[t][i].particle_pcurr[d];
         }

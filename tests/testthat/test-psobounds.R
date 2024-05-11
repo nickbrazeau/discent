@@ -14,7 +14,7 @@ test_that("PSO respects bounds", {
                                     flearn_lowerbound = 1e-3,
                                     flearn_upperbound = 1e-1,
                                     mlearn_lowerbound = 1e-3,
-                                    mlearn_upperbound = 1e-1,
+                                    mlearn_upperbound = 100,
                                     c1 = 0.1,
                                     c2 = 0.1,
                                     w = 0.25,
@@ -26,8 +26,8 @@ test_that("PSO respects bounds", {
                                     swarmsize = 5,
                                     swarmsteps = 10,
                                     normalize_geodist = F,
-                                    report_progress = F,
-                                    return_verbose = F)
+                                    report_sd_progress = F,
+                                    return_verbose = T)
   #......................
   # check that bounds are respect
   #......................

@@ -90,7 +90,7 @@ deme_inbreeding_spcoef_pso <- function(discdat,
   assert_single_int(steps)
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")
-  ssert_single_logical(report_sd_progress)
+  assert_single_logical(report_sd_progress)
   assert_single_logical(report_fd_progress)
   assert_single_logical(normalize_geodist)
 
