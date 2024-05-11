@@ -10,7 +10,7 @@ test_that("model has deterministic results from same start", {
 
   # given same start parameters and data and iters
   # model should always follow the same gradient/trajectory
-  mod1 <- deme_inbreeding_spcoef(discdat = inputdisc,
+  mod1 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                  start_params = our_start_params,
                                  f_learningrate = 1e-5,
                                  m_learningrate = 1e-1,
@@ -22,7 +22,7 @@ test_that("model has deterministic results from same start", {
                                  report_progress = F,
                                  return_verbose = F)
 
-  mod2 <- deme_inbreeding_spcoef(discdat = inputdisc,
+  mod2 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                  start_params = our_start_params,
                                  f_learningrate = 1e-5,
                                  m_learningrate = 1e-1,
@@ -34,7 +34,7 @@ test_that("model has deterministic results from same start", {
                                  report_progress = F,
                                  return_verbose = F)
 
-  mod3 <- deme_inbreeding_spcoef(discdat = inputdisc,
+  mod3 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                  start_params = our_start_params,
                                  f_learningrate = 1e-5,
                                  m_learningrate = 1e-1,
@@ -46,7 +46,7 @@ test_that("model has deterministic results from same start", {
                                  report_progress = F,
                                  return_verbose = F)
 
-  mod4 <- deme_inbreeding_spcoef(discdat = inputdisc,
+  mod4 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                  start_params = our_start_params,
                                  f_learningrate = 1e-5,
                                  m_learningrate = 1e-1,
