@@ -49,30 +49,6 @@ rnorm_interval <- function(mean, sd, a=0, b=1) {
 #'@export
 
 sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
-  # #......................
-  # # assertions
-  # #......................
-  # assert_numeric(demesize)
-  # assert_numeric(distmat)
-  # assert_numeric(rate)
-  # assert_numeric(Ft)
-  # assert_single_bounded(Ft, left = 0, right = 1)
-  # if (inherits(distmat, "dist")) {
-  #   assert_eq(length(demesize), nrow(as.matrix(distmat)),
-  #             message = "Distance matrix must contain a row and column
-  #                    for each deme")
-  # } else {
-  #   assert_eq(length(demesize), nrow(distmat),
-  #             message = "Distance matrix must contain a row and column
-  #                    for each deme")
-  #   assert_eq(nrow(distmat), ncol(distmat),
-  #             message = "If not a distance matrix (class: 'dist'), then
-  #           distance matrix must be square")
-  #   assertthat::are_equal(distmat[ lower.tri(distmat) ], distmat[ upper.tri(distmat) ],
-  #                         message = "If not a distance matrix (class: 'dist'), then
-  #                       must be a symmetric matrix")
-  # }
-
 
   #......................
   # simulation
