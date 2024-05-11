@@ -54,7 +54,8 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   double b1 = rcpp_to_double(args["b1"]);
   double b2 = rcpp_to_double(args["b2"]);
   double e = rcpp_to_double(args["e"]);
-  bool report_progress = rcpp_to_bool(args["report_progress"]);
+  bool report_sd_progress = rcpp_to_bool(args["report_sd_progress"]);
+  bool report_fd_progress = rcpp_to_bool(args["report_fd_progress"]);
   bool return_verbose = rcpp_to_bool(args["return_verbose"]);
   // items for particle swarm
   int swarmsize = rcpp_to_int(args["swarmsize"]);
@@ -96,19 +97,19 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     vector<double> fvec(n_Demes);
     double ffill = runif1(fi_lowerbound, fi_upperbound); // rand fi start param
     fill(fvec.begin(), fvec.end(), ffill);
+    swarm[0][i].fvec = fvec;
+    swarm[0][i].m = runif1(m_lowerbound, m_upperbound);
+    swarm[0][i].f_learningrate = runif1(flearn_lowerbound, flearn_upperbound);
+    swarm[0][i].m_learningrate = runif1(mlearn_lowerbound, mlearn_upperbound);
     swarm[0][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
     swarm[0][i].steps = searchsteps;
     swarm[0][i].n_Demes = n_Demes;
     swarm[0][i].n_Kpairmax = n_Kpairmax;
-    swarm[0][i].m = runif1(m_lowerbound, m_upperbound);
-    swarm[0][i].f_learningrate = runif1(flearn_lowerbound, flearn_upperbound);
-    swarm[0][i].m_learningrate = runif1(mlearn_lowerbound, mlearn_upperbound);
     swarm[0][i].m_lowerbound = m_lowerbound;
     swarm[0][i].m_upperbound = m_upperbound;
     swarm[0][i].b1 = b1;
     swarm[0][i].b2 = b2;
     swarm[0][i].e = e;
-    swarm[0][i].fvec = fvec;
 
     // storage and ADAM items
     swarm[0][i].cost = vector<double>(searchsteps);
@@ -169,19 +170,19 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
       //-------------------------
       vector<double> fvec(n_Demes);
       fill(fvec.begin(), fvec.end(), swarm[t][i].particle_pcurr[0]);
+      swarm[t][i].fvec = fvec;
+      swarm[t][i].m = swarm[t][i].particle_pcurr[1];
+      swarm[t][i].f_learningrate = swarm[t][i].particle_pcurr[2];
+      swarm[t][i].m_learningrate = swarm[t][i].particle_pcurr[3];
       swarm[t][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
       swarm[t][i].steps = searchsteps;
       swarm[t][i].n_Demes = n_Demes;
       swarm[t][i].n_Kpairmax = n_Kpairmax;
-      swarm[t][i].m = swarm[t][i].particle_pcurr[1];
-      swarm[t][i].f_learningrate = swarm[t][i].particle_pcurr[2];
-      swarm[t][i].m_learningrate = swarm[t][i].particle_pcurr[3];
       swarm[t][i].m_lowerbound = m_lowerbound;
       swarm[t][i].m_upperbound = m_upperbound;
       swarm[t][i].b1 = b1;
       swarm[t][i].b2 = b2;
       swarm[t][i].e = e;
-      swarm[t][i].fvec = fvec;
 
       // storage and ADAM items
       swarm[t][i].cost = vector<double>(searchsteps);
@@ -198,7 +199,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
       swarm[t][i].m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
       swarm[t][i].v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
       // run GD
-      swarm[t][i].performGD(false, gendist_arr, geodist_mat);
+      swarm[t][i].performGD(report_sd_progress, gendist_arr, geodist_mat);
 
       // update particle best and global best
       if (swarm[t][i].cost[searchsteps-1] < swarm[t-1][i].cost[searchsteps-1]) {
@@ -261,15 +262,15 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
 
 
   // run GD
-  discParticle.performGD(report_progress, gendist_arr, geodist_mat);
+  discParticle.performGD(report_fd_progress, gendist_arr, geodist_mat);
 
   //-------------------------------
   // Out: return as Rcpp object
   //-------------------------------
   if (return_verbose) {
     vector<vector<vector<double>>> swarmfill(swarmsteps, vector<vector<double>>(swarmsize, vector<double>(5)));
-    for (int t = 1; t < swarmsteps; t++) {
-      for (int i = 1; i < swarmsize; i++) {
+    for (int t = 0; t < swarmsteps; t++) {
+      for (int i = 0; i < swarmsize; i++) {
         for (int d = 0; d < 4; d++) {
           swarmfill[t][i][d] = swarm[t][i].particle_pcurr[d];
         }

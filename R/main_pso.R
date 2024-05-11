@@ -13,6 +13,8 @@
 #' @param  swarmsize
 #' @param  swarmsteps
 #' @param  searchsteps
+#' @param report_sd_progress boolean; search chain
+#' @param report_fd_progress boolean; final chain
 #' @inherit description deme_inbreeding_spcoef_vanilla
 #' @details The gen.geo.dist dataframe must be named with the following columns:
 #'          "smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
@@ -49,7 +51,8 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                                        swarmsize = 25,
                                        thin = 1,
                                        normalize_geodist = TRUE,
-                                       report_progress = TRUE,
+                                       report_sd_progress = TRUE,
+                                       report_fd_progress = TRUE,
                                        return_verbose = FALSE){
 
   #..............................................................
@@ -87,12 +90,18 @@ deme_inbreeding_spcoef_pso <- function(discdat,
   assert_single_int(steps)
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")
-  assert_single_logical(report_progress)
+  ssert_single_logical(report_sd_progress)
+  assert_single_logical(report_fd_progress)
   assert_single_logical(normalize_geodist)
 
   # no missing
   if(sum(is.na(discdat)) != 0) {
     stop("discdat dataframe cannot have missing values")
+  }
+
+  # catch accidental bad F and M bound
+  if ( any(round(c(fi_lowerbound, m_lowerbound), digits = 1e200) == 0) ) {
+    warning("The Fi or M lower-bound is zero (or essentially zero), which will result in unstable behavior in the Gradient-Descent algorithm. Consider increasing the lower-bound limit")
   }
 
   #......................
@@ -150,13 +159,6 @@ deme_inbreeding_spcoef_pso <- function(discdat,
     discdat <- discdat %>%
       dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
   }
-  # catch accidental bad M start if user is standardizing distances
-  if (normalize_geodist & (m_upperbound > 500) ) {
-    warning("You have selected to normalize geographic distances, but your
-            migration rate upper bound parameter is large. Please consider placing it on a
-            similar scale to your normalized geographic distances for stability.")
-  }
-
 
   # put geo information into distance matrix
   geodist <- discdat %>%
@@ -210,7 +212,8 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                swarmsize = swarmsize,
                searchsteps = searchsteps,
                steps = steps,
-               report_progress = report_progress,
+               report_sd_progress = report_sd_progress,
+               report_fd_progress = report_fd_progress,
                return_verbose = return_verbose
   )
 

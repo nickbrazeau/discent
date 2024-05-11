@@ -1,0 +1,48 @@
+---
+title: "Running the Basic Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Running the Model}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(discent) 
+```
+
+# ***
+
+```{r}
+data("IBD_simulation_data")
+
+start_params <- rep(0.3, 3)
+names(start_params) <- 1:3
+start_params <- c(start_params, "m"= 250)
+
+#run
+ret <- discent::deme_inbreeding_spcoef_vanilla(discdat = IBD_simulation_data,
+                                       start_params = start_params,
+                                       f_learningrate = 0.001,
+                                       m_learningrate = 1e-6,
+                                       m_lowerbound = 0,
+                                       m_upperbound = Inf,
+                                       b1 = 0.9,
+                                       b2 = 0.999,
+                                       e = 1e-8,
+                                       steps = 1e4,
+                                       thin = 1,
+                                       normalize_geodist = TRUE,
+                                       report_progress = TRUE,
+                                       return_verbose = TRUE)
+
+```
