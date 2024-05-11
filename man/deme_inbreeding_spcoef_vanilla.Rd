@@ -44,7 +44,7 @@ deme_inbreeding_spcoef_vanilla(
 
 \item{thin}{integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
 
-\item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. rescaled to \code{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
+\item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 
 \item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
 

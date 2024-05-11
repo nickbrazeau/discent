@@ -7,9 +7,9 @@ Particle Swarm Meta-Optimization}
 \usage{
 deme_inbreeding_spcoef_pso(
   discdat,
-  m_lowerbound = 0,
+  m_lowerbound = 1e-10,
   m_upperbound = Inf,
-  fi_lowerbound = 0,
+  fi_lowerbound = 0.001,
   fi_upperbound = 0.3,
   flearn_lowerbound = 1e-10,
   flearn_upperbound = 0.01,
@@ -22,6 +22,9 @@ deme_inbreeding_spcoef_pso(
   b2 = 0.999,
   e = 1e-08,
   steps = 1000,
+  searchsteps = 100,
+  swarmsteps = 50,
+  swarmsize = 25,
   thin = 1,
   normalize_geodist = TRUE,
   report_progress = TRUE,
@@ -61,9 +64,15 @@ deme_inbreeding_spcoef_pso(
 
 \item{steps}{integer; the number of "steps" as we move down the gradient}
 
+\item{searchsteps}{}
+
+\item{swarmsteps}{}
+
+\item{swarmsize}{}
+
 \item{thin}{integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
 
-\item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. rescaled to \code{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
+\item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 
 \item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
 
@@ -80,10 +89,6 @@ The gen.geo.dist dataframe must be named with the following columns:
 Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
 Pairwise Genetic Distance; Pairwise Geographpic Distance. Note, the order of the
 columns do not matter but the names of the columns must match.
-
-The start_params vector names must match the cluster names (i.e. clusters must be
-have a name that we can match on for the starting relatedness paramerts). In addition,
-you must provide a start parameter for "m".
 
 We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
 logit transformation internally in the code.
