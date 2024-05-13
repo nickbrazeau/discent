@@ -90,7 +90,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // SECTION 2: Run PSO
   //---------------------------------------------------
   //-----------------------------
-  // init PSO
+  // init PSO, t = 0
   //-----------------------------
   for (int i = 0; i < swarmsize; i++) {
     // fill in particles
@@ -128,32 +128,41 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     // run GD
     swarm[0][i].performGD(false, gendist_arr, geodist_mat);
     // store current position, personal best, and velocity
-    vector<double> init_p0(4);
     vector<double> init_velocity0(4);
     fill(init_velocity0.begin(), init_velocity0.end(),0); // decision to start with an initial velocity of zero, slow-start/conservative
-    swarm[0][i].particle_pbest = swarm[0][i].particle_pcurr = init_p0;
-    g_best_swarm_pos[0] = swarm[0][i].particle_pbest[0] = swarm[0][i].particle_pcurr[0] = ffill;
-    g_best_swarm_pos[1] = swarm[0][i].particle_pbest[1] = swarm[0][i].particle_pcurr[1] = swarm[0][i].m;
-    g_best_swarm_pos[2] = swarm[0][i].particle_pbest[2] = swarm[0][i].particle_pcurr[2] = swarm[0][i].f_learningrate;
-    g_best_swarm_pos[3] = swarm[0][i].particle_pbest[3] = swarm[0][i].particle_pcurr[3] = swarm[0][i].m_learningrate;
     swarm[0][i].particle_velocity = init_velocity0;
-    // update global best
-    g_best_swarm_pos[4] = swarm[0][i].cost[searchsteps-1];
+    swarm[0][i].particle_pcurr = vector<double>(4); // blank to fill in initial values above, length 4: F, M, Flearn, Mlearn
+    swarm[0][i].particle_pbest = vector<double>(5); // blank as above but length 5 to include cost tracking
+    swarm[0][i].particle_pbest[0] = swarm[0][i].particle_pcurr[0] = ffill;
+    swarm[0][i].particle_pbest[1] = swarm[0][i].particle_pcurr[1] = swarm[0][i].m;
+    swarm[0][i].particle_pbest[2] = swarm[0][i].particle_pcurr[2] = swarm[0][i].f_learningrate;
+    swarm[0][i].particle_pbest[3] = swarm[0][i].particle_pcurr[3] = swarm[0][i].m_learningrate;
+    swarm[0][i].particle_pbest[4] = OVERFLO_DOUBLE; // high initial cost, don't get stuck on first guess
   }
-
-
+  // find initial global best
+  g_best_swarm_pos[4] = swarm[0][0].cost[searchsteps-1]; // init a minimum
+  int newglobindex = 0;
+  for (int i = 1; i < swarmsize; i++) {
+    if (swarm[0][i].cost[searchsteps-1] < g_best_swarm_pos[4])
+    g_best_swarm_pos[4] = swarm[0][i].cost[searchsteps-1];
+    newglobindex = i;
+  }
+  // update global best for t=0 in particle steps gathered from above
+  g_best_swarm_pos[0] = swarm[0][newglobindex].particle_pbest[0];
+  g_best_swarm_pos[1] = swarm[0][newglobindex].particle_pbest[1];
+  g_best_swarm_pos[2] = swarm[0][newglobindex].particle_pbest[2];
+  g_best_swarm_pos[3] = swarm[0][newglobindex].particle_pbest[3];
 
   //-----------------------------
-  // Remaining Steps of PSO
+  // Remaining Steps of PSO, t = 1 -> tsteps
   //-----------------------------
   for (int t = 1; t < swarmsteps; t++) {
-    for (int i = 1; i < swarmsize; i++) {
+    for (int i = 0; i < swarmsize; i++) {
       // initialize swarm pieces for below
-      vector<double> init_p(4);
-      vector<double> init_velocity(4);
-      swarm[t][i].particle_pbest = swarm[t][i].particle_pcurr = init_p;
-      swarm[t][i].particle_velocity = init_velocity;
-      // calculate new velocity and position for each disc param
+      swarm[t][i].particle_pbest = swarm[t-1][i].particle_pbest; // init prior bests
+      swarm[t][i].particle_pcurr = vector<double>(4); // empty new positions
+      swarm[t][i].particle_velocity = vector<double>(4); // empty new velocities
+      // Now update new velocity and position for each disc param
       for (int d = 0; d < 4; d++) {
         // breaking velocity calculation into inertia, cognitive, and social componentns
         double inert = w * swarm[t-1][i].particle_velocity[d];
@@ -198,26 +207,27 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
       swarm[t][i].v2t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // second fi moment (v);
       swarm[t][i].m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
       swarm[t][i].v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
-      // run GD
+      // run GD to get COST, which will dictate local and global minima
       swarm[t][i].performGD(report_sd_progress, gendist_arr, geodist_mat);
 
-      // update particle best and global best
-      if (swarm[t][i].cost[searchsteps-1] < swarm[t-1][i].cost[searchsteps-1]) {
+      // update particle best
+      if (swarm[t][i].cost[searchsteps-1] < swarm[t-1][i].particle_pbest[4]) {
         swarm[t][i].particle_pbest[0] = swarm[t][i].particle_pcurr[0];
         swarm[t][i].particle_pbest[1] = swarm[t][i].particle_pcurr[1];
         swarm[t][i].particle_pbest[2] = swarm[t][i].particle_pcurr[2];
         swarm[t][i].particle_pbest[3] = swarm[t][i].particle_pcurr[3];
+        swarm[t][i].particle_pbest[4] = swarm[t][i].cost[searchsteps-1]; // update cost as well to find new particle minimum
 
-        // particle best must be better than curr, otherwise wouldn't make threshold for global (save if/then eval freq)
+        // Update global best: can nest this IF-loop b/c particle best must be better than curr to meet threshold for global min
         if (swarm[t][i].cost[searchsteps-1] < g_best_swarm_pos[4]) {
           g_best_swarm_pos[0] = swarm[t][i].particle_pcurr[0];
           g_best_swarm_pos[1] = swarm[t][i].particle_pcurr[1];
           g_best_swarm_pos[2] = swarm[t][i].particle_pcurr[2];
           g_best_swarm_pos[3] = swarm[t][i].particle_pcurr[3];
+          g_best_swarm_pos[4] = swarm[t][i].cost[searchsteps-1]; // update cost as well to find new global minimum
         }
       }
       // end updates
-
     }
   }
 
@@ -267,18 +277,34 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   //-------------------------------
   // Out: return as Rcpp object
   //-------------------------------
-  if (return_verbose) {
-    vector<vector<vector<double>>> swarmfill(swarmsteps, vector<vector<double>>(swarmsize, vector<double>(5)));
-    for (int t = 1; t < swarmsteps; t++) {
-      for (int i = 1; i < swarmsize; i++) {
-        for (int d = 0; d < 4; d++) {
-          swarmfill[t][i][d] = swarm[t][i].particle_pcurr[d];
-        }
-          swarmfill[t][i][4] = swarm[t][i].cost[searchsteps-1];
+
+  vector<vector<vector<double>>> swarmfill(swarmsteps, vector<vector<double>>(swarmsize, vector<double>(13)));
+    for (int t = 0; t < swarmsteps; t++) {
+      for (int i = 0; i < swarmsize; i++) {
+        // p current positions
+        swarmfill[t][i][0] = swarm[t][i].particle_pcurr[0];
+        swarmfill[t][i][1] = swarm[t][i].particle_pcurr[1];
+        swarmfill[t][i][2] = swarm[t][i].particle_pcurr[2];
+        swarmfill[t][i][3] = swarm[t][i].particle_pcurr[3];
+        // p best position
+        swarmfill[t][i][4] = swarm[t][i].particle_pbest[0];
+        swarmfill[t][i][5] = swarm[t][i].particle_pbest[1];
+        swarmfill[t][i][6] = swarm[t][i].particle_pbest[2];
+        swarmfill[t][i][7] = swarm[t][i].particle_pbest[3];
+        swarmfill[t][i][8] = swarm[t][i].particle_pbest[4];
+        // p velocity
+        swarmfill[t][i][9] = swarm[t][i].particle_velocity[0];
+        swarmfill[t][i][10] = swarm[t][i].particle_velocity[1];
+        swarmfill[t][i][11] = swarm[t][i].particle_velocity[2];
+        swarmfill[t][i][12] = swarm[t][i].particle_velocity[3];
       }
     }
+
+
+  if (return_verbose) {
     // return with swarm details
-    return Rcpp::List::create(Rcpp::Named("swarm") = swarmfill,
+    return Rcpp::List::create(
+                              Rcpp::Named("swarm") = swarmfill,
                               Rcpp::Named("m_run") = discParticle.m_run,
                               Rcpp::Named("fi_run") = discParticle.fi_run,
                               Rcpp::Named("m_gradtraj") = discParticle.m_gradtraj,
@@ -304,6 +330,4 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
                               Rcpp::Named("Final_Fis") = discParticle.fvec,
                               Rcpp::Named("Final_m") = discParticle.m);
   }
-
-
-  }
+}

@@ -39,9 +39,9 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                                        flearn_upperbound = 1e-2,
                                        mlearn_lowerbound = 1e-15,
                                        mlearn_upperbound = 1e-8,
-                                       c1 = 0.1,
-                                       c2 = 0.1,
-                                       w = 0.25,
+                                       c1 = 2.0,
+                                       c2 = 2.0,
+                                       w = 0.73,
                                        b1 = 0.9,
                                        b2 = 0.999,
                                        e = 1e-8,
@@ -228,6 +228,27 @@ deme_inbreeding_spcoef_pso <- function(discdat,
   # process output
   colnames(keyi) <- c("Deme", "key")
   if (return_verbose) {
+
+    #......................
+    # tidy up swarm
+    #......................
+    swarmtidy <- as.data.frame( matrix(NA, nrow = swarmsize * swarmsteps, ncol = 15))
+    rowiter <- 1
+    for (t in 1:swarmsteps) {
+      for (i in 1:swarmsize) {
+        swarmtidy[rowiter,1] <- t
+        swarmtidy[rowiter,2] <- i
+        swarmtidy[rowiter,3:15] <- unlist(output_raw$swarm[[t]][[i]])
+        rowiter <- rowiter + 1
+      }
+    }
+    colnames(swarmtidy) <- c("swarm_step_t", "particle_int",
+                             "particle_Poscurr_Fstart", "particle_Poscurr_Mstart", "particle_Poscurr_Flearn", "particle_Poscurr_Mlearn",
+                             "particle_Posbest_Fstart", "particle_Posbest_Mstart", "particle_Posbest_Flearn", "particle_Posbest_Mlearn", "particle_Posbest_Cost",
+                             "particle_Veloccurr_Fstart", "particle_Veloccurr_Mstart", "particle_Veloccurr_Flearn", "particle_Veloccurr_Mlearn")
+    #......................
+    # rest of output
+    #......................
     output <- list(
       deme_key = keyi,
       m_run = output_raw$m_run[thin_its],
@@ -241,7 +262,7 @@ deme_inbreeding_spcoef_pso <- function(discdat,
       cost = output_raw$cost[thin_its],
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m,
-      swarm = output_raw$swarm
+      swarm = swarmtidy
     )
 
   } else {

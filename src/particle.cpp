@@ -36,7 +36,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     }
   }
   // Catch and Cap Extreme Costs
-  if (cost[0] > OVERFLO_DOUBLE | isnan(cost[0])) {
+  if (cost[0] > OVERFLO_DOUBLE || isnan(cost[0])) {
     cost[0] = OVERFLO_DOUBLE;
   }
 
@@ -149,7 +149,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       }
     }
     // Catch and Cap Extreme Costs
-    if (cost[step] > OVERFLO_DOUBLE | isnan(cost[step])) {
+    if (cost[step] > OVERFLO_DOUBLE || isnan(cost[step])) {
       cost[step] = OVERFLO_DOUBLE;
     }
   } // end steps
