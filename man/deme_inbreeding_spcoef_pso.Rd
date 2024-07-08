@@ -21,9 +21,9 @@ deme_inbreeding_spcoef_pso(
   b1 = 0.9,
   b2 = 0.999,
   e = 1e-08,
-  steps = 1000,
-  searchsteps = 100,
-  swarmsteps = 50,
+  finalsteps = 1000,
+  particlesteps = 100,
+  swarmmoves = 50,
   swarmsize = 25,
   thin = 1,
   normalize_geodist = TRUE,
@@ -35,9 +35,9 @@ deme_inbreeding_spcoef_pso(
 \arguments{
 \item{discdat}{dataframe; The genetic-geographic data by deme (K)}
 
-\item{m_lowerbound}{double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+\item{m_lowerbound}{double; lower limit value for the global "m" parameter; any "m" value encounter less than the lower bound will be replaced by the lower bound}
 
-\item{m_upperbound}{double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+\item{m_upperbound}{double; upper limit value for the global "m" parameter; any "m" value encounter greater than the upper bound will be replaced by the upper bound}
 
 \item{fi_lowerinit}{double; The initial deme-inbreeding parameter lower-bound to parameterize
 each swarm-particle (\eqn{a}), such that starting deme-inbreeding estimates are drawn from
@@ -58,27 +58,37 @@ each swarm-particle's convergence to the \eqn{m} parameter (\eqn{a} draw from th
 \item{mlearn_upperinit}{double; As above, the initial migration learning-rate upper-bound to parameterize
 each swarm-particle (\eqn{b}).}
 
-\item{c1}{}
+\item{c1}{double; the "cognitive" coefficient from the PSO algorithm. Essentially, it
+dictates how strongly the prior particle's positions should be weighted
+against the entire swarm's historical positions in determining the next step of exploration.}
 
-\item{c2}{}
+\item{c2}{double; the "social" coefficient from the PSO. Essentially determines how much weight
+or influence other particles in the swarm exert on the current particle in determing the next step
+of exploration.}
 
-\item{w}{}
+\item{w}{double; the "inertia" coefficient from the PSO algorithm. Essentially, how
+strongly the currently velocity (i.e. the direction the particle is headed) should be weighted relative to the prior particle's
+and swarm's current positions (i.e. prior directions).}
 
-\item{b1}{double; Exponential decay rates for the first moment estimate}
+\item{b1}{double; exponential decay rates for the first moment estimate in the Adam optimization algorithm}
 
-\item{b2}{double; Exponential decay rates for the second moment estimate}
+\item{b2}{double; exponential decay rates for the second moment estimate in the Adam optimization algorithm}
 
-\item{e}{double; Epsilon (error) for stability in the Adam optimization algorithm}
+\item{e}{double; epsilon (error) for stability in the Adam optimization algorithm}
 
-\item{steps}{integer; the number of "steps" as we move down the gradient}
+\item{finalsteps}{integer; the number of "final" steps considered for the "final run" of the gradient descent}
 
-\item{searchsteps}{}
+\item{particlesteps}{integer; the number of steps that a particle takes in the vanilla gradient descent algorithm given its newly initialized start parameters in
+order to calculate a cost for the new position. Essentially, we consider the vanilla gradient descent model at the current position for a short number of iterations to
+estimate the "favorability of the positions current footing" or "traction" of the current position being considered.}
 
-\item{swarmsteps}{}
+\item{swarmmoves}{integer; the number of iterations or moves that the particles within the swarm are able
+to explore before selecting the final particle for the "final" run (note, \emph{moves} is reserved for the swarm's actions, while \emph{steps}
+is used to describe iterations in the gradient descent algorithm).}
 
-\item{swarmsize}{}
+\item{swarmsize}{integer; the number of particles in the swarm}
 
-\item{thin}{integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
+\item{thin}{integer; the number of steps to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
 
 \item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 
@@ -90,9 +100,12 @@ each swarm-particle (\eqn{b}).}
 only for the final iteration. User will typically not want to store every iteration, which can be memory intensive}
 }
 \description{
-The Particle Swarm Optimization is a meta-optimization (meta-heuristic) approach that attempts to find optimal
+The Particle Swarm Optimization (PSO) is a meta-optimization (meta-heuristic) approach that attempts to find optimal
 start parameters for the user to avoid a grid-search approach as would be best practices for fine-tuning the gradient descent
 approach.
+}
+\details{
+Default values are based on ***
 }
 \references{
 Clerc, M., and J. Kennedy. The Particle Swarm — Explosion, Stability, and Convergence in a Multidimensional Complex Space. IEEE Transactions on Evolutionary Computation 6, no. 1 (February 2002): 58–73. Y. H. Shi and R. C. Eberhart, “A modified particle swarm optimizer,” in Proceedings of the IEEE International Conferences on Evolutionary Computation, pp. 69–73, Anchorage, Alaska, USA, May 1998.
