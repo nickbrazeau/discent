@@ -9,94 +9,104 @@ deme_inbreeding_spcoef_pso(
   discdat,
   m_lowerbound = 1e-10,
   m_upperbound = Inf,
-  fi_lowerbound = 0.001,
-  fi_upperbound = 0.3,
-  flearn_lowerbound = 1e-10,
-  flearn_upperbound = 0.01,
-  mlearn_lowerbound = 1e-15,
-  mlearn_upperbound = 1e-08,
-  c1 = 0.1,
-  c2 = 0.1,
-  w = 0.25,
+  fi_lowerinit = 0.001,
+  fi_upperinit = 0.3,
+  flearn_lowerinit = 1e-10,
+  flearn_upperinit = 0.01,
+  mlearn_lowerinit = 1e-15,
+  mlearn_upperinit = 1e-08,
+  c1 = 2,
+  c2 = 2,
+  w = 0.73,
   b1 = 0.9,
   b2 = 0.999,
   e = 1e-08,
-  steps = 1000,
-  searchsteps = 100,
-  swarmsteps = 50,
+  finalsteps = 1000,
+  particlesteps = 100,
+  swarmmoves = 50,
   swarmsize = 25,
   thin = 1,
   normalize_geodist = TRUE,
-  report_progress = TRUE,
+  report_sd_progress = TRUE,
+  report_fd_progress = TRUE,
   return_verbose = FALSE
 )
 }
 \arguments{
 \item{discdat}{dataframe; The genetic-geographic data by deme (K)}
 
-\item{m_lowerbound}{double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+\item{m_lowerbound}{double; lower limit value for the global "m" parameter; any "m" value encounter less than the lower bound will be replaced by the lower bound}
 
-\item{m_upperbound}{double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+\item{m_upperbound}{double; upper limit value for the global "m" parameter; any "m" value encounter greater than the upper bound will be replaced by the upper bound}
 
-\item{fi_lowerbound}{}
+\item{fi_lowerinit}{double; The initial deme-inbreeding parameter lower-bound to parameterize
+each swarm-particle (\eqn{a}), such that starting deme-inbreeding estimates are drawn from
+a uniform distribution \eqn{f = U_{a,b} }}
 
-\item{fi_upperbound}{}
+\item{fi_upperinit}{double; As above, the initial deme-inbreeding parameter upper-bound to parameterize
+each swarm-particle (\eqn{b}).}
 
-\item{flearn_lowerbound}{}
+\item{flearn_lowerinit}{double; The initial deme-inbreeding learning-rate lower-bound to parameterize
+each swarm-particle's convergence to the \eqn{f} parameter (\eqn{a} draw from the unifrom \eqn{f = U_{a,b} }).}
 
-\item{flearn_upperbound}{}
+\item{flearn_upperinit}{double; As above, the initial deme-inbreeding learning-rate upper-bound to parameterize
+each swarm-particle (\eqn{b}).}
 
-\item{mlearn_lowerbound}{}
+\item{mlearn_lowerinit}{double; similar to before, the initial migration learning-rate lower-bound to parameterize
+each swarm-particle's convergence to the \eqn{m} parameter (\eqn{a} draw from the unifrom \eqn{m = U_{a,b} }).}
 
-\item{mlearn_upperbound}{}
+\item{mlearn_upperinit}{double; As above, the initial migration learning-rate upper-bound to parameterize
+each swarm-particle (\eqn{b}).}
 
-\item{c1}{}
+\item{c1}{double; the "cognitive" coefficient from the PSO algorithm. Essentially, it
+dictates how strongly the prior particle's positions should be weighted
+against the entire swarm's historical positions in determining the next step of exploration.}
 
-\item{c2}{}
+\item{c2}{double; the "social" coefficient from the PSO. Essentially determines how much weight
+or influence other particles in the swarm exert on the current particle in determing the next step
+of exploration.}
 
-\item{w}{}
+\item{w}{double; the "inertia" coefficient from the PSO algorithm. Essentially, how
+strongly the currently velocity (i.e. the direction the particle is headed) should be weighted relative to the prior particle's
+and swarm's current positions (i.e. prior directions).}
 
-\item{b1}{double; Exponential decay rates for the first moment estimate}
+\item{b1}{double; exponential decay rates for the first moment estimate in the Adam optimization algorithm}
 
-\item{b2}{double; Exponential decay rates for the second moment estimate}
+\item{b2}{double; exponential decay rates for the second moment estimate in the Adam optimization algorithm}
 
-\item{e}{double; Epsilon (error) for stability in the Adam optimization algorithm}
+\item{e}{double; epsilon (error) for stability in the Adam optimization algorithm}
 
-\item{steps}{integer; the number of "steps" as we move down the gradient}
+\item{finalsteps}{integer; the number of "final" steps considered for the "final run" of the gradient descent}
 
-\item{searchsteps}{}
+\item{particlesteps}{integer; the number of steps that a particle takes in the vanilla gradient descent algorithm given its newly initialized start parameters in
+order to calculate a cost for the new position. Essentially, we consider the vanilla gradient descent model at the current position for a short number of iterations to
+estimate the "favorability of the positions current footing" or "traction" of the current position being considered.}
 
-\item{swarmsteps}{}
+\item{swarmmoves}{integer; the number of iterations or moves that the particles within the swarm are able
+to explore before selecting the final particle for the "final" run (note, \emph{moves} is reserved for the swarm's actions, while \emph{steps}
+is used to describe iterations in the gradient descent algorithm).}
 
-\item{swarmsize}{}
+\item{swarmsize}{integer; the number of particles in the swarm}
 
-\item{thin}{integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
+\item{thin}{integer; the number of steps to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
 
 \item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 
-\item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
+\item{report_sd_progress}{boolean; search chain}
+
+\item{report_fd_progress}{boolean; final chain}
 
 \item{return_verbose}{boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 only for the final iteration. User will typically not want to store every iteration, which can be memory intensive}
 }
 \description{
-Identify Deme Inbreeding Spatial Coefficients in Continuous Space with
-Particle Swarm Meta-Optimization
-}
-\details{
-The gen.geo.dist dataframe must be named with the following columns:
-"smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
-Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
-Pairwise Genetic Distance; Pairwise Geographpic Distance. Note, the order of the
-columns do not matter but the names of the columns must match.
-
-We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
-logit transformation internally in the code.
-
-Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
-for moment decay rates, epsilon, and learning rates are taken from \cite{DP Kingma, 2014}.
-
-The Particle Swarm Optimization is a meta-optimization (meta-heuristic) approach that attempts to find optimal
+The Particle Swarm Optimization (PSO) is a meta-optimization (meta-heuristic) approach that attempts to find optimal
 start parameters for the user to avoid a grid-search approach as would be best practices for fine-tuning the gradient descent
 approach.
+}
+\details{
+Default values are based on ***
+}
+\references{
+Clerc, M., and J. Kennedy. The Particle Swarm — Explosion, Stability, and Convergence in a Multidimensional Complex Space. IEEE Transactions on Evolutionary Computation 6, no. 1 (February 2002): 58–73. Y. H. Shi and R. C. Eberhart, “A modified particle swarm optimizer,” in Proceedings of the IEEE International Conferences on Evolutionary Computation, pp. 69–73, Anchorage, Alaska, USA, May 1998.
 }

@@ -30,19 +30,19 @@ deme_inbreeding_spcoef_vanilla(
 
 \item{m_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
 
-\item{m_lowerbound}{double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+\item{m_lowerbound}{double; lower limit value for the global "m" parameter; any "m" value encounter less than the lower bound will be replaced by the lower bound}
 
-\item{m_upperbound}{double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values}
+\item{m_upperbound}{double; upper limit value for the global "m" parameter; any "m" value encounter greater than the upper bound will be replaced by the upper bound}
 
-\item{b1}{double; Exponential decay rates for the first moment estimate}
+\item{b1}{double; exponential decay rates for the first moment estimate in the Adam optimization algorithm}
 
-\item{b2}{double; Exponential decay rates for the second moment estimate}
+\item{b2}{double; exponential decay rates for the second moment estimate in the Adam optimization algorithm}
 
-\item{e}{double; Epsilon (error) for stability in the Adam optimization algorithm}
+\item{e}{double; epsilon (error) for stability in the Adam optimization algorithm}
 
-\item{steps}{integer; the number of "steps" as we move down the gradient}
+\item{steps}{integer; the number of steps as we move down the gradient}
 
-\item{thin}{integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
+\item{thin}{integer; the number of steps to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
 
 \item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
 
@@ -53,7 +53,7 @@ only for the final iteration. User will typically not want to store every iterat
 }
 \description{
 The purpose of this statistic is to identify an inbreeding coefficient, or degree of
-relatedness, for a given location in space. We assume that locations in spaces can be
+relatedness, for a given location in discrete space. We assume that locations in spaces can be
 represented as "demes," such that multiple individuals live in the same deme
 (i.e. samples are sourced from the same location). The expected pairwise relationship
 between two individuals, or samples, is dependent on the each sample's deme's inbreeding

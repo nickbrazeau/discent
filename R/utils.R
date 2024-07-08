@@ -79,17 +79,17 @@ expand_pairwise <- function(discdf){
 #' @param x DISC result from deme_inbreeding_spcoef function
 #' @noMd
 #' @export
-is.DISCresult <- function(x) {
-  inherits(x, "is.DISCresult")
+is.vanillaDISCresult <- function(x) {
+  inherits(x, "is.vanillaDISCresult")
 }
 
 #' @title print DISCresult S3 Class
 #' @description overload print() function to print summary only
-#' @inheritParams is.DISCresult
+#' @inheritParams is.vanillaDISCresult
 #' @param ... further arguments passed to or from other methods.
 #' @noMd
 #' @export
-print.DISCresult <- function(x, ...) {
+print.vanillaDISCresult <- function(x, ...) {
 
   # print summary only
   cat(crayon::red("Final DISC Range:"),  paste(round(min(x$Final_Fis),2), round(max(x$Final_Fis),2), sep = " - "), "\n")
@@ -103,18 +103,18 @@ print.DISCresult <- function(x, ...) {
 #' @param ... further arguments passed to or from other methods.
 #' @noMd
 #' @export
-summary.DISCresult <- function(object, ...) {
+summary.vanillaDISCresult <- function(object, ...) {
   # send summary only
-  return(tidyout.DISCresult(object))
+  return(tidyout.vanillaDISCresult(object))
 }
 
 
 #............................................................
-# organzing SIR NE output
+# organizing disc output
 #...........................................................
 #' @title Tidy Out Sim Method
 #' @description Method assignment
-#' @inheritParams is.DISCresult
+#' @inheritParams is.vanillaDISCresult
 #' @noMd
 #' @export
 tidyout <- function(x) {
@@ -123,11 +123,11 @@ tidyout <- function(x) {
 
 #' @title Tidy Out Sim
 #' @description Function for taking output of SIR NE and lifting it over
-#' @inheritParams is.DISCresult
+#' @inheritParams is.vanillaDISCresult
 #' @noMd
 #' @export
 
-tidyout.DISCresult <- function(x) {
+tidyout.vanillaDISCresult <- function(x) {
   #......................
   # clean up
   #......................

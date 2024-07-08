@@ -36,7 +36,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     }
   }
   // Catch and Cap Extreme Costs
-  if (cost[0] > OVERFLO_DOUBLE | isnan(cost[0])) {
+  if (cost[0] > OVERFLO_DOUBLE || isnan(cost[0])) {
     cost[0] = OVERFLO_DOUBLE;
   }
 
@@ -124,8 +124,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     m = m - m_learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
     // vanilla GD
     // m = m - m_learningrate * mgrad;
-    // check bounds on m
-    // will reflect with normal based on magnitude + standard normal sd it is off to proper interval; NB also want to bound m so that it can only explore distance isolation (repulsion versus attraction)
+    // assert bounds on m
     if (m < m_lowerbound) {
       m = m_lowerbound;
     } else if (m > m_upperbound) {
@@ -149,7 +148,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       }
     }
     // Catch and Cap Extreme Costs
-    if (cost[step] > OVERFLO_DOUBLE | isnan(cost[step])) {
+    if (cost[step] > OVERFLO_DOUBLE || isnan(cost[step])) {
       cost[step] = OVERFLO_DOUBLE;
     }
   } // end steps
