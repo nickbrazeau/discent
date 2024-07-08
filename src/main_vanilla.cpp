@@ -19,7 +19,7 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // extract proposed global M of migration
   double m = rcpp_to_double(args["m"]);
   // get dims
-  int n_Demes = fvec.size();
+  int n_Demes = rcpp_to_int(args["n_Demes"]);
   int n_Kpairmax =  rcpp_to_int(args["n_Kpairmax"]);
 
   // observed pairwise sample genetic distances
