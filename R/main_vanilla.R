@@ -8,8 +8,8 @@
 #' @param e double; epsilon (error) for stability in the Adam optimization algorithm
 #' @param steps integer; the number of steps as we move down the gradient
 #' @param thin integer; the number of steps to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)
-#' @param m_lowerbound double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
-#' @param m_upperbound double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
+#' @param m_lowerbound double; lower limit value for the global "m" parameter; any "m" value encounter less than the lower bound will be replaced by the lower bound
+#' @param m_upperbound double; upper limit value for the global "m" parameter; any "m" value encounter greater than the upper bound will be replaced by the upper bound
 #' @param normalize_geodist boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.
 #' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or

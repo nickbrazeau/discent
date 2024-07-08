@@ -36,6 +36,7 @@
 #' @description The Particle Swarm Optimization (PSO) is a meta-optimization (meta-heuristic) approach that attempts to find optimal
 #' start parameters for the user to avoid a grid-search approach as would be best practices for fine-tuning the gradient descent
 #' approach.
+#' @details Default values are based on ***
 #' @references Clerc, M., and J. Kennedy. The Particle Swarm — Explosion, Stability, and Convergence in a Multidimensional Complex Space. IEEE Transactions on Evolutionary Computation 6, no. 1 (February 2002): 58–73. Y. H. Shi and R. C. Eberhart, “A modified particle swarm optimizer,” in Proceedings of the IEEE International Conferences on Evolutionary Computation, pp. 69–73, Anchorage, Alaska, USA, May 1998.
 #' @export
 
@@ -271,7 +272,8 @@ deme_inbreeding_spcoef_pso <- function(discdat,
       cost = output_raw$cost[thin_its],
       Final_Fis = expit(output_raw$Final_Fis),
       Final_m = output_raw$Final_m,
-      swarm = swarmtidy
+      swarm = swarmtidy,
+      global_best = output_raw$global_best
     )
 
   } else {

@@ -102,7 +102,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     swarm[0][i].f_learningrate = runif1(flearn_lowerinit, flearn_upperinit);
     swarm[0][i].m_learningrate = runif1(mlearn_lowerinit, mlearn_upperinit);
     swarm[0][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
-    swarm[0][i].steps = particlesteps;
+    swarm[0][i].steps = particlesteps; // vanilla GD just takes in steps, in this case our prelim particle steps for estimating cost
     swarm[0][i].n_Demes = n_Demes;
     swarm[0][i].n_Kpairmax = n_Kpairmax;
     swarm[0][i].m_lowerbound = m_lowerbound;
@@ -125,21 +125,21 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     swarm[0][i].v2t_fi = vector<vector<double>>(particlesteps, vector<double>(n_Demes)); // second fi moment (v);
     swarm[0][i].m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
     swarm[0][i].v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
-    // run GD
+    // run GD on initial random start params
     swarm[0][i].performGD(false, gendist_arr, geodist_mat);
     // store current position, personal best, and velocity
     vector<double> init_velocity0(4);
     fill(init_velocity0.begin(), init_velocity0.end(),0); // decision to start with an initial velocity of zero, slow-start/conservative
     swarm[0][i].particle_velocity = init_velocity0;
     swarm[0][i].particle_pcurr = vector<double>(4); // blank to fill in initial values above, length 4: F, M, Flearn, Mlearn
-    swarm[0][i].particle_pbest = vector<double>(5); // blank as above but length 5 to include cost tracking
+    swarm[0][i].particle_pbest = vector<double>(5); // blank as above but length 5 to include cost tracking (F, M, Flearn, Mlearn & Cost)
     swarm[0][i].particle_pbest[0] = swarm[0][i].particle_pcurr[0] = ffill;
     swarm[0][i].particle_pbest[1] = swarm[0][i].particle_pcurr[1] = swarm[0][i].m;
     swarm[0][i].particle_pbest[2] = swarm[0][i].particle_pcurr[2] = swarm[0][i].f_learningrate;
     swarm[0][i].particle_pbest[3] = swarm[0][i].particle_pcurr[3] = swarm[0][i].m_learningrate;
-    swarm[0][i].particle_pbest[4] = OVERFLO_DOUBLE; // high initial cost, don't get stuck on first guess
+    swarm[0][i].particle_pbest[4] = swarm[0][i].cost[particlesteps-1];
   }
-  // find initial global best
+  // find and store initial global best
   g_best_swarm_pos[4] = swarm[0][0].cost[particlesteps-1]; // init a minimum
   int newglobindex = 0;
   for (int i = 1; i < swarmsize; i++) {
@@ -164,18 +164,24 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
       swarm[t][i].particle_velocity = vector<double>(4); // empty new velocities
       // Now update new velocity and position for each disc param
       for (int d = 0; d < 4; d++) {
-        // breaking velocity calculation into inertia, cognitive, and social componentns
+        // breaking velocity calculation into inertia, cognitive, and social components
         double inert = w * swarm[t-1][i].particle_velocity[d];
         double cog = c1 * runif_0_1() * (swarm[t-1][i].particle_pbest[d] - swarm[t-1][i].particle_pcurr[d]);
         double soc = c2 * runif_0_1() * (g_best_swarm_pos[d] - swarm[t-1][i].particle_pcurr[d]);
         // update velocity
         swarm[t][i].particle_velocity[d] = inert + cog + soc;
         // update current position
-        swarm[t][i].particle_pcurr[d] = swarm[t-1][i].particle_pcurr[d] + swarm[t][i].particle_velocity[d];
-      } // end update of params
+        if (d == 1 && (swarm[t-1][i].particle_pcurr[1] + swarm[t][i].particle_velocity[1]) < m_lowerbound) {
+          swarm[t][i].particle_pcurr[1] = m_lowerbound; // catch m lower bound so that particle accurately represents what is being called in grad desc formula
+        } else if (d == 1 && (swarm[t-1][i].particle_pcurr[1] + swarm[t][i].particle_velocity[1]) > m_upperbound) {
+          swarm[t][i].particle_pcurr[1] = m_upperbound; // catch m lower bound so that particle accurately represents what is being called in grad desc formula
+        } else {
+          swarm[t][i].particle_pcurr[d] = swarm[t-1][i].particle_pcurr[d] + swarm[t][i].particle_velocity[d];
+        }
+      } // end update of params position based on velocity
 
       //-------------------------
-      // now run particle for new positions
+      // now run particle prelim cost for new position
       //-------------------------
       vector<double> fvec(n_Demes);
       fill(fvec.begin(), fvec.end(), swarm[t][i].particle_pcurr[0]);
@@ -217,15 +223,14 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
         swarm[t][i].particle_pbest[2] = swarm[t][i].particle_pcurr[2];
         swarm[t][i].particle_pbest[3] = swarm[t][i].particle_pcurr[3];
         swarm[t][i].particle_pbest[4] = swarm[t][i].cost[particlesteps-1]; // update cost as well to find new particle minimum
-
-        // Update global best: can nest this IF-loop b/c particle best must be better than curr to meet threshold for global min
-        if (swarm[t][i].cost[particlesteps-1] < g_best_swarm_pos[4]) {
-          g_best_swarm_pos[0] = swarm[t][i].particle_pcurr[0];
-          g_best_swarm_pos[1] = swarm[t][i].particle_pcurr[1];
-          g_best_swarm_pos[2] = swarm[t][i].particle_pcurr[2];
-          g_best_swarm_pos[3] = swarm[t][i].particle_pcurr[3];
-          g_best_swarm_pos[4] = swarm[t][i].cost[particlesteps-1]; // update cost as well to find new global minimum
-        }
+      }
+       // Update global best
+      if (swarm[t][i].cost[particlesteps-1] < g_best_swarm_pos[4]) {
+        g_best_swarm_pos[0] = swarm[t][i].particle_pcurr[0];
+        g_best_swarm_pos[1] = swarm[t][i].particle_pcurr[1];
+        g_best_swarm_pos[2] = swarm[t][i].particle_pcurr[2];
+        g_best_swarm_pos[3] = swarm[t][i].particle_pcurr[3];
+        g_best_swarm_pos[4] = swarm[t][i].cost[particlesteps-1]; // update cost as well to find new global minimum
       }
       // end updates
     }
@@ -305,6 +310,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     // return with swarm details
     return Rcpp::List::create(
                               Rcpp::Named("swarm") = swarmfill,
+                              Rcpp::Named("global_best") = g_best_swarm_pos,
                               Rcpp::Named("m_run") = discParticle.m_run,
                               Rcpp::Named("fi_run") = discParticle.fi_run,
                               Rcpp::Named("m_gradtraj") = discParticle.m_gradtraj,
