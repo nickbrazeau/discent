@@ -48,7 +48,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
 
   // items for grad descent
   int steps = rcpp_to_int(args["steps"]);
-  int searchsteps = rcpp_to_int(args["searchsteps"]);
+  int particlesteps = rcpp_to_int(args["particlesteps"]);
   double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
   double m_upperbound = rcpp_to_double(args["m_upperbound"]);
   double b1 = rcpp_to_double(args["b1"]);
@@ -59,33 +59,33 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   bool return_verbose = rcpp_to_bool(args["return_verbose"]);
   // items for particle swarm
   int swarmsize = rcpp_to_int(args["swarmsize"]);
-  int swarmsteps = rcpp_to_int(args["swarmsteps"]);
+  int swarmmoves = rcpp_to_int(args["swarmmoves"]);
   int c1 = rcpp_to_double(args["c1"]);
   int c2 = rcpp_to_double(args["c2"]);
   int w = rcpp_to_double(args["w"]);
   // bound for init
-  double fi_lowerbound = rcpp_to_double(args["fi_lowerbound"]);
-  double fi_upperbound = rcpp_to_double(args["fi_upperbound"]);
-  double flearn_lowerbound = rcpp_to_double(args["flearn_lowerbound"]);
-  double flearn_upperbound = rcpp_to_double(args["flearn_upperbound"]);
-  double mlearn_lowerbound = rcpp_to_double(args["mlearn_lowerbound"]);
-  double mlearn_upperbound = rcpp_to_double(args["mlearn_upperbound"]);
+  double fi_lowerinit = rcpp_to_double(args["fi_lowerinit"]);
+  double fi_upperinit = rcpp_to_double(args["fi_upperinit"]);
+  double flearn_lowerinit = rcpp_to_double(args["flearn_lowerinit"]);
+  double flearn_upperinit = rcpp_to_double(args["flearn_upperinit"]);
+  double mlearn_lowerinit = rcpp_to_double(args["mlearn_lowerinit"]);
+  double mlearn_upperinit = rcpp_to_double(args["mlearn_upperinit"]);
   // catch infs
-  fi_lowerbound = (fi_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : fi_lowerbound;
+  fi_lowerinit = (fi_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : fi_lowerinit;
   m_lowerbound = (m_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE :  m_lowerbound;
-  flearn_lowerbound = (flearn_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : flearn_lowerbound;
-  mlearn_lowerbound = (mlearn_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : mlearn_lowerbound;
-  fi_upperbound = (fi_upperbound < OVERFLO_DOUBLE) ? fi_upperbound : OVERFLO_DOUBLE;
+  flearn_lowerinit = (flearn_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : flearn_lowerinit;
+  mlearn_lowerinit = (mlearn_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : mlearn_lowerinit;
+  fi_upperinit = (fi_upperinit < OVERFLO_DOUBLE) ? fi_upperinit : OVERFLO_DOUBLE;
   m_upperbound = (m_upperbound < OVERFLO_DOUBLE) ? m_upperbound : OVERFLO_DOUBLE;
-  flearn_upperbound = (flearn_upperbound < OVERFLO_DOUBLE) ? flearn_upperbound : OVERFLO_DOUBLE;
-  mlearn_upperbound = (mlearn_upperbound < OVERFLO_DOUBLE) ? mlearn_upperbound : OVERFLO_DOUBLE;
+  flearn_upperinit = (flearn_upperinit < OVERFLO_DOUBLE) ? flearn_upperinit : OVERFLO_DOUBLE;
+  mlearn_upperinit = (mlearn_upperinit < OVERFLO_DOUBLE) ? mlearn_upperinit : OVERFLO_DOUBLE;
 
   // storage
   // NB order for vector pos will be fi, m, flearn, mlearn
   vector<double> g_best_swarm_pos(5); // global best of swarm based on our 4 start param & cost for search
   fill(g_best_swarm_pos.begin(), g_best_swarm_pos.end(), OVERFLO_DOUBLE); // minimalization problem
   // nested vectors, first over time, then particles
-  vector<vector<Particle>> swarm(swarmsteps, vector<Particle>(swarmsize));
+  vector<vector<Particle>> swarm(swarmmoves, vector<Particle>(swarmsize));
   //---------------------------------------------------
   // SECTION 2: Run PSO
   //---------------------------------------------------
@@ -95,14 +95,14 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   for (int i = 0; i < swarmsize; i++) {
     // fill in particles
     vector<double> fvec(n_Demes);
-    double ffill = runif1(fi_lowerbound, fi_upperbound); // rand fi start param
+    double ffill = runif1(fi_lowerinit, fi_upperinit); // rand fi start param
     fill(fvec.begin(), fvec.end(), ffill);
     swarm[0][i].fvec = fvec;
     swarm[0][i].m = runif1(m_lowerbound, m_upperbound);
-    swarm[0][i].f_learningrate = runif1(flearn_lowerbound, flearn_upperbound);
-    swarm[0][i].m_learningrate = runif1(mlearn_lowerbound, mlearn_upperbound);
+    swarm[0][i].f_learningrate = runif1(flearn_lowerinit, flearn_upperinit);
+    swarm[0][i].m_learningrate = runif1(mlearn_lowerinit, mlearn_upperinit);
     swarm[0][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
-    swarm[0][i].steps = searchsteps;
+    swarm[0][i].steps = particlesteps;
     swarm[0][i].n_Demes = n_Demes;
     swarm[0][i].n_Kpairmax = n_Kpairmax;
     swarm[0][i].m_lowerbound = m_lowerbound;
@@ -112,17 +112,17 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     swarm[0][i].e = e;
 
     // storage and ADAM items
-    swarm[0][i].cost = vector<double>(searchsteps);
-    swarm[0][i].m_run = vector<double>(searchsteps);
-    swarm[0][i].fi_run = vector<vector<double>>(searchsteps, vector<double>(n_Demes));
-    swarm[0][i].m_gradtraj = vector<double>(searchsteps); // m gradient storage;
-    swarm[0][i].fi_gradtraj =   vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // fi storage gradient;
-    swarm[0][i].m1t_m = vector<double>(searchsteps); // first m moment;
-    swarm[0][i].v2t_m =   vector<double>(searchsteps); // second m moment (v);
+    swarm[0][i].cost = vector<double>(particlesteps);
+    swarm[0][i].m_run = vector<double>(particlesteps);
+    swarm[0][i].fi_run = vector<vector<double>>(particlesteps, vector<double>(n_Demes));
+    swarm[0][i].m_gradtraj = vector<double>(particlesteps); // m gradient storage;
+    swarm[0][i].fi_gradtraj =   vector<vector<double>>(particlesteps, vector<double>(n_Demes)); // fi storage gradient;
+    swarm[0][i].m1t_m = vector<double>(particlesteps); // first m moment;
+    swarm[0][i].v2t_m =   vector<double>(particlesteps); // second m moment (v);
     swarm[0][i].m1t_m_hat = double(); // first moment bias corrected
     swarm[0][i].v2t_m_hat = double();  // second moment (v) bias corrected
-    swarm[0][i].m1t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // first fi moment;
-    swarm[0][i].v2t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // second fi moment (v);
+    swarm[0][i].m1t_fi = vector<vector<double>>(particlesteps, vector<double>(n_Demes)); // first fi moment;
+    swarm[0][i].v2t_fi = vector<vector<double>>(particlesteps, vector<double>(n_Demes)); // second fi moment (v);
     swarm[0][i].m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
     swarm[0][i].v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
     // run GD
@@ -140,11 +140,11 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     swarm[0][i].particle_pbest[4] = OVERFLO_DOUBLE; // high initial cost, don't get stuck on first guess
   }
   // find initial global best
-  g_best_swarm_pos[4] = swarm[0][0].cost[searchsteps-1]; // init a minimum
+  g_best_swarm_pos[4] = swarm[0][0].cost[particlesteps-1]; // init a minimum
   int newglobindex = 0;
   for (int i = 1; i < swarmsize; i++) {
-    if (swarm[0][i].cost[searchsteps-1] < g_best_swarm_pos[4])
-    g_best_swarm_pos[4] = swarm[0][i].cost[searchsteps-1];
+    if (swarm[0][i].cost[particlesteps-1] < g_best_swarm_pos[4])
+    g_best_swarm_pos[4] = swarm[0][i].cost[particlesteps-1];
     newglobindex = i;
   }
   // update global best for t=0 in particle steps gathered from above
@@ -156,7 +156,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   //-----------------------------
   // Remaining Steps of PSO, t = 1 -> tsteps
   //-----------------------------
-  for (int t = 1; t < swarmsteps; t++) {
+  for (int t = 1; t < swarmmoves; t++) {
     for (int i = 0; i < swarmsize; i++) {
       // initialize swarm pieces for below
       swarm[t][i].particle_pbest = swarm[t-1][i].particle_pbest; // init prior bests
@@ -184,7 +184,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
       swarm[t][i].f_learningrate = swarm[t][i].particle_pcurr[2];
       swarm[t][i].m_learningrate = swarm[t][i].particle_pcurr[3];
       swarm[t][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
-      swarm[t][i].steps = searchsteps;
+      swarm[t][i].steps = particlesteps;
       swarm[t][i].n_Demes = n_Demes;
       swarm[t][i].n_Kpairmax = n_Kpairmax;
       swarm[t][i].m_lowerbound = m_lowerbound;
@@ -194,37 +194,37 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
       swarm[t][i].e = e;
 
       // storage and ADAM items
-      swarm[t][i].cost = vector<double>(searchsteps);
-      swarm[t][i].m_run = vector<double>(searchsteps);
-      swarm[t][i].fi_run = vector<vector<double>>(searchsteps, vector<double>(n_Demes));
-      swarm[t][i].m_gradtraj = vector<double>(searchsteps); // m gradient storage;
-      swarm[t][i].fi_gradtraj =   vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // fi storage gradient;
-      swarm[t][i].m1t_m = vector<double>(searchsteps); // first m moment;
-      swarm[t][i].v2t_m =   vector<double>(searchsteps); // second m moment (v);
+      swarm[t][i].cost = vector<double>(particlesteps);
+      swarm[t][i].m_run = vector<double>(particlesteps);
+      swarm[t][i].fi_run = vector<vector<double>>(particlesteps, vector<double>(n_Demes));
+      swarm[t][i].m_gradtraj = vector<double>(particlesteps); // m gradient storage;
+      swarm[t][i].fi_gradtraj =   vector<vector<double>>(particlesteps, vector<double>(n_Demes)); // fi storage gradient;
+      swarm[t][i].m1t_m = vector<double>(particlesteps); // first m moment;
+      swarm[t][i].v2t_m =   vector<double>(particlesteps); // second m moment (v);
       swarm[t][i].m1t_m_hat = double();
       swarm[t][i].v2t_m_hat = double();
-      swarm[t][i].m1t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // first fi moment;
-      swarm[t][i].v2t_fi = vector<vector<double>>(searchsteps, vector<double>(n_Demes)); // second fi moment (v);
+      swarm[t][i].m1t_fi = vector<vector<double>>(particlesteps, vector<double>(n_Demes)); // first fi moment;
+      swarm[t][i].v2t_fi = vector<vector<double>>(particlesteps, vector<double>(n_Demes)); // second fi moment (v);
       swarm[t][i].m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
       swarm[t][i].v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
       // run GD to get COST, which will dictate local and global minima
       swarm[t][i].performGD(report_sd_progress, gendist_arr, geodist_mat);
 
       // update particle best
-      if (swarm[t][i].cost[searchsteps-1] < swarm[t-1][i].particle_pbest[4]) {
+      if (swarm[t][i].cost[particlesteps-1] < swarm[t-1][i].particle_pbest[4]) {
         swarm[t][i].particle_pbest[0] = swarm[t][i].particle_pcurr[0];
         swarm[t][i].particle_pbest[1] = swarm[t][i].particle_pcurr[1];
         swarm[t][i].particle_pbest[2] = swarm[t][i].particle_pcurr[2];
         swarm[t][i].particle_pbest[3] = swarm[t][i].particle_pcurr[3];
-        swarm[t][i].particle_pbest[4] = swarm[t][i].cost[searchsteps-1]; // update cost as well to find new particle minimum
+        swarm[t][i].particle_pbest[4] = swarm[t][i].cost[particlesteps-1]; // update cost as well to find new particle minimum
 
         // Update global best: can nest this IF-loop b/c particle best must be better than curr to meet threshold for global min
-        if (swarm[t][i].cost[searchsteps-1] < g_best_swarm_pos[4]) {
+        if (swarm[t][i].cost[particlesteps-1] < g_best_swarm_pos[4]) {
           g_best_swarm_pos[0] = swarm[t][i].particle_pcurr[0];
           g_best_swarm_pos[1] = swarm[t][i].particle_pcurr[1];
           g_best_swarm_pos[2] = swarm[t][i].particle_pcurr[2];
           g_best_swarm_pos[3] = swarm[t][i].particle_pcurr[3];
-          g_best_swarm_pos[4] = swarm[t][i].cost[searchsteps-1]; // update cost as well to find new global minimum
+          g_best_swarm_pos[4] = swarm[t][i].cost[particlesteps-1]; // update cost as well to find new global minimum
         }
       }
       // end updates
@@ -278,8 +278,8 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // Out: return as Rcpp object
   //-------------------------------
 
-  vector<vector<vector<double>>> swarmfill(swarmsteps, vector<vector<double>>(swarmsize, vector<double>(13)));
-    for (int t = 0; t < swarmsteps; t++) {
+  vector<vector<vector<double>>> swarmfill(swarmmoves, vector<vector<double>>(swarmsize, vector<double>(13)));
+    for (int t = 0; t < swarmmoves; t++) {
       for (int i = 0; i < swarmsize; i++) {
         // p current positions
         swarmfill[t][i][0] = swarm[t][i].particle_pcurr[0];
