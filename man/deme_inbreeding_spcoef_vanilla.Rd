@@ -53,7 +53,7 @@ only for the final iteration. User will typically not want to store every iterat
 }
 \description{
 The purpose of this statistic is to identify an inbreeding coefficient, or degree of
-relatedness, for a given location in space. We assume that locations in spaces can be
+relatedness, for a given location in discrete space. We assume that locations in spaces can be
 represented as "demes," such that multiple individuals live in the same deme
 (i.e. samples are sourced from the same location). The expected pairwise relationship
 between two individuals, or samples, is dependent on the each sample's deme's inbreeding
