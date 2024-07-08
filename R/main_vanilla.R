@@ -3,11 +3,11 @@
 #' @param start_params named double vector; vector of start parameters.
 #' @param f_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
 #' @param m_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
-#' @param b1 double; Exponential decay rates for the first moment estimate
-#' @param b2 double; Exponential decay rates for the second moment estimate
-#' @param e double; Epsilon (error) for stability in the Adam optimization algorithm
-#' @param steps integer; the number of "steps" as we move down the gradient
-#' @param thin integer; the number of "steps" to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)
+#' @param b1 double; exponential decay rates for the first moment estimate in the Adam optimization algorithm
+#' @param b2 double; exponential decay rates for the second moment estimate in the Adam optimization algorithm
+#' @param e double; epsilon (error) for stability in the Adam optimization algorithm
+#' @param steps integer; the number of steps as we move down the gradient
+#' @param thin integer; the number of steps to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)
 #' @param m_lowerbound double; lower limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param m_upperbound double; upper limit value for the global "m" parameter; will use a reflected normal within the gradient descent algorithm to adjust any aberrant values
 #' @param normalize_geodist boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.
@@ -15,7 +15,7 @@
 #' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
 #' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
 #' @description The purpose of this statistic is to identify an inbreeding coefficient, or degree of
-#'              relatedness, for a given location in space. We assume that locations in spaces can be
+#'              relatedness, for a given location in discrete space. We assume that locations in spaces can be
 #'              represented as "demes," such that multiple individuals live in the same deme
 #'              (i.e. samples are sourced from the same location). The expected pairwise relationship
 #'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
@@ -199,6 +199,7 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   args <- list(gendist = as.vector(gendist_arr),
                geodist = as.vector(geodist_mat),
                fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
+               n_Demes = length(demes),
                n_Kpairmax = n_Kpairmax,
                m = unname(start_params["m"]),
                f_learningrate = f_learningrate,
