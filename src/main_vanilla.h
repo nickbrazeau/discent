@@ -3,4 +3,4 @@
 
 //------------------------------------------------
 // estimate deme inbreeding spatial coefficient
-Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args);
+Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args);

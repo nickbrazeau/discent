@@ -1,78 +1,12 @@
-#include "main.h"
+
+#include "particle.h"
 #include "misc_v15.h"
 using namespace std;
 
+
 //------------------------------------------------
-// Perform gradient descent to calculate deme Fi's
-// [[Rcpp::export]]
-Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, Rcpp::List args_progress) {
-  // overflow cost parameter
-  const double OVERFLO_DOUBLE = DBL_MAX/1000.0;
-  // extract proposed proposed Inb. Coeff. (Fis) for each K (deme)
-  vector<double> fvec = rcpp_to_vector_double(args["fvec"]);
-  // extract proposed global M of migration
-  double m = rcpp_to_double(args["m"]);
-  // get dims
-  int n_Demes = fvec.size();
-  int n_Kpairmax =  rcpp_to_int(args["n_Kpairmax"]);
-
-  // observed pairwise sample genetic distances
-  vector<double> gendist = rcpp_to_vector_double(args["gendist"]);
-  // recast to array from vector (perserving structure)
-  vector<vector<vector<double>>> gendist_arr(n_Demes, vector<vector<double>>(n_Demes, vector<double>(n_Kpairmax)));
-  int geniter = 0;
-  for (int i = 0; i < n_Kpairmax; i++) {
-    for (int j = 0; j < n_Demes; j++) {
-      for (int k = 0; k < n_Demes; k++) {
-        gendist_arr[k][j][i] = gendist[geniter];
-        geniter++;
-      }
-    }
-  }
-
-  // observed geo data
-  vector<double> geodist = rcpp_to_vector_double(args["geodist"]); // pairwise sample geo distances
-  vector<vector<double>> geodist_mat(n_Demes, vector<double>(n_Demes));
-  // recast
-  int geoiter = 0;
-  for (int i = 0; i < n_Demes; i++) {
-    for (int j = 0; j < n_Demes; j++) {
-      geodist_mat[j][i] = geodist[geoiter];
-      geoiter++;
-    }
-  }
-
-  // items for grad descent
-  int steps = rcpp_to_int(args["steps"]);
-  double f_learningrate = rcpp_to_double(args["f_learningrate"]);
-  double m_learningrate = rcpp_to_double(args["m_learningrate"]);
-  double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
-  double m_upperbound = rcpp_to_double(args["m_upperbound"]);
-  double b1 = rcpp_to_double(args["b1"]);
-  double b2 = rcpp_to_double(args["b2"]);
-  double e = rcpp_to_double(args["e"]);
-  bool report_progress = rcpp_to_bool(args["report_progress"]);
-  Rcpp::Function update_progress = args_functions["update_progress"];
-
-  // items of interest to keep track of
-  vector<double> cost(steps);
-  vector<double> m_run(steps);
-  vector<vector<double>> fi_run(steps, vector<double>(n_Demes));
-  vector<double> m_gradtraj(steps); // m gradient storage
-  vector<vector<double>> fi_gradtraj(steps, vector<double>(n_Demes)); // fi storage gradient
-
-  // moments for Adam
-  // https://arxiv.org/pdf/1412.6980
-  vector<double> m1t_m(steps); // first moment
-  vector<double> v2t_m(steps); // second moment (v)
-  double m1t_m_hat; // first moment bias corrected
-  double v2t_m_hat; // second moment (v) bias corrected
-
-  vector<vector<double>> m1t_fi(steps, vector<double>(n_Demes)); // first moment
-  vector<vector<double>> v2t_fi(steps, vector<double>(n_Demes)); // second moment (v)
-  vector<double> m1t_fi_hat(n_Demes); // first moment bias corrected
-  vector<double> v2t_fi_hat(n_Demes); // second moment (v) bias corrected
-
+// run ADAM gradient descent host
+void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &gendist_arr, vector<vector<double>> &geodist_mat) {
 
   //-------------------------------
   // initialize storage vectors
@@ -102,11 +36,9 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     }
   }
   // Catch and Cap Extreme Costs
-  if (cost[0] > OVERFLO_DOUBLE) {
+  if (cost[0] > OVERFLO_DOUBLE || isnan(cost[0])) {
     cost[0] = OVERFLO_DOUBLE;
   }
-
-
 
   //-------------------------------
   // start grad descent by looping through steps
@@ -115,9 +47,10 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
 
     // report progress
     if (report_progress) {
-      update_progress(args_progress, "pb", step, steps);
+      if (((step+1) % 100)==0) {
+        print("      DISC step",step+1);
+      }
     }
-
 
     //-------------------------------
     // F gradient
@@ -141,7 +74,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       }
     }
 
-
     //-------------------------------
     // M gradient
     // N.B. all terms included here, easier sum -- longer partial derivative
@@ -162,8 +94,6 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
         }
       }
     }
-
-
 
     //-------------------------------
     // Update F and M
@@ -193,9 +123,8 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
     // calculate and apply the update for M
     m = m - m_learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
     // vanilla GD
-   // m = m - m_learningrate * mgrad;
-    // check bounds on m
-    // will reflect with normal based on magnitude + standard normal sd it is off to proper interval; NB also want to bound m so that it can only explore distance isolation (repulsion versus attraction)
+    // m = m - m_learningrate * mgrad;
+    // assert bounds on m
     if (m < m_lowerbound) {
       m = m_lowerbound;
     } else if (m > m_upperbound) {
@@ -219,25 +148,16 @@ Rcpp::List deme_inbreeding_coef_cpp(Rcpp::List args, Rcpp::List args_functions, 
       }
     }
     // Catch and Cap Extreme Costs
-    if (cost[step] > OVERFLO_DOUBLE) {
+    if (cost[step] > OVERFLO_DOUBLE || isnan(cost[step])) {
       cost[step] = OVERFLO_DOUBLE;
     }
   } // end steps
+}
 
-  //-------------------------------
-  // Out
-  //-------------------------------
-  // return as Rcpp object
-  return Rcpp::List::create(Rcpp::Named("m_run") = m_run,
-                            Rcpp::Named("fi_run") = fi_run,
-                            Rcpp::Named("m_gradtraj") = m_gradtraj,
-                            Rcpp::Named("fi_gradtraj") = fi_gradtraj,
-                            Rcpp::Named("m_firstmoment") = m1t_m,
-                            Rcpp::Named("m_secondmoment") = v2t_m,
-                            Rcpp::Named("fi_firstmoment") = m1t_fi,
-                            Rcpp::Named("fi_secondmoment") = v2t_fi,
-                            Rcpp::Named("cost") = cost,
-                            Rcpp::Named("Final_Fis") = fvec,
-                            Rcpp::Named("Final_m") = m);
 
+
+//------------------------------------------------
+// print
+void Particle::print_particle() {
+  print("discParticle");
 }

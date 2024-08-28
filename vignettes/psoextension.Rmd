@@ -1,0 +1,28 @@
+---
+title: "Running the `DISCent` Model with Particle Swarm Optimizer Metaheuristic Search"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{psoextension}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(discent)
+```
+
+
+# Overview
+- PSO is being used to find best start parameters 
+- Swarm made up of particles 
+- Swarm object 
+  - swarm steps = time limit of search/swarm moves
+  - swarm size = number of particles 
+      - for each particle, there is a grad descent step considered
