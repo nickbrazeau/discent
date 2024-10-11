@@ -27,11 +27,11 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
   // cost is for every pair in the upper triangle
   for (int i = 0; i < (n_Demes-1); i++) {
     for (int j = i+1; j < n_Demes; j++) {
+      double avg_fvec = (fvec[i] + fvec[j])/2;
+      double exp_M = exp(-geodist_mat[i][j] / m);
       for (int k = 0; k < n_Kpairmax; k++){
         if (gendist_arr[i][j][k] != -1) {
-          cost[0] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-            exp(-geodist_mat[i][j] / m)), 2);
-        }
+          cost[0] += pow( (gendist_arr[i][j][k] -  avg_fvec * exp_M), 2);       }
       }
     }
   }
@@ -89,6 +89,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
             if (gendist_arr[i][j][k] != -1) {
               mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
                 2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
+              mgrad += lambda * 2 * m; // lambda term for explicit regularization/penalty on large M
             }
           }
         }
@@ -107,7 +108,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       v2t_fi_hat[i] = v2t_fi[step][i] / (1-pow(b2, step));
 
       // calculate and apply fs upate
-      fvec[i] = fvec[i] - f_learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
+      fvec[i] = fvec[i] - learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
 
       // store for out
       fi_run[step][i] = fvec[i];
@@ -121,9 +122,9 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     v2t_m_hat = v2t_m[step] / (1-pow(b2, step));
 
     // calculate and apply the update for M
-    m = m - m_learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
+    m = m - learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
     // vanilla GD
-    // m = m - m_learningrate * mgrad;
+    // m = m - learningrate * mgrad;
     // assert bounds on m
     if (m < m_lowerbound) {
       m = m_lowerbound;
@@ -142,7 +143,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
             cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-              exp(-geodist_mat[i][j] / m)), 2);
+              exp(-geodist_mat[i][j] / m)), 2) + lambda * m * m;
           }
         }
       }

@@ -11,8 +11,7 @@ test_that("M is properly bounded", {
     dplyr::filter(deme1 != deme2)
   mod1 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                          start_params = our_start_params,
-                                         f_learningrate = 1e-3,
-                                         m_learningrate = 1e-1,
+                                         learningrate = 1e-3,
                                          m_lowerbound = 999,
                                          m_upperbound = 1001,
                                          b1 = 0.9,

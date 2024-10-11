@@ -66,19 +66,19 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // bound for init
   double fi_lowerinit = rcpp_to_double(args["fi_lowerinit"]);
   double fi_upperinit = rcpp_to_double(args["fi_upperinit"]);
-  double flearn_lowerinit = rcpp_to_double(args["flearn_lowerinit"]);
-  double flearn_upperinit = rcpp_to_double(args["flearn_upperinit"]);
-  double mlearn_lowerinit = rcpp_to_double(args["mlearn_lowerinit"]);
-  double mlearn_upperinit = rcpp_to_double(args["mlearn_upperinit"]);
+  double learn_lowerinit = rcpp_to_double(args["learn_lowerinit"]);
+  double learn_upperinit = rcpp_to_double(args["learn_upperinit"]);
+  double lambda_lowerinit = rcpp_to_double(args["lambda_lowerinit"]);
+  double lambda_upperinit = rcpp_to_double(args["lambda_upperinit"]);
   // catch infs
   fi_lowerinit = (fi_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : fi_lowerinit;
   m_lowerbound = (m_lowerbound < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE :  m_lowerbound;
-  flearn_lowerinit = (flearn_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : flearn_lowerinit;
-  mlearn_lowerinit = (mlearn_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : mlearn_lowerinit;
+  learn_lowerinit = (learn_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : learn_lowerinit;
+  lambda_lowerinit = (lambda_lowerinit < -OVERFLO_DOUBLE) ? -OVERFLO_DOUBLE : lambda_lowerinit;
   fi_upperinit = (fi_upperinit < OVERFLO_DOUBLE) ? fi_upperinit : OVERFLO_DOUBLE;
   m_upperbound = (m_upperbound < OVERFLO_DOUBLE) ? m_upperbound : OVERFLO_DOUBLE;
-  flearn_upperinit = (flearn_upperinit < OVERFLO_DOUBLE) ? flearn_upperinit : OVERFLO_DOUBLE;
-  mlearn_upperinit = (mlearn_upperinit < OVERFLO_DOUBLE) ? mlearn_upperinit : OVERFLO_DOUBLE;
+  learn_upperinit = (learn_upperinit < OVERFLO_DOUBLE) ? learn_upperinit : OVERFLO_DOUBLE;
+  lambda_upperinit = (lambda_upperinit < OVERFLO_DOUBLE) ? lambda_upperinit : OVERFLO_DOUBLE;
 
   // storage
   // NB order for vector pos will be fi, m, flearn, mlearn
@@ -99,8 +99,8 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     fill(fvec.begin(), fvec.end(), ffill);
     swarm[0][i].fvec = fvec;
     swarm[0][i].m = runif1(m_lowerbound, m_upperbound);
-    swarm[0][i].f_learningrate = runif1(flearn_lowerinit, flearn_upperinit);
-    swarm[0][i].m_learningrate = runif1(mlearn_lowerinit, mlearn_upperinit);
+    swarm[0][i].learningrate = runif1(learn_lowerinit, learn_upperinit);
+    swarm[0][i].lambda = runif1(lambda_lowerinit, lambda_upperinit);
     swarm[0][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
     swarm[0][i].steps = particlesteps; // vanilla GD just takes in steps, in this case our prelim particle steps for estimating cost
     swarm[0][i].n_Demes = n_Demes;
@@ -131,12 +131,12 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
     vector<double> init_velocity0(4);
     fill(init_velocity0.begin(), init_velocity0.end(),0); // decision to start with an initial velocity of zero, slow-start/conservative
     swarm[0][i].particle_velocity = init_velocity0;
-    swarm[0][i].particle_pcurr = vector<double>(4); // blank to fill in initial values above, length 4: F, M, Flearn, Mlearn
-    swarm[0][i].particle_pbest = vector<double>(5); // blank as above but length 5 to include cost tracking (F, M, Flearn, Mlearn & Cost)
+    swarm[0][i].particle_pcurr = vector<double>(4); // blank to fill in initial values above, length 4: F, M, Flearn, lambda
+    swarm[0][i].particle_pbest = vector<double>(5); // blank as above but length 5 to include cost tracking (F, M, Flearn, lambda & Cost)
     swarm[0][i].particle_pbest[0] = swarm[0][i].particle_pcurr[0] = ffill;
     swarm[0][i].particle_pbest[1] = swarm[0][i].particle_pcurr[1] = swarm[0][i].m;
-    swarm[0][i].particle_pbest[2] = swarm[0][i].particle_pcurr[2] = swarm[0][i].f_learningrate;
-    swarm[0][i].particle_pbest[3] = swarm[0][i].particle_pcurr[3] = swarm[0][i].m_learningrate;
+    swarm[0][i].particle_pbest[2] = swarm[0][i].particle_pcurr[2] = swarm[0][i].learningrate;
+    swarm[0][i].particle_pbest[3] = swarm[0][i].particle_pcurr[3] = swarm[0][i].lambda;
     swarm[0][i].particle_pbest[4] = swarm[0][i].cost[particlesteps-1];
   }
   // find and store initial global best
@@ -144,7 +144,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   int newglobindex = 0;
   for (int i = 1; i < swarmsize; i++) {
     if (swarm[0][i].cost[particlesteps-1] < g_best_swarm_pos[4])
-    g_best_swarm_pos[4] = swarm[0][i].cost[particlesteps-1];
+      g_best_swarm_pos[4] = swarm[0][i].cost[particlesteps-1];
     newglobindex = i;
   }
   // update global best for t=0 in particle steps gathered from above
@@ -187,8 +187,8 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
       fill(fvec.begin(), fvec.end(), swarm[t][i].particle_pcurr[0]);
       swarm[t][i].fvec = fvec;
       swarm[t][i].m = swarm[t][i].particle_pcurr[1];
-      swarm[t][i].f_learningrate = swarm[t][i].particle_pcurr[2];
-      swarm[t][i].m_learningrate = swarm[t][i].particle_pcurr[3];
+      swarm[t][i].learningrate = swarm[t][i].particle_pcurr[2];
+      swarm[t][i].lambda = swarm[t][i].particle_pcurr[3];
       swarm[t][i].OVERFLO_DOUBLE = OVERFLO_DOUBLE;
       swarm[t][i].steps = particlesteps;
       swarm[t][i].n_Demes = n_Demes;
@@ -224,7 +224,7 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
         swarm[t][i].particle_pbest[3] = swarm[t][i].particle_pcurr[3];
         swarm[t][i].particle_pbest[4] = swarm[t][i].cost[particlesteps-1]; // update cost as well to find new particle minimum
       }
-       // Update global best
+      // Update global best
       if (swarm[t][i].cost[particlesteps-1] < g_best_swarm_pos[4]) {
         g_best_swarm_pos[0] = swarm[t][i].particle_pcurr[0];
         g_best_swarm_pos[1] = swarm[t][i].particle_pcurr[1];
@@ -248,8 +248,8 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   discParticle.n_Demes = n_Demes;
   discParticle.n_Kpairmax = n_Kpairmax;
   discParticle.m = g_best_swarm_pos[1];
-  discParticle.f_learningrate = g_best_swarm_pos[2];
-  discParticle.m_learningrate = g_best_swarm_pos[3];
+  discParticle.learningrate = g_best_swarm_pos[2];
+  discParticle.lambda = g_best_swarm_pos[3];
   discParticle.m_lowerbound = m_lowerbound;
   discParticle.m_upperbound = m_upperbound;
   discParticle.b1 = b1;
@@ -284,44 +284,44 @@ Rcpp::List pso_deme_inbreeding_coef_cpp(Rcpp::List args) {
   //-------------------------------
 
   vector<vector<vector<double>>> swarmfill(swarmmoves, vector<vector<double>>(swarmsize, vector<double>(13)));
-    for (int t = 0; t < swarmmoves; t++) {
-      for (int i = 0; i < swarmsize; i++) {
-        // p current positions
-        swarmfill[t][i][0] = swarm[t][i].particle_pcurr[0];
-        swarmfill[t][i][1] = swarm[t][i].particle_pcurr[1];
-        swarmfill[t][i][2] = swarm[t][i].particle_pcurr[2];
-        swarmfill[t][i][3] = swarm[t][i].particle_pcurr[3];
-        // p best position
-        swarmfill[t][i][4] = swarm[t][i].particle_pbest[0];
-        swarmfill[t][i][5] = swarm[t][i].particle_pbest[1];
-        swarmfill[t][i][6] = swarm[t][i].particle_pbest[2];
-        swarmfill[t][i][7] = swarm[t][i].particle_pbest[3];
-        swarmfill[t][i][8] = swarm[t][i].particle_pbest[4];
-        // p velocity
-        swarmfill[t][i][9] = swarm[t][i].particle_velocity[0];
-        swarmfill[t][i][10] = swarm[t][i].particle_velocity[1];
-        swarmfill[t][i][11] = swarm[t][i].particle_velocity[2];
-        swarmfill[t][i][12] = swarm[t][i].particle_velocity[3];
-      }
+  for (int t = 0; t < swarmmoves; t++) {
+    for (int i = 0; i < swarmsize; i++) {
+      // p current positions
+      swarmfill[t][i][0] = swarm[t][i].particle_pcurr[0];
+      swarmfill[t][i][1] = swarm[t][i].particle_pcurr[1];
+      swarmfill[t][i][2] = swarm[t][i].particle_pcurr[2];
+      swarmfill[t][i][3] = swarm[t][i].particle_pcurr[3];
+      // p best position
+      swarmfill[t][i][4] = swarm[t][i].particle_pbest[0];
+      swarmfill[t][i][5] = swarm[t][i].particle_pbest[1];
+      swarmfill[t][i][6] = swarm[t][i].particle_pbest[2];
+      swarmfill[t][i][7] = swarm[t][i].particle_pbest[3];
+      swarmfill[t][i][8] = swarm[t][i].particle_pbest[4];
+      // p velocity
+      swarmfill[t][i][9] = swarm[t][i].particle_velocity[0];
+      swarmfill[t][i][10] = swarm[t][i].particle_velocity[1];
+      swarmfill[t][i][11] = swarm[t][i].particle_velocity[2];
+      swarmfill[t][i][12] = swarm[t][i].particle_velocity[3];
     }
+  }
 
 
   if (return_verbose) {
     // return with swarm details
     return Rcpp::List::create(
-                              Rcpp::Named("swarm") = swarmfill,
-                              Rcpp::Named("global_best") = g_best_swarm_pos,
-                              Rcpp::Named("m_run") = discParticle.m_run,
-                              Rcpp::Named("fi_run") = discParticle.fi_run,
-                              Rcpp::Named("m_gradtraj") = discParticle.m_gradtraj,
-                              Rcpp::Named("fi_gradtraj") = discParticle.fi_gradtraj,
-                              Rcpp::Named("m_firstmoment") = discParticle.m1t_m,
-                              Rcpp::Named("m_secondmoment") = discParticle.v2t_m,
-                              Rcpp::Named("fi_firstmoment") = discParticle.m1t_fi,
-                              Rcpp::Named("fi_secondmoment") = discParticle.v2t_fi,
-                              Rcpp::Named("cost") = discParticle.cost,
-                              Rcpp::Named("Final_Fis") = discParticle.fvec,
-                              Rcpp::Named("Final_m") = discParticle.m);
+      Rcpp::Named("swarm") = swarmfill,
+      Rcpp::Named("global_best") = g_best_swarm_pos,
+      Rcpp::Named("m_run") = discParticle.m_run,
+      Rcpp::Named("fi_run") = discParticle.fi_run,
+      Rcpp::Named("m_gradtraj") = discParticle.m_gradtraj,
+      Rcpp::Named("fi_gradtraj") = discParticle.fi_gradtraj,
+      Rcpp::Named("m_firstmoment") = discParticle.m1t_m,
+      Rcpp::Named("m_secondmoment") = discParticle.v2t_m,
+      Rcpp::Named("fi_firstmoment") = discParticle.m1t_fi,
+      Rcpp::Named("fi_secondmoment") = discParticle.v2t_fi,
+      Rcpp::Named("cost") = discParticle.cost,
+      Rcpp::Named("Final_Fis") = discParticle.fvec,
+      Rcpp::Named("Final_m") = discParticle.m);
   } else {
 
     return Rcpp::List::create(Rcpp::Named("m_run") = discParticle.m_run,

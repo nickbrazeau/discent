@@ -15,8 +15,7 @@ test_that("No More negative Fs with logit", {
   our_start_params <- c(our_start_params, "m" = 1e3)
   ret <- deme_inbreeding_spcoef_vanilla(discdat = input,
                                         start_params = our_start_params,
-                                        f_learningrate = 1e-3,
-                                        m_learningrate = 1e-5,
+                                        learningrate = 1e-3,
                                         b1 = 0.9,
                                         b2 = 0.999,
                                         e = 1e-8,

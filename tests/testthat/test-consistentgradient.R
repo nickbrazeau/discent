@@ -12,8 +12,7 @@ test_that("model has deterministic results from same start", {
   # model should always follow the same gradient/trajectory
   mod1 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                          start_params = our_start_params,
-                                         f_learningrate = 1e-5,
-                                         m_learningrate = 1e-1,
+                                         learningrate = 1e-5,
                                          b1 = 0.9,
                                          b2 = 0.999,
                                          e = 1e-8,
@@ -24,8 +23,7 @@ test_that("model has deterministic results from same start", {
 
   mod2 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                          start_params = our_start_params,
-                                         f_learningrate = 1e-5,
-                                         m_learningrate = 1e-1,
+                                         learningrate = 1e-5,
                                          b1 = 0.9,
                                          b2 = 0.999,
                                          e = 1e-8,
@@ -36,8 +34,7 @@ test_that("model has deterministic results from same start", {
 
   mod3 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                          start_params = our_start_params,
-                                         f_learningrate = 1e-5,
-                                         m_learningrate = 1e-1,
+                                         learningrate = 1e-5,
                                          b1 = 0.9,
                                          b2 = 0.999,
                                          e = 1e-8,
@@ -48,8 +45,7 @@ test_that("model has deterministic results from same start", {
 
   mod4 <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                          start_params = our_start_params,
-                                         f_learningrate = 1e-5,
-                                         m_learningrate = 1e-1,
+                                         learningrate = 1e-5,
                                          b1 = 0.9,
                                          b2 = 0.999,
                                          e = 1e-8,

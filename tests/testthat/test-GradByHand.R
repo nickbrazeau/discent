@@ -36,8 +36,8 @@ test_that("Fi gradient by hand", {
     dplyr::filter(deme1 != deme2)
   ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                         start_params = our_start_params,
-                                        f_learningrate = 1e-3,
-                                        m_learningrate = 1e-5,
+                                        learningrate = 1e-3,
+                                        lambda = 0,
                                         b1 = 0.9,
                                         b2 = 0.999,
                                         e = 1e-8,
@@ -94,8 +94,8 @@ test_that("M gradient by hand", {
     dplyr::filter(deme1 != deme2)
   ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                         start_params = our_start_params,
-                                        f_learningrate = 1e-3,
-                                        m_learningrate = 1e-5,
+                                        learningrate = 1e-3,
+                                        lambda = 0,
                                         b1 = 0.9,
                                         b2 = 0.999,
                                         e = 1e-8,

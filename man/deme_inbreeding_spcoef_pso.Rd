@@ -11,10 +11,10 @@ deme_inbreeding_spcoef_pso(
   m_upperbound = Inf,
   fi_lowerinit = 0.001,
   fi_upperinit = 0.3,
-  flearn_lowerinit = 1e-10,
-  flearn_upperinit = 0.01,
-  mlearn_lowerinit = 1e-15,
-  mlearn_upperinit = 1e-08,
+  learn_lowerinit = 1e-10,
+  learn_upperinit = 0.01,
+  lambda_lowerinit = 1e-08,
+  lambda_upperinit = 10,
   c1 = 2,
   c2 = 2,
   w = 0.73,
@@ -46,16 +46,16 @@ a uniform distribution \eqn{f = U_{a,b} }}
 \item{fi_upperinit}{double; As above, the initial deme-inbreeding parameter upper-bound to parameterize
 each swarm-particle (\eqn{b}).}
 
-\item{flearn_lowerinit}{double; The initial deme-inbreeding learning-rate lower-bound to parameterize
+\item{learn_lowerinit}{double; The initial deme-inbreeding learning-rate lower-bound to parameterize
 each swarm-particle's convergence to the \eqn{f} parameter (\eqn{a} draw from the unifrom \eqn{f = U_{a,b} }).}
 
-\item{flearn_upperinit}{double; As above, the initial deme-inbreeding learning-rate upper-bound to parameterize
+\item{learn_upperinit}{double; As above, the initial deme-inbreeding learning-rate upper-bound to parameterize
 each swarm-particle (\eqn{b}).}
 
-\item{mlearn_lowerinit}{double; similar to before, the initial migration learning-rate lower-bound to parameterize
+\item{lambda_lowerinit}{double; similar to before, the initial lambda value lower-bound to parameterize
 each swarm-particle's convergence to the \eqn{m} parameter (\eqn{a} draw from the unifrom \eqn{m = U_{a,b} }).}
 
-\item{mlearn_upperinit}{double; As above, the initial migration learning-rate upper-bound to parameterize
+\item{lambda_upperinit}{double; As above, the initial lambda value upper-bound to parameterize
 each swarm-particle (\eqn{b}).}
 
 \item{c1}{double; the "cognitive" coefficient from the PSO algorithm. Essentially, it
