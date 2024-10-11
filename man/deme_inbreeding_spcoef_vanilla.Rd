@@ -7,8 +7,8 @@
 deme_inbreeding_spcoef_vanilla(
   discdat,
   start_params = c(),
-  f_learningrate = 0.001,
-  m_learningrate = 1e-06,
+  lambda = 0.1,
+  learningrate = 0.001,
   m_lowerbound = 0,
   m_upperbound = Inf,
   b1 = 0.9,
@@ -26,9 +26,9 @@ deme_inbreeding_spcoef_vanilla(
 
 \item{start_params}{named double vector; vector of start parameters.}
 
-\item{f_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients}
+\item{lambda}{double; A quadratic L2 explicit regularization, or penalty, parameter on "m" parameter. Note, lambda is a scalar such that: \eqn{\lambda m^2}.}
 
-\item{m_learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter}
+\item{learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent}
 
 \item{m_lowerbound}{double; lower limit value for the global "m" parameter; any "m" value encounter less than the lower bound will be replaced by the lower bound}
 
