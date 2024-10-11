@@ -41,6 +41,7 @@
 #' @export
 
 deme_inbreeding_spcoef_pso <- function(discdat,
+                                       lambda = 0.1,
                                        m_lowerbound = 1e-10,
                                        m_upperbound = Inf,
                                        fi_lowerinit= 1e-3,
@@ -79,6 +80,7 @@ deme_inbreeding_spcoef_pso <- function(discdat,
   }
 
   assert_dataframe(discdat)
+  assert_single_numeric(lambda)
   assert_single_numeric(b1)
   assert_single_numeric(b2)
   assert_single_numeric(e)
@@ -212,6 +214,7 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                flearn_upperinit = flearn_upperinit,
                mlearn_lowerinit = mlearn_lowerinit,
                mlearn_upperinit = mlearn_upperinit,
+               lambda = lambda,
                b1 = b1,
                b2 = b2,
                e = e,

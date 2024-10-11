@@ -89,6 +89,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
             if (gendist_arr[i][j][k] != -1) {
               mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
                 2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
+              mgrad += lambda * 2 * m; // lambda term for explicit regularization/penalty on large M
             }
           }
         }
