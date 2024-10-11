@@ -6,13 +6,9 @@
 #' a uniform distribution \eqn{f = U_{a,b} }
 #' @param  fi_upperinit double; As above, the initial deme-inbreeding parameter upper-bound to parameterize
 #' each swarm-particle (\eqn{b}).
-#' @param  flearn_lowerinit double; The initial deme-inbreeding learning-rate lower-bound to parameterize
+#' @param  learn_lowerinit double; The initial learning-rate lower-bound to parameterize
 #' each swarm-particle's convergence to the \eqn{f} parameter (\eqn{a} draw from the unifrom \eqn{f = U_{a,b} }).
-#' @param  flearn_upperinit double; As above, the initial deme-inbreeding learning-rate upper-bound to parameterize
-#' each swarm-particle (\eqn{b}).
-#' @param  mlearn_lowerinit double; similar to before, the initial migration learning-rate lower-bound to parameterize
-#' each swarm-particle's convergence to the \eqn{m} parameter (\eqn{a} draw from the unifrom \eqn{m = U_{a,b} }).
-#' @param  mlearn_upperinit double; As above, the initial migration learning-rate upper-bound to parameterize
+#' @param  learn_upperinit double; As above, the initial learning-rate upper-bound to parameterize
 #' each swarm-particle (\eqn{b}).
 #' @param  c1 double; the "cognitive" coefficient from the PSO algorithm. Essentially, it
 #' dictates how strongly the prior particle's positions should be weighted
@@ -46,10 +42,8 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                                        m_upperbound = Inf,
                                        fi_lowerinit= 1e-3,
                                        fi_upperinit = 0.3,
-                                       flearn_lowerinit = 1e-10,
-                                       flearn_upperinit = 1e-2,
-                                       mlearn_lowerinit = 1e-15,
-                                       mlearn_upperinit = 1e-8,
+                                       learn_lowerinit = 1e-10,
+                                       learn_upperinit = 1e-2,
                                        c1 = 2.0,
                                        c2 = 2.0,
                                        w = 0.73,
@@ -93,12 +87,9 @@ deme_inbreeding_spcoef_pso <- function(discdat,
   assert_single_numeric(fi_lowerinit)
   assert_single_numeric(fi_upperinit)
   assert_gr(fi_upperinit, fi_lowerinit)
-  assert_single_numeric(flearn_lowerinit)
-  assert_single_numeric(flearn_upperinit)
-  assert_gr(flearn_upperinit, flearn_lowerinit)
-  assert_single_numeric(mlearn_lowerinit)
-  assert_single_numeric(mlearn_upperinit)
-  assert_gr(mlearn_upperinit, mlearn_lowerinit)
+  assert_single_numeric(learn_lowerinit)
+  assert_single_numeric(learn_upperinit)
+  assert_gr(learn_upperinit, learn_lowerinit)
   assert_single_int(finalsteps)
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")
@@ -210,10 +201,8 @@ deme_inbreeding_spcoef_pso <- function(discdat,
                m_upperbound = m_upperbound,
                fi_lowerinit = logit( fi_lowerinit ),
                fi_upperinit = logit( fi_upperinit ),
-               flearn_lowerinit = flearn_lowerinit,
-               flearn_upperinit = flearn_upperinit,
-               mlearn_lowerinit = mlearn_lowerinit,
-               mlearn_upperinit = mlearn_upperinit,
+               learn_lowerinit = learn_lowerinit,
+               learn_upperinit = learn_upperinit,
                lambda = lambda,
                b1 = b1,
                b2 = b2,
@@ -251,14 +240,14 @@ deme_inbreeding_spcoef_pso <- function(discdat,
       for (i in 1:swarmsize) {
         swarmtidy[rowiter,1] <- t
         swarmtidy[rowiter,2] <- i
-        swarmtidy[rowiter,3:15] <- unlist(output_raw$swarm[[t]][[i]])
+        swarmtidy[rowiter,3:12] <- unlist(output_raw$swarm[[t]][[i]])
         rowiter <- rowiter + 1
       }
     }
     colnames(swarmtidy) <- c("swarm_step_t", "particle_int",
-                             "particle_Poscurr_Fstart", "particle_Poscurr_Mstart", "particle_Poscurr_Flearn", "particle_Poscurr_Mlearn",
-                             "particle_Posbest_Fstart", "particle_Posbest_Mstart", "particle_Posbest_Flearn", "particle_Posbest_Mlearn", "particle_Posbest_Cost",
-                             "particle_Veloccurr_Fstart", "particle_Veloccurr_Mstart", "particle_Veloccurr_Flearn", "particle_Veloccurr_Mlearn")
+                             "particle_Poscurr_Fstart", "particle_Poscurr_Mstart", "particle_Poscurr_learn",
+                             "particle_Posbest_Fstart", "particle_Posbest_Mstart", "particle_Posbest_learn", "particle_Posbest_Cost",
+                             "particle_Veloccurr_Fstart", "particle_Veloccurr_Mstart", "particle_Veloccurr_learn")
     #......................
     # rest of output
     #......................

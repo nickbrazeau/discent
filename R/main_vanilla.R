@@ -1,9 +1,8 @@
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space (Vanilla)
 #' @param discdat dataframe; The genetic-geographic data by deme (K)
 #' @param start_params named double vector; vector of start parameters.
-#' @param lambda @@@
-#' @param f_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients
-#' @param m_learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter
+#' @param lambda double; A quadratic L2 explicit regularization, or penalty, parameter on "m" parameter. Note, lambda is a scalar such that: \eqn{\lambda m^2}.
+#' @param learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent
 #' @param b1 double; exponential decay rates for the first moment estimate in the Adam optimization algorithm
 #' @param b2 double; exponential decay rates for the second moment estimate in the Adam optimization algorithm
 #' @param e double; epsilon (error) for stability in the Adam optimization algorithm
@@ -39,8 +38,7 @@
 deme_inbreeding_spcoef_vanilla <- function(discdat,
                                            start_params = c(),
                                            lambda = 0.1,
-                                           f_learningrate = 1e-3,
-                                           m_learningrate = 1e-6,
+                                           learningrate = 1e-3,
                                            m_lowerbound = 0,
                                            m_upperbound = Inf,
                                            b1 = 0.9,
@@ -79,8 +77,7 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
                            for each deme and the migration parameter, m")
   sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
   assert_single_numeric(lambda)
-  assert_single_numeric(f_learningrate)
-  assert_single_numeric(m_learningrate)
+  assert_single_numeric(learningrate)
   assert_single_numeric(b1)
   assert_single_numeric(b2)
   assert_single_numeric(e)
@@ -206,8 +203,7 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
                n_Kpairmax = n_Kpairmax,
                m = unname(start_params["m"]),
                lambda = lambda,
-               f_learningrate = f_learningrate,
-               m_learningrate = m_learningrate,
+               learningrate = learningrate,
                m_lowerbound = m_lowerbound,
                m_upperbound = m_upperbound,
                b1 = b1,

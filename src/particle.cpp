@@ -108,7 +108,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       v2t_fi_hat[i] = v2t_fi[step][i] / (1-pow(b2, step));
 
       // calculate and apply fs upate
-      fvec[i] = fvec[i] - f_learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
+      fvec[i] = fvec[i] - learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
 
       // store for out
       fi_run[step][i] = fvec[i];
@@ -122,9 +122,9 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     v2t_m_hat = v2t_m[step] / (1-pow(b2, step));
 
     // calculate and apply the update for M
-    m = m - m_learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
+    m = m - learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
     // vanilla GD
-    // m = m - m_learningrate * mgrad;
+    // m = m - learningrate * mgrad;
     // assert bounds on m
     if (m < m_lowerbound) {
       m = m_lowerbound;
