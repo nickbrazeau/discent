@@ -70,10 +70,10 @@ approach.</p>
 <span>  m_upperbound <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  fi_lowerinit <span class="op">=</span> <span class="fl">0.001</span>,</span>
 <span>  fi_upperinit <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>  flearn_lowerinit <span class="op">=</span> <span class="fl">1e-10</span>,</span>
-<span>  flearn_upperinit <span class="op">=</span> <span class="fl">0.01</span>,</span>
-<span>  mlearn_lowerinit <span class="op">=</span> <span class="fl">1e-15</span>,</span>
-<span>  mlearn_upperinit <span class="op">=</span> <span class="fl">1e-08</span>,</span>
+<span>  learn_lowerinit <span class="op">=</span> <span class="fl">1e-10</span>,</span>
+<span>  learn_upperinit <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>  lambda_lowerinit <span class="op">=</span> <span class="fl">1e-08</span>,</span>
+<span>  lambda_upperinit <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  c1 <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  c2 <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  w <span class="op">=</span> <span class="fl">0.73</span>,</span>
@@ -119,23 +119,23 @@ a uniform distribution \(f = U_{a,b} \)</p></dd>
 each swarm-particle (\(b\)).</p></dd>
 
 
-<dt id="arg-flearn-lowerinit">flearn_lowerinit<a class="anchor" aria-label="anchor" href="#arg-flearn-lowerinit"></a></dt>
+<dt id="arg-learn-lowerinit">learn_lowerinit<a class="anchor" aria-label="anchor" href="#arg-learn-lowerinit"></a></dt>
 <dd><p>double; The initial deme-inbreeding learning-rate lower-bound to parameterize
 each swarm-particle's convergence to the \(f\) parameter (\(a\) draw from the unifrom \(f = U_{a,b} \)).</p></dd>
 
 
-<dt id="arg-flearn-upperinit">flearn_upperinit<a class="anchor" aria-label="anchor" href="#arg-flearn-upperinit"></a></dt>
+<dt id="arg-learn-upperinit">learn_upperinit<a class="anchor" aria-label="anchor" href="#arg-learn-upperinit"></a></dt>
 <dd><p>double; As above, the initial deme-inbreeding learning-rate upper-bound to parameterize
 each swarm-particle (\(b\)).</p></dd>
 
 
-<dt id="arg-mlearn-lowerinit">mlearn_lowerinit<a class="anchor" aria-label="anchor" href="#arg-mlearn-lowerinit"></a></dt>
-<dd><p>double; similar to before, the initial migration learning-rate lower-bound to parameterize
+<dt id="arg-lambda-lowerinit">lambda_lowerinit<a class="anchor" aria-label="anchor" href="#arg-lambda-lowerinit"></a></dt>
+<dd><p>double; similar to before, the initial lambda value lower-bound to parameterize
 each swarm-particle's convergence to the \(m\) parameter (\(a\) draw from the unifrom \(m = U_{a,b} \)).</p></dd>
 
 
-<dt id="arg-mlearn-upperinit">mlearn_upperinit<a class="anchor" aria-label="anchor" href="#arg-mlearn-upperinit"></a></dt>
-<dd><p>double; As above, the initial migration learning-rate upper-bound to parameterize
+<dt id="arg-lambda-upperinit">lambda_upperinit<a class="anchor" aria-label="anchor" href="#arg-lambda-upperinit"></a></dt>
+<dd><p>double; As above, the initial lambda value upper-bound to parameterize
 each swarm-particle (\(b\)).</p></dd>
 
 
@@ -231,7 +231,7 @@ only for the final iteration. User will typically not want to store every iterat
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>

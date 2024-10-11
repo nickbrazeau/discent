@@ -73,8 +73,8 @@ coefficient and the geographic distance between the demes. The program assumes a
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">deme_inbreeding_spcoef_vanilla</span><span class="op">(</span></span>
 <span>  <span class="va">discdat</span>,</span>
 <span>  start_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  f_learningrate <span class="op">=</span> <span class="fl">0.001</span>,</span>
-<span>  m_learningrate <span class="op">=</span> <span class="fl">1e-06</span>,</span>
+<span>  lambda <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  learningrate <span class="op">=</span> <span class="fl">0.001</span>,</span>
 <span>  m_lowerbound <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  m_upperbound <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  b1 <span class="op">=</span> <span class="fl">0.9</span>,</span>
@@ -100,12 +100,12 @@ coefficient and the geographic distance between the demes. The program assumes a
 <dd><p>named double vector; vector of start parameters.</p></dd>
 
 
-<dt id="arg-f-learningrate">f_learningrate<a class="anchor" aria-label="anchor" href="#arg-f-learningrate"></a></dt>
-<dd><p>double; alpha parameter for how much each "step" is weighted in the gradient descent for inbreeding coefficients</p></dd>
+<dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
+<dd><p>double; A quadratic L2 explicit regularization, or penalty, parameter on "m" parameter. Note, lambda is a scalar such that: \(\lambda m^2\).</p></dd>
 
 
-<dt id="arg-m-learningrate">m_learningrate<a class="anchor" aria-label="anchor" href="#arg-m-learningrate"></a></dt>
-<dd><p>double; alpha parameter for how much each "step" is weighted in the gradient descent for the migration parameter</p></dd>
+<dt id="arg-learningrate">learningrate<a class="anchor" aria-label="anchor" href="#arg-learningrate"></a></dt>
+<dd><p>double; alpha parameter for how much each "step" is weighted in the gradient descent</p></dd>
 
 
 <dt id="arg-m-lowerbound">m_lowerbound<a class="anchor" aria-label="anchor" href="#arg-m-lowerbound"></a></dt>
@@ -178,7 +178,7 @@ for moment decay rates, epsilon, and learning rates are taken from <cite>DP King
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
