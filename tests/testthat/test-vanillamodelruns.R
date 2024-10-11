@@ -12,8 +12,8 @@ test_that("Vanilla model runs", {
     dplyr::filter(deme1 != deme2)
   mod <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                         start_params = our_start_params,
-                                        f_learningrate = 1e-5,
-                                        m_learningrate = 1e-1,
+                                        learningrate = 1e-5,
+                                        lambda = 1e-1,
                                         b1 = 0.9,
                                         b2 = 0.999,
                                         e = 1e-8,
