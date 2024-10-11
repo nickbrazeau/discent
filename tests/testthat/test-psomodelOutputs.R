@@ -13,6 +13,8 @@ test_that("PSO model output is consistent w/ Fstart velocity calculations", {
                                     fi_upperinit = 0.3,
                                     learn_lowerinit = 1e-10,
                                     learn_upperinit = 1e-2,
+                                    lambda_lowerinit = 1e-5,
+                                    lambda_upperinit = 1e-1,
                                     c1 = 2,
                                     c2 = 2,
                                     w = 0.8,
@@ -46,10 +48,10 @@ test_that("PSO model output is consistent w/ Mstart velocity calculations", {
                                      m_upperbound = 1e3,
                                      fi_lowerinit = 1e-3,
                                      fi_upperinit = 0.3,
-                                     flearn_lowerinit = 1e-10,
-                                     flearn_upperinit = 1e-2,
-                                     mlearn_lowerinit = 1e-5,
-                                     mlearn_upperinit = 1e-1,
+                                     learn_lowerinit = 1e-10,
+                                     learn_upperinit = 1e-2,
+                                     lambda_lowerinit = 1e-5,
+                                     lambda_upperinit = 1e-1,
                                      c1 = 2,
                                      c2 = 2,
                                      w = 0.8,
@@ -90,10 +92,10 @@ test_that("PSO model output is consistent w/ Flearn velocity calculations", {
                                      m_upperbound = 1e3,
                                      fi_lowerinit = 1e-3,
                                      fi_upperinit = 0.3,
-                                     flearn_lowerinit = 1e-10,
-                                     flearn_upperinit = 1e-2,
-                                     mlearn_lowerinit = 1e-5,
-                                     mlearn_upperinit = 1e-1,
+                                     learn_lowerinit = 1e-10,
+                                     learn_upperinit = 1e-2,
+                                     lambda_lowerinit = 1e-5,
+                                     lambda_upperinit = 1e-1,
                                      c1 = 2,
                                      c2 = 2,
                                      w = 0.8,
@@ -115,7 +117,7 @@ test_that("PSO model output is consistent w/ Flearn velocity calculations", {
 })
 
 
-test_that("PSO model output is consistent w/ Mlearn velocity calculations", {
+test_that("PSO model output is consistent w/ lambda velocity calculations", {
 
   # sim data
   data("IBD_simulation_data", package = "discent")
@@ -128,10 +130,10 @@ test_that("PSO model output is consistent w/ Mlearn velocity calculations", {
                                      m_upperbound = 1e3,
                                      fi_lowerinit = 1e-3,
                                      fi_upperinit = 0.3,
-                                     flearn_lowerinit = 1e-10,
-                                     flearn_upperinit = 1e-2,
-                                     mlearn_lowerinit = 1e-5,
-                                     mlearn_upperinit = 1e-1,
+                                     learn_lowerinit = 1e-10,
+                                     learn_upperinit = 1e-2,
+                                     lambda_lowerinit = 1e-5,
+                                     lambda_upperinit = 1e-1,
                                      c1 = 2,
                                      c2 = 2,
                                      w = 0.8,
@@ -145,11 +147,11 @@ test_that("PSO model output is consistent w/ Mlearn velocity calculations", {
                                      normalize_geodist = F,
                                      return_verbose = T)
 
-  Mlearn <- mod0$swarm %>%
+  lambda <- mod0$swarm %>%
     dplyr::filter(particle_int ==1) %>%
-    dplyr::select(dplyr::contains("Mlearn"))
-  chck <- Mlearn$particle_Poscurr_Mlearn + dplyr::lead(Mlearn$particle_Veloccurr_Mlearn)
-  testthat::expect_equal(chck[1:9], Mlearn$particle_Poscurr_Mlearn[2:10])
+    dplyr::select(dplyr::contains("lambda"))
+  chck <- lambda$particle_Poscurr_lambda + dplyr::lead(lambda$particle_Veloccurr_lambda)
+  testthat::expect_equal(chck[1:9], lambda$particle_Poscurr_lambda[2:10])
 })
 
 
@@ -168,10 +170,10 @@ test_that("PSO model position doesn't move if velocity zero", {
                                      m_upperbound = 1e3,
                                      fi_lowerinit = 1e-3,
                                      fi_upperinit = 0.3,
-                                     flearn_lowerinit = 1e-10,
-                                     flearn_upperinit = 1e-2,
-                                     mlearn_lowerinit = 1e-5,
-                                     mlearn_upperinit = 1e-1,
+                                     learn_lowerinit = 1e-10,
+                                     learn_upperinit = 1e-2,
+                                     lambda_lowerinit = 1e-5,
+                                     lambda_upperinit = 1e-1,
                                      c1 = 0,
                                      c2 = 0,
                                      w = 0,
@@ -202,10 +204,10 @@ test_that("PSO model final run respects migration bounds in swarm run", {
                                      m_upperbound = 1001,
                                      fi_lowerinit = 1e-3,
                                      fi_upperinit = 0.3,
-                                     flearn_lowerinit = 1e-10,
-                                     flearn_upperinit = 1e-2,
-                                     mlearn_lowerinit = 1e-5,
-                                     mlearn_upperinit = 1e-1,
+                                     learn_lowerinit = 1e-10,
+                                     learn_upperinit = 1e-2,
+                                     lambda_lowerinit = 1e-5,
+                                     lambda_upperinit = 1e-1,
                                      c1 = 0.1,
                                      c2 = 0.1,
                                      w = 0.25,
@@ -237,10 +239,10 @@ test_that("PSO model final run respects migration bounds in final run", {
                                     m_upperbound = 1001,
                                     fi_lowerinit = 1e-3,
                                     fi_upperinit = 0.3,
-                                    flearn_lowerinit = 1e-10,
-                                    flearn_upperinit = 1e-2,
-                                    mlearn_lowerinit = 1e-5,
-                                    mlearn_upperinit = 1e-1,
+                                    learn_lowerinit = 1e-10,
+                                    learn_upperinit = 1e-2,
+                                    lambda_lowerinit = 1e-5,
+                                    lambda_upperinit = 1e-1,
                                     c1 = 0.1,
                                     c2 = 0.1,
                                     w = 0.25,
