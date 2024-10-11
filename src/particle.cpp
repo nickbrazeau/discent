@@ -27,11 +27,11 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
   // cost is for every pair in the upper triangle
   for (int i = 0; i < (n_Demes-1); i++) {
     for (int j = i+1; j < n_Demes; j++) {
+      double avg_fvec = (fvec[i] + fvec[j])/2;
+      double exp_M = exp(-geodist_mat[i][j] / m);
       for (int k = 0; k < n_Kpairmax; k++){
         if (gendist_arr[i][j][k] != -1) {
-          cost[0] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-            exp(-geodist_mat[i][j] / m)), 2);
-        }
+          cost[0] += pow( (gendist_arr[i][j][k] -  avg_fvec * exp_M), 2);       }
       }
     }
   }
@@ -143,7 +143,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
             cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-              exp(-geodist_mat[i][j] / m)), 2);
+              exp(-geodist_mat[i][j] / m)), 2) + lambda * m * m;
           }
         }
       }
