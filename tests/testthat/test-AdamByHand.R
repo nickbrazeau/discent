@@ -26,8 +26,7 @@ test_that("Fi adam by hand", {
     dplyr::filter(deme1 != deme2)
   ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                         start_params = our_start_params,
-                                        f_learningrate = 1e-3,
-                                        m_learningrate = 1e-5,
+                                        learningrate = 1e-3,
                                         b1 = 0.9,
                                         b2 = 0.999,
                                         e = 1e-8,
@@ -39,12 +38,12 @@ test_that("Fi adam by hand", {
   b1 <- 0.9
   b2 <- 0.999
   e <- 1e-8
-  f_learningrate <- 1e-3
+  learningrate <- 1e-3
   mt_f1 <- b1 * 0 + (1-b1) * ret$fi_gradtraj[2,1]
   vt_f1 <- b2 * 0 + (1-b2) * (ret$fi_gradtraj[2,1]^2)
   mt_f1hat <- mt_f1 / (1 - b1^1)
   vt_f1hat <- vt_f1 / (1 - b2^1)
-  fnew1 = logit(ret$fi_run[1,1]) - f_learningrate * (mt_f1hat/(sqrt(vt_f1hat) + e))
+  fnew1 = logit(ret$fi_run[1,1]) - learningrate * (mt_f1hat/(sqrt(vt_f1hat) + e))
   fnew1 <- expit(fnew1)
   ret$fi_run[2,1]
 
@@ -81,8 +80,7 @@ test_that("M adam by hand", {
     dplyr::filter(deme1 != deme2)
   ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
                                         start_params = our_start_params,
-                                        f_learningrate = 1e-3,
-                                        m_learningrate = 1e-5,
+                                        learningrate = 1e-3,
                                         b1 = 0.9,
                                         b2 = 0.999,
                                         e = 1e-8,
@@ -94,12 +92,12 @@ test_that("M adam by hand", {
   b1 <- 0.9
   b2 <- 0.999
   e <- 1e-8
-  m_learningrate <- 1e-5
+  learningrate <- 1e-5
   mt_m <- b1 * 0 + (1-b1) * ret$fi_gradtraj[2,1]
   vt_m <- b2 * 0 + (1-b2) * (ret$fi_gradtraj[2,1]^2)
   mt_mhat <- mt_m / (1 - b1^1)
   vt_mhat <- vt_m / (1 - b2^1)
-  mnew1 <- ret$m_run[1] - m_learningrate * (mt_mhat/(sqrt(vt_mhat) + e))
+  mnew1 <- ret$m_run[1] - learningrate * (mt_mhat/(sqrt(vt_mhat) + e))
   ret$m_run[1]
 
   # test out
