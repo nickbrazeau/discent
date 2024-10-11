@@ -32,8 +32,8 @@ start_params <- c(start_params, "m"= 250)
 #run
 ret <- discent::deme_inbreeding_spcoef_vanilla(discdat = IBD_simulation_data,
                                        start_params = start_params,
-                                       f_learningrate = 0.001,
-                                       m_learningrate = 1e-6,
+                                       learningrate = 1e-3,
+                                       lambda = 0.01,
                                        m_lowerbound = 0,
                                        m_upperbound = Inf,
                                        b1 = 0.9,
