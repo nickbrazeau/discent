@@ -101,6 +101,16 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   }
 
   #......................
+  # check that disc dat is being used correctly
+  #......................
+  goodegg::assert_eq(
+    x = choose(length(unique(c(discdat$deme1, discdat$deme2))), 2), # max number of between distances
+    y = unique(paste0(discdat$deme1, discdat$deme2, discdat$geodist)), # count of unique between distances
+    message = "You have pairwise demes with differing geodistances measurements in your data input. Geodistances must be the same between demes (pairwise geodistances should be the same)."
+  )
+
+
+  #......................
   # check for self comparisons
   #......................
   sapply(discdat$geodist, assert_neq, y = 0,
