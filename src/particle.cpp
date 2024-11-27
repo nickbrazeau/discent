@@ -29,9 +29,11 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     for (int j = i+1; j < n_Demes; j++) {
       double avg_fvec = (fvec[i] + fvec[j])/2;
       double exp_M = exp(-geodist_mat[i][j] / m);
+      double L2term = lambda * pow(m, 2); // explicit regularization term
       for (int k = 0; k < n_Kpairmax; k++){
         if (gendist_arr[i][j][k] != -1) {
-          cost[0] += pow( (gendist_arr[i][j][k] -  avg_fvec * exp_M), 2);       }
+          cost[0] += pow( (gendist_arr[i][j][k] -  avg_fvec * exp_M), 2) + L2term;
+        }
       }
     }
   }
@@ -65,10 +67,14 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
+        double avg_fvec = (fvec[i] + fvec[j])/2;
+        double exp_M = exp(-geodist_mat[i][j] / m);
+        double exp_M2 = exp(-2*geodist_mat[i][j] / m);
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) { // NB -1 includes self deme comparisons i = j, as well as demes hat do not contain max members in array
-            fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] / m) +
-              ((fvec[i] + fvec[j])/2) * exp(-2*geodist_mat[i][j] / m);
+            //fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] / m) +
+            //  ((fvec[i] + fvec[j])/2) * exp(-2*geodist_mat[i][j] / m);
+            fgrad[i] += -gendist_arr[i][j][k] * exp_M + avg_fvec * exp_M2;
           }
         }
       }
@@ -84,13 +90,17 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     // step through partial deriv for M
     for (int i = 0; i < n_Demes; i++) {
       for (int j = 0; j < n_Demes; j++) {
-        if (i != j) { // redundant w/ R catch and -1 below, but extra protective
-          for (int k = 0; k < n_Kpairmax; k++){
-            if (gendist_arr[i][j][k] != -1) {
-              mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
-                2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
-              mgrad += lambda * 2 * m; // lambda term for explicit regularization/penalty on large M
-            }
+        double avg_fvec = (fvec[i] + fvec[j])/2;
+        double exp_M = exp(-geodist_mat[i][j] / m);
+        double L2term = lambda * pow(m, 2); // explicit regularization term
+        double quadexp = 2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
+        for (int k = 0; k < n_Kpairmax; k++){
+          if (gendist_arr[i][j][k] != -1) {
+            // mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
+            //   2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
+            // mgrad += lambda * 2 * m; // lambda term for explicit regularization/penalty on large M
+            mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * avg_fvec * exp_M + quadexp;
+            mgrad += L2term; // lambda term for explicit regularization/penalty on large M
           }
         }
       }
@@ -140,10 +150,15 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     // cost is for every pair in the upper triangle
     for (int i = 0; i < (n_Demes-1); i++) {
       for (int j = i+1; j < n_Demes; j++) {
+        double avg_fvec = (fvec[i] + fvec[j])/2;
+        double exp_M = exp(-geodist_mat[i][j] / m);
+        double L2term = lambda * pow(m, 2); // explicit regularization term
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
-            cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-              exp(-geodist_mat[i][j] / m)), 2) + lambda * m * m;
+            // cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
+            //   exp(-geodist_mat[i][j] / m)), 2) + lambda * m * m;
+            cost[step] += pow( gendist_arr[i][j][k] - (avg_fvec *
+              exp_M), 2) + L2term;
           }
         }
       }
