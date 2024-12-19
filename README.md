@@ -1,8 +1,8 @@
 # DISCent
 <!-- badges: start -->
 ![main_build](https://github.com/nickbrazeau/discent/actions/workflows/check-standard.yaml/badge.svg?branch=main) 
-![main_build](https://github.com/nickbrazeau/discent/actions/workflows/check-standard.yaml/badge.svg?branch=develop) 
 ![Code Coverage](https://github.com/nickbrazeau/discent/actions/workflows/test-coverage.yaml/badge.svg?branch=main)
+[![CodeFactor](https://www.codefactor.io/repository/github/nickbrazeau/discent/badge/main)](https://www.codefactor.io/repository/github/discent/polysimibd/overview/main)
 <!-- badges: end -->
 
 <description>
