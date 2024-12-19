@@ -36,7 +36,7 @@
 #' @export
 
 deme_inbreeding_spcoef_vanilla <- function(discdat,
-                                           start_params = c(),
+                                           start_params = NULL,
                                            lambda = 0.1,
                                            learningrate = 1e-3,
                                            m_lowerbound = 0,
@@ -124,8 +124,8 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
   # get deme names and lift over sorted names for i and j
   demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
-  keyi <- data.frame(deme1 = demes, i = 1:length(demes))
-  keyj <- data.frame(deme2 = demes, j = 1:length(demes))
+  keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
+  keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
 
   # transform data w/ logit
   discdat <- discdat %>%
@@ -157,8 +157,8 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   # versus a list with varying sizes (and eventually a more efficient for-loop)
   n_Kpairmax <- max(purrr::map_dbl(gendist$data, nrow))
   gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
-  for (i in 1:nrow(gendist)) {
-    gendist_arr[gendist$i[i], gendist$j[i], 1:nrow(gendist$data[[i]])] <- unname(unlist(gendist$data[[i]]))
+  for (i in seq_len(nrow(gendist))) {
+    gendist_arr[gendist$i[i], gendist$j[i], seq_len(nrow(gendist$data[[i]]))] <- unname(unlist(gendist$data[[i]]))
   }
 
   # normalize geodistances per user; NB have already removed self comparisons, so no 0s
@@ -191,13 +191,14 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
     if (length(unique(unlist(x))) != 1) {
       stop("deme1 and deme2 have different geodistances among P-sample combinations. Distances should all be same among samples")
     }
-    return( unique(unlist(x)) ) # all same by unique
+    # out
+    unique(unlist(x))  # all same by unique
   }
   )
 
   # upper tri
   geodist_mat <- matrix(data = -1, nrow = length(locats), ncol = length(locats))
-  for (i in 1:nrow(geodist)) {
+  for (i in seq_len(nrow(geodist))) {
     geodist_mat[geodist$i[i], geodist$j[i]] <- geodist$data[i]
   }
   diag(geodist_mat) <- 0

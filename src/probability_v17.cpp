@@ -133,7 +133,6 @@ double rnorm1(double mean, double sd) {
 //------------------------------------------------
 // draw from univariate normal distribution and reflect to interval (a,b)
 double rnorm1_interval(double mean, double sd, double a, double b) {
-
   // draw raw value relative to a
   double ret = rnorm1(mean, sd) - a;
 
@@ -197,7 +196,6 @@ double dmnorm1(const vector<double> &x,
                const vector<double> &mu,
                double logdet,
                const vector< vector<double> > &chol_inverse) {
-
   int d = int(x.size());
   double ret = -0.5*d*log(2*M_PI) - 0.5*logdet;
   double tmp;
@@ -219,7 +217,6 @@ double dmnorm1(const vector<double> &x,
 double dmnorm2(const vector<double> &x,
                const vector<double> &mu,
                const vector<vector<double>> &sigma) {
-
   // calculate determinants etc.
   int d = int(x.size());
   vector<vector<double>> sigma_chol(d, vector<double>(d));
@@ -244,7 +241,6 @@ double dinvwish1(const vector<vector<double>> &sigma_inv,
                  const vector<vector<double>> &psi,
                  const vector<vector<double>> &psi_chol,
                  double nu) {
-
   // get basic properties
   int d = sigma_inv.size();
 
@@ -271,7 +267,6 @@ double dinvwish1(const vector<vector<double>> &sigma_inv,
 double dinvwish2(const vector<vector<double>> &sigma,
                  const vector<vector<double>> &psi,
                  double nu) {
-
   // get basic properties
   int d = sigma.size();
 

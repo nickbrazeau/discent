@@ -32,7 +32,8 @@ update_progress <- function(pb_list, name, i, max_i) {
 #' @noRd
 # no export because simple
 logit <- function(p){
-  return( log(p/(1-p)) )
+  # out
+   log(p/(1-p))
 }
 
 #------------------------------------------------
@@ -43,7 +44,8 @@ logit <- function(p){
 #' @noRd
 # no export because simple
 expit <- function(p){
-  return(1/(1+exp(-p)))
+  # out
+  1/(1+exp(-p))
 }
 
 #------------------------------------------------
@@ -67,7 +69,8 @@ expand_pairwise <- function(discdf){
   colnames(discdfexpand) <- c("smpl2", "smpl1", "deme2", "deme1", "gendist", "geodist")
   discdfexpand <- rbind.data.frame(discdf, discdfexpand) # now have all pairwise possibilities
   discdfexpand <- discdfexpand[!duplicated(discdfexpand), ]
-  return(discdfexpand)
+  # out
+  discdfexpand
 }
 
 
@@ -105,7 +108,7 @@ print.vanillaDISCresult <- function(x, ...) {
 #' @export
 summary.vanillaDISCresult <- function(object, ...) {
   # send summary only
-  return(tidyout.vanillaDISCresult(object))
+  tidyout.vanillaDISCresult(object)
 }
 
 
@@ -132,12 +135,10 @@ tidyout.vanillaDISCresult <- function(x) {
   # clean up
   #......................
   fis <- dplyr::bind_cols(x$deme_key, x$Final_Fis) %>%
-    dplyr::select(-c("key")) %>%
+    dplyr::select(-key) %>%
     magrittr::set_colnames(c("Deme", "DISC"))
 
   # out
-  ret <- list(Final_Fis = fis,
-              Final_M = x$Final_m)
-  return(ret)
-
+  list(Final_Fis = fis,
+       Final_M = x$Final_m)
 }

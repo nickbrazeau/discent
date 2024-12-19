@@ -6,7 +6,7 @@
 \usage{
 deme_inbreeding_spcoef_vanilla(
   discdat,
-  start_params = c(),
+  start_params = NULL,
   lambda = 0.1,
   learningrate = 0.001,
   m_lowerbound = 0,
