@@ -10,13 +10,13 @@
 <url><loc>/index.html</loc></url>
 <url><loc>/news/index.html</loc></url>
 <url><loc>/reference/IBD_simulation_data.html</loc></url>
-<url><loc>/reference/deme_inbreeding_spcoef_vanilla.html</loc></url>
+<url><loc>/reference/disc.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
-<url><loc>/reference/is.vanillaDISCresult.html</loc></url>
+<url><loc>/reference/is.DISCresult.html</loc></url>
 <url><loc>/reference/pipe.html</loc></url>
-<url><loc>/reference/print.vanillaDISCresult.html</loc></url>
-<url><loc>/reference/summary.vanillaDISCresult.html</loc></url>
+<url><loc>/reference/print.DISCresult.html</loc></url>
+<url><loc>/reference/summary.DISCresult.html</loc></url>
+<url><loc>/reference/tidyout.DISCresult.html</loc></url>
 <url><loc>/reference/tidyout.html</loc></url>
-<url><loc>/reference/tidyout.vanillaDISCresult.html</loc></url>
 </urlset>
 

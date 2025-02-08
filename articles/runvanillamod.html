@@ -97,22 +97,20 @@
 <span><span class="va">start_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">start_params</span>, <span class="st">"m"</span><span class="op">=</span> <span class="fl">250</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#run</span></span>
-<span><span class="va">ret</span> <span class="op">&lt;-</span> <span class="fu">discent</span><span class="fu">::</span><span class="fu"><a href="../reference/deme_inbreeding_spcoef_vanilla.html">deme_inbreeding_spcoef_vanilla</a></span><span class="op">(</span>discdat <span class="op">=</span> <span class="va">IBD_simulation_data</span>,</span>
-<span>                                       start_params <span class="op">=</span> <span class="va">start_params</span>,</span>
-<span>                                       learningrate <span class="op">=</span> <span class="fl">1e-3</span>,</span>
-<span>                                       lambda <span class="op">=</span> <span class="fl">0.01</span>,</span>
-<span>                                       m_lowerbound <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>                                       m_upperbound <span class="op">=</span> <span class="cn">Inf</span>,</span>
-<span>                                       b1 <span class="op">=</span> <span class="fl">0.9</span>,</span>
-<span>                                       b2 <span class="op">=</span> <span class="fl">0.999</span>,</span>
-<span>                                       e <span class="op">=</span> <span class="fl">1e-8</span>,</span>
-<span>                                       steps <span class="op">=</span> <span class="fl">1e4</span>,</span>
-<span>                                       thin <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                                       normalize_geodist <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                       report_progress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                       return_verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in get(paste0(generic, ".", class), envir = get_method_env()) : </span></span>
-<span><span class="co">#&gt;   object 'type_sum.accel' not found</span></span>
+<span><span class="va">ret</span> <span class="op">&lt;-</span> <span class="fu">discent</span><span class="fu">::</span><span class="fu"><a href="../reference/disc.html">disc</a></span><span class="op">(</span>discdat <span class="op">=</span> <span class="va">IBD_simulation_data</span>,</span>
+<span>                     start_params <span class="op">=</span> <span class="va">start_params</span>,</span>
+<span>                     learningrate <span class="op">=</span> <span class="fl">1e-3</span>,</span>
+<span>                     lambda <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>                     m_lowerbound <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>                     m_upperbound <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>                     b1 <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>                     b2 <span class="op">=</span> <span class="fl">0.999</span>,</span>
+<span>                     e <span class="op">=</span> <span class="fl">1e-8</span>,</span>
+<span>                     steps <span class="op">=</span> <span class="fl">1e4</span>,</span>
+<span>                     thin <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                     normalize_geodist <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                     report_progress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                     return_verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       DISC step 100</span></span>
 <span><span class="co">#&gt;       DISC step 200</span></span>
 <span><span class="co">#&gt;       DISC step 300</span></span>
