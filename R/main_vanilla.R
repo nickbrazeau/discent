@@ -1,4 +1,4 @@
-#' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space (Vanilla)
+#' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
 #' @param discdat dataframe; The genetic-geographic data by deme (K)
 #' @param start_params named double vector; vector of start parameters.
 #' @param lambda double; A quadratic L2 explicit regularization, or penalty, parameter on "m" parameter. Note, lambda is a scalar such that: \eqn{\lambda m^2}.
@@ -32,23 +32,22 @@
 #' logit transformation internally in the code.
 #' @details Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
 #' for moment decay rates, epsilon, and learning rates are taken from \cite{DP Kingma, 2014}.
-#' @details The "vanilla" method does not attempt to optimize start parameters.
 #' @export
 
-deme_inbreeding_spcoef_vanilla <- function(discdat,
-                                           start_params = NULL,
-                                           lambda = 0.1,
-                                           learningrate = 1e-3,
-                                           m_lowerbound = 0,
-                                           m_upperbound = Inf,
-                                           b1 = 0.9,
-                                           b2 = 0.999,
-                                           e = 1e-8,
-                                           steps = 1e3,
-                                           thin = 1,
-                                           normalize_geodist = TRUE,
-                                           report_progress = TRUE,
-                                           return_verbose = FALSE){
+disc <- function(discdat,
+                 start_params = NULL,
+                 lambda = 0.1,
+                 learningrate = 1e-3,
+                 m_lowerbound = 0,
+                 m_upperbound = Inf,
+                 b1 = 0.9,
+                 b2 = 0.999,
+                 e = 1e-8,
+                 steps = 1e3,
+                 thin = 1,
+                 normalize_geodist = TRUE,
+                 report_progress = TRUE,
+                 return_verbose = FALSE){
 
   #..............................................................
   # Assertions & Catches
@@ -261,7 +260,7 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   }
 
   # add S3 class structure
-  attr(output, "class") <- "vanillaDISCresult"
+  attr(output, "class") <- "DISCresult"
   return(output)
 }
 

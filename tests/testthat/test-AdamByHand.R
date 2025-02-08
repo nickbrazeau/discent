@@ -24,16 +24,16 @@ test_that("Fi adam by hand", {
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
-                                        start_params = our_start_params,
-                                        learningrate = 1e-3,
-                                        b1 = 0.9,
-                                        b2 = 0.999,
-                                        e = 1e-8,
-                                        steps = 1e3,
-                                        normalize_geodist = F,
-                                        report_progress = T,
-                                        return_verbose = T)
+  ret <- disc(discdat = inputdisc,
+              start_params = our_start_params,
+              learningrate = 1e-3,
+              b1 = 0.9,
+              b2 = 0.999,
+              e = 1e-8,
+              steps = 1e3,
+              normalize_geodist = F,
+              report_progress = T,
+              return_verbose = T)
   # back out for Fi adam
   b1 <- 0.9
   b2 <- 0.999
@@ -78,16 +78,16 @@ test_that("M adam by hand", {
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
-                                        start_params = our_start_params,
-                                        learningrate = 1e-3,
-                                        b1 = 0.9,
-                                        b2 = 0.999,
-                                        e = 1e-8,
-                                        steps = 1e3,
-                                        normalize_geodist = F,
-                                        report_progress = T,
-                                        return_verbose = T)
+  ret <- disc(discdat = inputdisc,
+              start_params = our_start_params,
+              learningrate = 1e-3,
+              b1 = 0.9,
+              b2 = 0.999,
+              e = 1e-8,
+              steps = 1e3,
+              normalize_geodist = F,
+              report_progress = T,
+              return_verbose = T)
   # back out for m adam
   b1 <- 0.9
   b2 <- 0.999

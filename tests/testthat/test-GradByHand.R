@@ -34,17 +34,17 @@ test_that("Fi gradient by hand", {
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
-                                        start_params = our_start_params,
-                                        learningrate = 1e-3,
-                                        lambda = 0,
-                                        b1 = 0.9,
-                                        b2 = 0.999,
-                                        e = 1e-8,
-                                        steps = 1e3,
-                                        normalize_geodist = F,
-                                        report_progress = T,
-                                        return_verbose = T)
+  ret <- disc(discdat = inputdisc,
+              start_params = our_start_params,
+              learningrate = 1e-3,
+              lambda = 0,
+              b1 = 0.9,
+              b2 = 0.999,
+              e = 1e-8,
+              steps = 1e3,
+              normalize_geodist = F,
+              report_progress = T,
+              return_verbose = T)
   # back out gradient for F1
   # NBset to 0 at first iter, so the additional adam term cancels out
   discF1 <- ret$fi_gradtraj[2,1]
@@ -92,17 +92,17 @@ test_that("M gradient by hand", {
   # now run model
   inputdisc <- dat %>%
     dplyr::filter(deme1 != deme2)
-  ret <- deme_inbreeding_spcoef_vanilla(discdat = inputdisc,
-                                        start_params = our_start_params,
-                                        learningrate = 1e-3,
-                                        lambda = 0,
-                                        b1 = 0.9,
-                                        b2 = 0.999,
-                                        e = 1e-8,
-                                        steps = 1e3,
-                                        normalize_geodist = F,
-                                        report_progress = T,
-                                        return_verbose = T)
+  ret <- disc(discdat = inputdisc,
+              start_params = our_start_params,
+              learningrate = 1e-3,
+              lambda = 0,
+              b1 = 0.9,
+              b2 = 0.999,
+              e = 1e-8,
+              steps = 1e3,
+              normalize_geodist = F,
+              report_progress = T,
+              return_verbose = T)
   # back out gradient for M
   # NB  set to 0 at first iter, so the additional adam term cancels out
   discM <- ret$m_gradtraj[2]

@@ -1,3 +1,41 @@
+#' @title Calculate Hessian Matrix from Cost Chain
+#' @param
+#' @description
+#' @details
+#' @returns
+#' @export
+
+# Calculate_Hessian_of_Cost <- function(costchain, burn) {
+#   # checks
+#   # goodegg::assert_vector(costchain)
+#   # goodegg::assert_int(burn)
+#   # goodegg::assert_le(burn, lenght(costchain), message = "Burn-in exceeds the length of the cost chain")
+#
+#
+#   # core
+#   costchain_burned <- costchain[(burn+1):length(costchain)] # burn in
+#   nlcost <- length(costchain_burned) # store length
+#   H <- matrix(NA, nrow = nlcost, ncol = nlcost) # blank hessian matrix
+#   # Compute Hessian using finite differences method
+#   for (i in 1:nlcost) {
+#     # Finite Differences for On-Diagonal Second Derivative (not mixed)
+#     # [f(x+h) - 2f(x) + f(x-h)]/h^2 https://en.wikipedia.org/wiki/Finite_difference#Relation_with_derivatives
+#     # NB, little h=1, for 1 step so is dropped
+#     if (i == 1) {
+#       H[i, i] <- costchain_burned[i+2] - 2 * costchain_burned[i+1] + costchain_burned[i] # forward lead at start
+#     } else if (i == nlcost) {
+#       H[i, i] <- costchain_burned[i] - 2 * costchain_burned[i-1] + costchain_burned[i-2] # back lag at start
+#     } else {
+#       H[i, i] <- costchain_burned[i+1] - 2 * costchain_burned[i] + costchain_burned[i-1]
+#     }
+#     # there are NO mixed partial derivative, off-diagonal since we have one dimensional data
+#     # [f(x_i+h, x_j+h) - f(x_i+h, x_j) - f(x_i, x_j+h) + f(x_i, x_j)] / 4h^2 https://math.stackexchange.com/questions/888259/can-someone-explain-in-general-what-a-central-difference-formula-is-and-what-it
+#   }
+#   # out
+#   return(H)
+# }
+
+
 #' Pipe operator
 #'
 #' See \code{magrittr::\link[magrittr]{\%>\%}} for details.
@@ -82,17 +120,17 @@ expand_pairwise <- function(discdf){
 #' @param x DISC result from deme_inbreeding_spcoef function
 #' @noMd
 #' @export
-is.vanillaDISCresult <- function(x) {
-  inherits(x, "is.vanillaDISCresult")
+is.DISCresult <- function(x) {
+  inherits(x, "is.DISCresult")
 }
 
 #' @title print DISCresult S3 Class
 #' @description overload print() function to print summary only
-#' @inheritParams is.vanillaDISCresult
+#' @inheritParams is.DISCresult
 #' @param ... further arguments passed to or from other methods.
 #' @noMd
 #' @export
-print.vanillaDISCresult <- function(x, ...) {
+print.DISCresult <- function(x, ...) {
 
   # print summary only
   cat(crayon::red("Final DISC Range:"),  paste(round(min(x$Final_Fis),2), round(max(x$Final_Fis),2), sep = " - "), "\n")
@@ -106,9 +144,9 @@ print.vanillaDISCresult <- function(x, ...) {
 #' @param ... further arguments passed to or from other methods.
 #' @noMd
 #' @export
-summary.vanillaDISCresult <- function(object, ...) {
+summary.DISCresult <- function(object, ...) {
   # send summary only
-  tidyout.vanillaDISCresult(object)
+  tidyout.DISCresult(object)
 }
 
 
@@ -117,7 +155,7 @@ summary.vanillaDISCresult <- function(object, ...) {
 #...........................................................
 #' @title Tidy Out Sim Method
 #' @description Method assignment
-#' @inheritParams is.vanillaDISCresult
+#' @inheritParams is.DISCresult
 #' @noMd
 #' @export
 tidyout <- function(x) {
@@ -126,11 +164,11 @@ tidyout <- function(x) {
 
 #' @title Tidy Out Sim
 #' @description Function for taking output of SIR NE and lifting it over
-#' @inheritParams is.vanillaDISCresult
+#' @inheritParams is.DISCresult
 #' @noMd
 #' @export
 
-tidyout.vanillaDISCresult <- function(x) {
+tidyout.DISCresult <- function(x) {
   #......................
   # clean up
   #......................
