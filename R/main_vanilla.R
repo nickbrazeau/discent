@@ -104,7 +104,7 @@ disc <- function(discdat,
   #......................
   assert_eq(
     x = choose(length(unique(c(discdat$deme1, discdat$deme2))), 2), # max number of between distances
-    y = length(unique(paste0(discdat$deme1, discdat$deme2, discdat$geodist, sep = "-"))), # count of unique between distances
+    y = length(unique(paste(discdat$deme1, discdat$deme2, discdat$geodist, sep = "-"))), # count of unique between distances
     message = "You have pairwise demes with differing geodistances measurements in your data input. Geodistances must be the same between demes (pairwise geodistances should be the same)."
   )
 
