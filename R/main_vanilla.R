@@ -116,12 +116,85 @@ disc <- function(discdat,
          message = "No within-deme sample comparisons allowed. Geodistance should not be 0")
   mapply(assert_neq, discdat$deme1, discdat$deme2,
          message = "No within-deme sample comparisons allowed. Locat names should not be the same")
-
   #............................................................
   # R manipulations before C++
   #...........................................................
+  disclist <- wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
+
+  #..............................................................
+  # run efficient C++ function
+  #..............................................................
+
+  args <- list(gendist = as.vector(disclist$gendist_arr),
+               geodist = as.vector(disclist$geodist_mat),
+               fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
+               n_Demes = length(disclist$demes),
+               n_Kpairmax = disclist$n_Kpairmax,
+               m = unname(start_params["m"]),
+               lambda = lambda,
+               learningrate = learningrate,
+               m_lowerbound = m_lowerbound,
+               m_upperbound = m_upperbound,
+               b1 = b1,
+               b2 = b2,
+               e = e,
+               steps = steps,
+               report_progress = report_progress
+  )
+
+  # run
+  output_raw <- vanilla_deme_inbreeding_coef_cpp(args)
+
+
+  # set up thinning
+  thin_its <- seq(1, steps, by = thin)
+  thin_its <- unique(c(thin_its, steps)) # always include last iteration
+
+  # process output
+  colnames(disclist$keyi) <- c("Deme", "key")
+  if (return_verbose) {
+    output <- list(
+      deme_key = disclist$keyi,
+      m_run = output_raw$m_run[thin_its],
+      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
+      m_gradtraj = output_raw$m_gradtraj[thin_its],
+      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
+      m_1moment = output_raw$m_firstmoment[thin_its],
+      m_2moment = output_raw$m_secondmoment[thin_its],
+      fi_1moment = do.call("rbind", output_raw$fi_firstmoment)[thin_its, ],
+      fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
+      cost = output_raw$cost[thin_its],
+      Final_Fis = expit(output_raw$Final_Fis),
+      Final_m = output_raw$Final_m,
+      raw_geodist_mat = output_raw$raw_geodist_mat,
+      raw_gendist_arr = output_raw$raw_gendist_arr
+    )
+
+  } else {
+    output <- list(
+      deme_key = disclist$keyi,
+      cost = output_raw$cost[thin_its],
+      m_run = output_raw$m_run[thin_its],
+      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
+      Final_Fis = expit(output_raw$Final_Fis),
+      Final_m = output_raw$Final_m)
+  }
+
+  # add S3 class structure
+  attr(output, "class") <- "DISCresult"
+  return(output)
+}
+
+
+#' @title Wrangle DISC data for efficient input into Cpp
+#' @inheritParams disc
+#' @description Internal wrangling function that expands the DISC genetic data into an array and the geographic
+#' distances into a matrix for efficient input into Cpp.
+#' @export
+
+wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats) {
   # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
-  # get deme names and lift over sorted names for i and j
+  # get deme names and lift over sorted names for i and j (note, deme names may be anything, so cannot rely on user indexing)
   demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
   keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
   keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
@@ -140,6 +213,7 @@ disc <- function(discdat,
   gendist <- discdat %>%
     expand_pairwise(.) %>% # get all pairwise for full matrix
     dplyr::select(c("deme1", "deme2", "gendist")) %>%
+    dplyr::filter(!duplicated(.)) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%
     tidyr::nest(.) %>%
     dplyr::left_join(., keyi, by = "deme1") %>%
@@ -178,6 +252,7 @@ disc <- function(discdat,
   # put geo information into distance matrix
   geodist <- discdat %>%
     expand_pairwise(.) %>% # get all pairwise for full matrix
+    dplyr::filter(!duplicated(.)) %>%
     dplyr::select(c("deme1", "deme2", "geodist")) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%
     tidyr::nest(.) %>%
@@ -202,65 +277,15 @@ disc <- function(discdat,
   }
   diag(geodist_mat) <- 0
 
-  #..............................................................
-  # run efficient C++ function
-  #..............................................................
-
-  args <- list(gendist = as.vector(gendist_arr),
-               geodist = as.vector(geodist_mat),
-               fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
-               n_Demes = length(demes),
-               n_Kpairmax = n_Kpairmax,
-               m = unname(start_params["m"]),
-               lambda = lambda,
-               learningrate = learningrate,
-               m_lowerbound = m_lowerbound,
-               m_upperbound = m_upperbound,
-               b1 = b1,
-               b2 = b2,
-               e = e,
-               steps = steps,
-               report_progress = report_progress
+  #......................
+  # out
+  #......................
+  ret <- list(
+    demes = demes,
+    n_Kpairmax = n_Kpairmax,
+    keyi = keyi,
+    gendist_arr = gendist_arr,
+    geodist_mat = geodist_mat
   )
-
-  # run
-  output_raw <- vanilla_deme_inbreeding_coef_cpp(args)
-
-
-  # set up thinning
-  thin_its <- seq(1, steps, by = thin)
-  thin_its <- unique(c(thin_its, steps)) # always include last iteration
-
-  # process output
-  colnames(keyi) <- c("Deme", "key")
-  if (return_verbose) {
-    output <- list(
-      deme_key = keyi,
-      m_run = output_raw$m_run[thin_its],
-      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
-      m_gradtraj = output_raw$m_gradtraj[thin_its],
-      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
-      m_1moment = output_raw$m_firstmoment[thin_its],
-      m_2moment = output_raw$m_secondmoment[thin_its],
-      fi_1moment = do.call("rbind", output_raw$fi_firstmoment)[thin_its, ],
-      fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
-      cost = output_raw$cost[thin_its],
-      Final_Fis = expit(output_raw$Final_Fis),
-      Final_m = output_raw$Final_m
-    )
-
-  } else {
-    output <- list(
-      deme_key = keyi,
-      cost = output_raw$cost[thin_its],
-      m_run = output_raw$m_run[thin_its],
-      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
-      Final_Fis = expit(output_raw$Final_Fis),
-      Final_m = output_raw$Final_m)
-  }
-
-  # add S3 class structure
-  attr(output, "class") <- "DISCresult"
-  return(output)
+  return(ret)
 }
-
