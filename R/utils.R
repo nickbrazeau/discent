@@ -26,8 +26,8 @@ update_progress <- function(pb_list, name, i, max_i) {
 
 #------------------------------------------------
 #' @title logit transformation
-#' @param p numeric vecotr
-#' @description Standard expit formula
+#' @param p numeric vector
+#' @description Standard logit formula
 #' @export
 logit <- function(p){
   # out
@@ -36,10 +36,9 @@ logit <- function(p){
 
 #------------------------------------------------
 #' @title expit transformation
-#' @param p numeric vecotr
+#' @param p numeric vector
 #' @description Standard expit formula
-#' @noMd
-#' @noRd
+#' @export
 # no export because simple
 expit <- function(p){
   # out
