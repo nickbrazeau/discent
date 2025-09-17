@@ -7,13 +7,13 @@ test_that("test that genetic data imports correctly", {
   # start params
   our_start_params <- rep(0.2, 3)
   names(our_start_params) <- 1:3
-  our_start_params <- c(our_start_params, "m" = 1e3)
+  our_start_params <- c(our_start_params, "m" = 10)
   # locats
   locats <- names(our_start_params)[!grepl("^m$", names(our_start_params))]
   #.................................
   # input into Cpp
   #.................................
-  disclist <- discent::wrangle_discentdat(discdat = dat, start_params = our_start_params,
+  disclist <- discent:::wrangle_discentdat(discdat = dat, start_params = our_start_params,
                                           locats = locats, normalize_geodist = T)
 
   #......................

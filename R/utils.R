@@ -1,41 +1,3 @@
-#' @title Calculate Hessian Matrix from Cost Chain
-#' @param
-#' @description
-#' @details
-#' @returns
-#' @export
-
-# Calculate_Hessian_of_Cost <- function(costchain, burn) {
-#   # checks
-#   # goodegg::assert_vector(costchain)
-#   # goodegg::assert_int(burn)
-#   # goodegg::assert_le(burn, lenght(costchain), message = "Burn-in exceeds the length of the cost chain")
-#
-#
-#   # core
-#   costchain_burned <- costchain[(burn+1):length(costchain)] # burn in
-#   nlcost <- length(costchain_burned) # store length
-#   H <- matrix(NA, nrow = nlcost, ncol = nlcost) # blank hessian matrix
-#   # Compute Hessian using finite differences method
-#   for (i in 1:nlcost) {
-#     # Finite Differences for On-Diagonal Second Derivative (not mixed)
-#     # [f(x+h) - 2f(x) + f(x-h)]/h^2 https://en.wikipedia.org/wiki/Finite_difference#Relation_with_derivatives
-#     # NB, little h=1, for 1 step so is dropped
-#     if (i == 1) {
-#       H[i, i] <- costchain_burned[i+2] - 2 * costchain_burned[i+1] + costchain_burned[i] # forward lead at start
-#     } else if (i == nlcost) {
-#       H[i, i] <- costchain_burned[i] - 2 * costchain_burned[i-1] + costchain_burned[i-2] # back lag at start
-#     } else {
-#       H[i, i] <- costchain_burned[i+1] - 2 * costchain_burned[i] + costchain_burned[i-1]
-#     }
-#     # there are NO mixed partial derivative, off-diagonal since we have one dimensional data
-#     # [f(x_i+h, x_j+h) - f(x_i+h, x_j) - f(x_i, x_j+h) + f(x_i, x_j)] / 4h^2 https://math.stackexchange.com/questions/888259/can-someone-explain-in-general-what-a-central-difference-formula-is-and-what-it
-#   }
-#   # out
-#   return(H)
-# }
-
-
 #' Pipe operator
 #'
 #' See \code{magrittr::\link[magrittr]{\%>\%}} for details.
@@ -66,9 +28,7 @@ update_progress <- function(pb_list, name, i, max_i) {
 #' @title logit transformation
 #' @param p numeric vecotr
 #' @description Standard expit formula
-#' @noMd
-#' @noRd
-# no export because simple
+#' @export
 logit <- function(p){
   # out
    log(p/(1-p))
