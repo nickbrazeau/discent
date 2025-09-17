@@ -51,7 +51,7 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // items for grad descent
   int steps = rcpp_to_int(args["steps"]);
   double lambda = rcpp_to_double(args["lambda"]);
-  double learningrate = rcpp_to_double(args["learningrate"]); 
+  double learningrate = rcpp_to_double(args["learningrate"]);
   double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
   double m_upperbound = rcpp_to_double(args["m_upperbound"]);
   double b1 = rcpp_to_double(args["b1"]);
@@ -112,6 +112,8 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
                             Rcpp::Named("fi_secondmoment") = discParticle.v2t_fi,
                             Rcpp::Named("cost") = discParticle.cost,
                             Rcpp::Named("Final_Fis") = discParticle.fvec,
-                            Rcpp::Named("Final_m") = discParticle.m);
+                            Rcpp::Named("Final_m") = discParticle.m,
+                            Rcpp::Named("raw_geodist_mat") = geodist_mat,
+                            Rcpp::Named("raw_gendist_arr") = gendist_arr);
 
 }

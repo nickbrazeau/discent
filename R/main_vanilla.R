@@ -1,4 +1,4 @@
-#' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space (Vanilla)
+#' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
 #' @param discdat dataframe; The genetic-geographic data by deme (K)
 #' @param start_params named double vector; vector of start parameters.
 #' @param lambda double; A quadratic L2 explicit regularization, or penalty, parameter on "m" parameter. Note, lambda is a scalar such that: \eqn{\lambda m^2}.
@@ -32,23 +32,22 @@
 #' logit transformation internally in the code.
 #' @details Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
 #' for moment decay rates, epsilon, and learning rates are taken from \cite{DP Kingma, 2014}.
-#' @details The "vanilla" method does not attempt to optimize start parameters.
 #' @export
 
-deme_inbreeding_spcoef_vanilla <- function(discdat,
-                                           start_params = c(),
-                                           lambda = 0.1,
-                                           learningrate = 1e-3,
-                                           m_lowerbound = 0,
-                                           m_upperbound = Inf,
-                                           b1 = 0.9,
-                                           b2 = 0.999,
-                                           e = 1e-8,
-                                           steps = 1e3,
-                                           thin = 1,
-                                           normalize_geodist = TRUE,
-                                           report_progress = TRUE,
-                                           return_verbose = FALSE){
+disc <- function(discdat,
+                 start_params = NULL,
+                 lambda = 0.1,
+                 learningrate = 1e-3,
+                 m_lowerbound = 0,
+                 m_upperbound = Inf,
+                 b1 = 0.9,
+                 b2 = 0.999,
+                 e = 1e-8,
+                 steps = 1e3,
+                 thin = 1,
+                 normalize_geodist = TRUE,
+                 report_progress = TRUE,
+                 return_verbose = FALSE){
 
   #..............................................................
   # Assertions & Catches
@@ -101,107 +100,37 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   }
 
   #......................
+  # check that disc dat is being used correctly
+  #......................
+  assert_eq(
+    x = choose(length(unique(c(discdat$deme1, discdat$deme2))), 2), # max number of between distances
+    y = length(unique(paste(discdat$deme1, discdat$deme2, discdat$geodist, sep = "-"))), # count of unique between distances
+    message = "You have pairwise demes with differing geodistances measurements in your data input. Geodistances must be the same between demes (pairwise geodistances should be the same)."
+  )
+
+
+  #......................
   # check for self comparisons
   #......................
   sapply(discdat$geodist, assert_neq, y = 0,
          message = "No within-deme sample comparisons allowed. Geodistance should not be 0")
   mapply(assert_neq, discdat$deme1, discdat$deme2,
          message = "No within-deme sample comparisons allowed. Locat names should not be the same")
-
   #............................................................
   # R manipulations before C++
   #...........................................................
-  # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
-  # get deme names and lift over sorted names for i and j
-  demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
-  keyi <- data.frame(deme1 = demes, i = 1:length(demes))
-  keyj <- data.frame(deme2 = demes, j = 1:length(demes))
-
-  # transform data w/ logit
-  discdat <- discdat %>%
-    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
-                                   ifelse(gendist < 0.001, 0.001,
-                                          gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = logit(gendist))
-  # transform start parameters w/ logit
-  start_params[names(start_params) != "m"] <- logit(start_params[names(start_params) != "m"])
-
-
-  # get genetic data by pairs through efficient nest
-  gendist <- discdat %>%
-    expand_pairwise(.) %>% # get all pairwise for full matrix
-    dplyr::select(c("deme1", "deme2", "gendist")) %>%
-    dplyr::group_by_at(c("deme1", "deme2")) %>%
-    tidyr::nest(.) %>%
-    dplyr::left_join(., keyi, by = "deme1") %>%
-    dplyr::left_join(., keyj, by = "deme2") %>%
-    dplyr::arrange_at(c("i", "j"))
-
-
-  # put gendist into an array
-  # NB we are filling an array with dimension of size:
-  #   locations x locations x max K-pairs
-  # Will fill in w/ -1 to indicate missing/skip where demes do not
-  # have max pairs.
-  # This approach wastes memory but allows for a structured array
-  # versus a list with varying sizes (and eventually a more efficient for-loop)
-  n_Kpairmax <- max(purrr::map_dbl(gendist$data, nrow))
-  gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
-  for (i in 1:nrow(gendist)) {
-    gendist_arr[gendist$i[i], gendist$j[i], 1:nrow(gendist$data[[i]])] <- unname(unlist(gendist$data[[i]]))
-  }
-
-  # normalize geodistances per user; NB have already removed self comparisons, so no 0s
-  if (normalize_geodist) {
-    mingeodist <- min(discdat$geodist)
-    maxgeodist <- max(discdat$geodist)
-    discdat <- discdat %>%
-      dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
-  }
-  # catch accidental bad M start if user is standardizing distances
-  if (normalize_geodist & (start_params[names(start_params) == "m"] > 500) ) {
-    warning("You have selected to normalize geographic distances, but your
-            migration rate start parameter is large. Please consider placing it on a
-            similar scale to your normalized geographic distances for stability.")
-  }
-
-
-  # put geo information into distance matrix
-  geodist <- discdat %>%
-    expand_pairwise(.) %>% # get all pairwise for full matrix
-    dplyr::select(c("deme1", "deme2", "geodist")) %>%
-    dplyr::group_by_at(c("deme1", "deme2")) %>%
-    tidyr::nest(.) %>%
-    dplyr::left_join(., keyi, by = "deme1") %>%
-    dplyr::left_join(., keyj, by = "deme2") %>%
-    dplyr::arrange_at(c("i", "j"))
-
-  # simplify geodistance data storage
-  geodist$data <- purrr::map_dbl(geodist$data, function(x){
-    if (length(unique(unlist(x))) != 1) {
-      stop("deme1 and deme2 have different geodistances among P-sample combinations. Distances should all be same among samples")
-    }
-    return( unique(unlist(x)) ) # all same by unique
-  }
-  )
-
-  # upper tri
-  geodist_mat <- matrix(data = -1, nrow = length(locats), ncol = length(locats))
-  for (i in 1:nrow(geodist)) {
-    geodist_mat[geodist$i[i], geodist$j[i]] <- geodist$data[i]
-  }
-  diag(geodist_mat) <- 0
+  disclist <- discent:::wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
 
   #..............................................................
   # run efficient C++ function
   #..............................................................
 
-  args <- list(gendist = as.vector(gendist_arr),
-               geodist = as.vector(geodist_mat),
-               fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
-               n_Demes = length(demes),
-               n_Kpairmax = n_Kpairmax,
-               m = unname(start_params["m"]),
+  args <- list(gendist = as.vector(disclist$gendist_arr),
+               geodist = as.vector(disclist$geodist_mat),
+               fvec = unname( disclist$start_params[!grepl("^m$", names(disclist$start_params))] ),
+               n_Demes = length(disclist$demes),
+               n_Kpairmax = disclist$n_Kpairmax,
+               m = unname(disclist$start_params["m"]),
                lambda = lambda,
                learningrate = learningrate,
                m_lowerbound = m_lowerbound,
@@ -222,10 +151,10 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   thin_its <- unique(c(thin_its, steps)) # always include last iteration
 
   # process output
-  colnames(keyi) <- c("Deme", "key")
+  colnames(disclist$keyi) <- c("Deme", "key")
   if (return_verbose) {
     output <- list(
-      deme_key = keyi,
+      deme_key = disclist$keyi,
       m_run = output_raw$m_run[thin_its],
       fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
       m_gradtraj = output_raw$m_gradtraj[thin_its],
@@ -236,12 +165,14 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
       fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
       Final_Fis = expit(output_raw$Final_Fis),
-      Final_m = output_raw$Final_m
+      Final_m = output_raw$Final_m,
+      raw_geodist_mat = output_raw$raw_geodist_mat,
+      raw_gendist_arr = output_raw$raw_gendist_arr
     )
 
   } else {
     output <- list(
-      deme_key = keyi,
+      deme_key = disclist$keyi,
       cost = output_raw$cost[thin_its],
       m_run = output_raw$m_run[thin_its],
       fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
@@ -250,7 +181,114 @@ deme_inbreeding_spcoef_vanilla <- function(discdat,
   }
 
   # add S3 class structure
-  attr(output, "class") <- "vanillaDISCresult"
+  attr(output, "class") <- "DISCresult"
   return(output)
 }
 
+
+#' @title Wrangle DISC data for efficient input into Cpp
+#' @inheritParams disc
+#' @param locats character vector; names of demes
+#' @description Internal wrangling function that expands the DISC genetic data into an array and the geographic
+#' distances into a matrix for efficient input into Cpp.
+#' @noMd
+#' @noRd
+
+wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats) {
+  # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
+  # get deme names and lift over sorted names for i and j (note, deme names may be anything, so cannot rely on user indexing)
+  demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
+  keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
+  keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
+
+  # transform data w/ logit
+  discdat <- discdat %>%
+    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
+                                   ifelse(gendist < 0.001, 0.001,
+                                          gendist))) %>% # reasonable bounds on logit
+    dplyr::mutate(gendist = logit(gendist))
+  # transform start parameters w/ logit
+  start_params[names(start_params) != "m"] <- logit(start_params[names(start_params) != "m"])
+
+
+  # get genetic data by pairs through efficient nest
+  gendist <- discdat %>%
+    expand_pairwise(.) %>% # get all pairwise for full matrix
+    dplyr::select(c("deme1", "deme2", "gendist")) %>%
+    dplyr::filter(!duplicated(.)) %>%
+    dplyr::group_by_at(c("deme1", "deme2")) %>%
+    tidyr::nest(.) %>%
+    dplyr::left_join(., keyi, by = "deme1") %>%
+    dplyr::left_join(., keyj, by = "deme2") %>%
+    dplyr::arrange_at(c("i", "j"))
+
+
+  # put gendist into an array
+  # NB we are filling an array with dimension of size:
+  #   locations x locations x max K-pairs
+  # Will fill in w/ -1 to indicate missing/skip where demes do not
+  # have max pairs.
+  # This approach wastes memory but allows for a structured array
+  # versus a list with varying sizes (and eventually a more efficient for-loop)
+  n_Kpairmax <- max(purrr::map_dbl(gendist$data, nrow))
+  gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
+  for (i in seq_len(nrow(gendist))) {
+    gendist_arr[gendist$i[i], gendist$j[i], seq_len(nrow(gendist$data[[i]]))] <- unname(unlist(gendist$data[[i]]))
+  }
+
+  # normalize geodistances per user; NB have already removed self comparisons, so no 0s
+  if (normalize_geodist) {
+    mingeodist <- min(discdat$geodist)
+    maxgeodist <- max(discdat$geodist)
+    discdat <- discdat %>%
+      dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
+  }
+  # catch accidental bad M start if user is standardizing distances
+  if (normalize_geodist & (start_params[names(start_params) == "m"] > 500) ) {
+    warning("You have selected to normalize geographic distances, but your
+            migration rate start parameter is large. Please consider placing it on a
+            similar scale to your normalized geographic distances for stability.")
+  }
+
+
+  # put geo information into distance matrix
+  geodist <- discdat %>%
+    expand_pairwise(.) %>% # get all pairwise for full matrix
+    dplyr::filter(!duplicated(.)) %>%
+    dplyr::select(c("deme1", "deme2", "geodist")) %>%
+    dplyr::group_by_at(c("deme1", "deme2")) %>%
+    tidyr::nest(.) %>%
+    dplyr::left_join(., keyi, by = "deme1") %>%
+    dplyr::left_join(., keyj, by = "deme2") %>%
+    dplyr::arrange_at(c("i", "j"))
+
+  # simplify geodistance data storage
+  geodist$data <- purrr::map_dbl(geodist$data, function(x){
+    if (length(unique(unlist(x))) != 1) {
+      stop("deme1 and deme2 have different geodistances among P-sample combinations. Distances should all be same among samples")
+    }
+    # out
+    unique(unlist(x))  # all same by unique
+  }
+  )
+
+  # upper tri
+  geodist_mat <- matrix(data = -1, nrow = length(locats), ncol = length(locats))
+  for (i in seq_len(nrow(geodist))) {
+    geodist_mat[geodist$i[i], geodist$j[i]] <- geodist$data[i]
+  }
+  diag(geodist_mat) <- 0
+
+  #......................
+  # out
+  #......................
+  ret <- list(
+    demes = demes,
+    n_Kpairmax = n_Kpairmax,
+    keyi = keyi,
+    gendist_arr = gendist_arr,
+    geodist_mat = geodist_mat,
+    start_params = start_params
+  )
+  return(ret)
+}

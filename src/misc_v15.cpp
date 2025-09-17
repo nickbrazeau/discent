@@ -127,7 +127,6 @@ vector<int> seq_int(int from, int to, int by) {
 // update timer and optionally print time difference
 double chrono_timer(chrono::high_resolution_clock::time_point &t0, string message_before,
                     string message_after, bool print_diff) {
-
   // calculate elapsed time
   chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
   chrono::duration<double> time_span = chrono::duration_cast< chrono::duration<double> >(t1-t0);
@@ -396,7 +395,6 @@ vector<vector<vector<double>>> rcpp_to_array_double(Rcpp::List x) {
 //------------------------------------------------
 // read values from comma-separated text file to vector<int>
 vector<int> file_to_vector_int(string file_path) {
-
   // initialise return object
   vector<int> ret;
 
@@ -420,7 +418,6 @@ vector<int> file_to_vector_int(string file_path) {
 //------------------------------------------------
 // read values from comma-separated text file to vector<double>
 vector<double> file_to_vector_double(string file_path) {
-
   // initialise return object
   vector<double> ret;
 
@@ -437,7 +434,6 @@ vector<double> file_to_vector_double(string file_path) {
       }
     }
   }
-
   return ret;
 }
 
@@ -446,7 +442,6 @@ vector<double> file_to_vector_double(string file_path) {
 // delimited by first line break, then comma. Lines do not all need to be same
 // length, i.e. jagged matrices are allowed.
 vector<vector<double>> file_to_matrix_double(string file_path) {
-
   // initialise return object
   vector<vector<double>> ret;
 
@@ -466,7 +461,6 @@ vector<vector<double>> file_to_matrix_double(string file_path) {
     }
     ret.push_back(v);
   }
-
   return ret;
 }
 
@@ -483,7 +477,6 @@ double lmvgamma_func(double x, double p) {
 //------------------------------------------------
 // calculate Cholesky decomposition of positive definite matrix sigma
 void cholesky(vector<vector<double>> &chol, const vector<vector<double>> &sigma) {
-
   for (int i = 0; i < int(sigma.size()); ++i) {
     for (int j = 0; j < (i+1); ++j) {
       chol[i][j] = sigma[i][j];
@@ -504,7 +497,6 @@ void cholesky(vector<vector<double>> &chol, const vector<vector<double>> &sigma)
       }
     }
   }
-
 }
 
 //------------------------------------------------
@@ -527,7 +519,6 @@ double log_determinant(const vector<vector<double>> &chol) {
 // find the inverse of the matrix M by Gauss-Jordan elimination. Note that M is
 // modified inside the function, and therefore cannot be passed in by reference.
 vector<vector<double>> inverse(vector<vector<double>> M) {
-
   int d = int(M.size());
   vector<vector<double>> IM = diag(d, 1.0);
 
@@ -571,7 +562,6 @@ vector<vector<double>> inverse(vector<vector<double>> M) {
 // values in x_pred must be inside (or equal to) x.
 void cubic_spline(vector<double> &x, vector<double> &y,
                   vector<double> &x_pred, vector<double> &y_pred) {
-
   // get vector sizes
   int n = x.size();
   int n_pred = x_pred.size();

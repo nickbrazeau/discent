@@ -62,11 +62,11 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
   ) %>%
     magrittr::set_colnames(c("deme1", "deme2", "geodist"))
   # individuals to long
-  inds <- 1:cumsum(demesize)[length(demesize)]
+  inds <- seq_len(cumsum(demesize)[length(demesize)])
   # trackers for demes
-  d1 <- tibble::tibble(smpl1 = inds, deme1 = as.factor(rep(1:length(demesize), demesize)),
+  d1 <- tibble::tibble(smpl1 = inds, deme1 = as.factor(rep(seq_len(length(demesize)), demesize)),
                        demesize1 = rep(demesize, demesize))
-  d2 <- tibble::tibble(smpl2 = inds, deme2 = as.factor(rep(1:length(demesize), demesize)),
+  d2 <- tibble::tibble(smpl2 = inds, deme2 = as.factor(rep(seq_len(length(demesize)), demesize)),
                        demesize2 = rep(demesize, demesize))
   # combinations and joins
   combinds <- tibble::as_tibble(t(combn(inds, 2)), .name_repair = "minimal") %>%
@@ -77,9 +77,8 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
 
   # function for drawing mean IBD based iso by dist
   draw_mean_Ftibd <- function(demesize1, demesize2, geodist, rate, Ft) {
-    ret <- 1/(demesize1 + demesize2) * (1 - pexp(geodist, rate)) +
+    1/(demesize1 + demesize2) * (1 - pexp(geodist, rate)) +
       ( (1 - 1/(demesize1 + demesize2)) *  (1 - pexp(geodist, rate)) * Ft )
-    return(ret)
   }
   combinds$mft <- purrr::pmap_dbl(combinds[,c("demesize1", "demesize2", "geodist")],
                                   draw_mean_Ftibd,
@@ -87,25 +86,24 @@ sim_IBDIBD <- function(demesize, distmat, rate, Ft) {
 
   # draw value of realized IBD from mean distribution
   draw_realized_ibdibd <- function(mft) {
-    ribdibd <- rnorm_interval(mean = mft, sd = mft * (1-mft),
-                              a = 0, b = 1)
-    return(ribdibd)
+    rnorm_interval(mean = mft, sd = mft * (1-mft),
+                   a = 0, b = 1)
   }
 
   # tidy up and out
-  combinds <- combinds %>%
+  combinds %>%
     dplyr::mutate(gendist = purrr::map_dbl(mft, draw_realized_ibdibd)) %>%
     dplyr::select(c("smpl1", "smpl2", "deme1", "deme2", "gendist", "geodist"))
-  return(combinds)
+
 
 }
 
 # Deme A and B are close but A is very far from C, while B is closer (eg a right triangle)
 set.seed(48)
 IBD_simulation_data <- sim_IBDIBD(demesize = c(3,3,4), distmat = matrix(c(0,500,1000,
-                                                             500,0,750,
-                                                             100,750,0), nrow = 3),
-                     rate = 1e-3, Ft = 0.3)
+                                                                          500,0,750,
+                                                                          100,750,0), nrow = 3),
+                                  rate = 1e-3, Ft = 0.3)
 
 # drop within deme
 IBD_simulation_data <- IBD_simulation_data[IBD_simulation_data$geodist > 0, ]

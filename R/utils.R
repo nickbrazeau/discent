@@ -28,11 +28,10 @@ update_progress <- function(pb_list, name, i, max_i) {
 #' @title logit transformation
 #' @param p numeric vecotr
 #' @description Standard expit formula
-#' @noMd
-#' @noRd
-# no export because simple
+#' @export
 logit <- function(p){
-  return( log(p/(1-p)) )
+  # out
+   log(p/(1-p))
 }
 
 #------------------------------------------------
@@ -43,7 +42,8 @@ logit <- function(p){
 #' @noRd
 # no export because simple
 expit <- function(p){
-  return(1/(1+exp(-p)))
+  # out
+  1/(1+exp(-p))
 }
 
 #------------------------------------------------
@@ -67,7 +67,8 @@ expand_pairwise <- function(discdf){
   colnames(discdfexpand) <- c("smpl2", "smpl1", "deme2", "deme1", "gendist", "geodist")
   discdfexpand <- rbind.data.frame(discdf, discdfexpand) # now have all pairwise possibilities
   discdfexpand <- discdfexpand[!duplicated(discdfexpand), ]
-  return(discdfexpand)
+  # out
+  discdfexpand
 }
 
 
@@ -79,17 +80,17 @@ expand_pairwise <- function(discdf){
 #' @param x DISC result from deme_inbreeding_spcoef function
 #' @noMd
 #' @export
-is.vanillaDISCresult <- function(x) {
-  inherits(x, "is.vanillaDISCresult")
+is.DISCresult <- function(x) {
+  inherits(x, "is.DISCresult")
 }
 
 #' @title print DISCresult S3 Class
 #' @description overload print() function to print summary only
-#' @inheritParams is.vanillaDISCresult
+#' @inheritParams is.DISCresult
 #' @param ... further arguments passed to or from other methods.
 #' @noMd
 #' @export
-print.vanillaDISCresult <- function(x, ...) {
+print.DISCresult <- function(x, ...) {
 
   # print summary only
   cat(crayon::red("Final DISC Range:"),  paste(round(min(x$Final_Fis),2), round(max(x$Final_Fis),2), sep = " - "), "\n")
@@ -103,9 +104,9 @@ print.vanillaDISCresult <- function(x, ...) {
 #' @param ... further arguments passed to or from other methods.
 #' @noMd
 #' @export
-summary.vanillaDISCresult <- function(object, ...) {
+summary.DISCresult <- function(object, ...) {
   # send summary only
-  return(tidyout.vanillaDISCresult(object))
+  tidyout.DISCresult(object)
 }
 
 
@@ -114,7 +115,7 @@ summary.vanillaDISCresult <- function(object, ...) {
 #...........................................................
 #' @title Tidy Out Sim Method
 #' @description Method assignment
-#' @inheritParams is.vanillaDISCresult
+#' @inheritParams is.DISCresult
 #' @noMd
 #' @export
 tidyout <- function(x) {
@@ -123,21 +124,19 @@ tidyout <- function(x) {
 
 #' @title Tidy Out Sim
 #' @description Function for taking output of SIR NE and lifting it over
-#' @inheritParams is.vanillaDISCresult
+#' @inheritParams is.DISCresult
 #' @noMd
 #' @export
 
-tidyout.vanillaDISCresult <- function(x) {
+tidyout.DISCresult <- function(x) {
   #......................
   # clean up
   #......................
   fis <- dplyr::bind_cols(x$deme_key, x$Final_Fis) %>%
-    dplyr::select(-c("key")) %>%
+    dplyr::select(-key) %>%
     magrittr::set_colnames(c("Deme", "DISC"))
 
   # out
-  ret <- list(Final_Fis = fis,
-              Final_M = x$Final_m)
-  return(ret)
-
+  list(Final_Fis = fis,
+       Final_M = x$Final_m)
 }
