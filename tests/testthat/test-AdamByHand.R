@@ -61,7 +61,7 @@ test_that("M adam by hand", {
   # start params
   our_start_params <- rep(0.2, 3)
   names(our_start_params) <- 1:3
-  our_start_params <- c(our_start_params, "m" = 1e3)
+  our_start_params <- c(our_start_params, "m" = 5)
 
   # tidy date and calculate gradient for F1
   input <- dat %>%
@@ -85,22 +85,22 @@ test_that("M adam by hand", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
-              normalize_geodist = F,
+              normalize_geodist = T,
               report_progress = T,
               return_verbose = T)
   # back out for m adam
   b1 <- 0.9
   b2 <- 0.999
   e <- 1e-8
-  learningrate <- 1e-5
-  mt_m <- b1 * 0 + (1-b1) * ret$fi_gradtraj[2,1]
-  vt_m <- b2 * 0 + (1-b2) * (ret$fi_gradtraj[2,1]^2)
+  learningrate <- 1e-3
+  mt_m <- b1 * 0 + (1-b1) * ret$m_gradtraj[2]
+  vt_m <- b2 * 0 + (1-b2) * (ret$m_gradtraj[2]^2)
   mt_mhat <- mt_m / (1 - b1^1)
   vt_mhat <- vt_m / (1 - b2^1)
   mnew1 <- ret$m_run[1] - learningrate * (mt_mhat/(sqrt(vt_mhat) + e))
-  ret$m_run[1]
+  ret$m_run[2]
 
   # test out
-  testthat::expect_equal(mnew1, ret$m_run[1])
+  testthat::expect_equal(mnew1, ret$m_run[2])
 
 })
