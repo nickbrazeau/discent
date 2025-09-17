@@ -71,13 +71,7 @@ test_that("M gradient by hand", {
   }
 
   # tidy date and calculate gradient for M
-  # note, need to expand matrix because comparisons are made for each deme - e.g. full distance matrix (not just combinations: lower or upper tri)
-  datexpand <- dat
-  colnames(datexpand) <- c("smpl2", "smpl1", "deme2", "deme1", "gendist", "geodist")
-  input <- dplyr::bind_rows(dat, datexpand) %>%
-    dplyr::filter(deme1 != deme2)
-  # logit transform
-  input <- input %>%
+  input <- dat %>%
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
                                           gendist))) %>% # reasonable bounds on logit

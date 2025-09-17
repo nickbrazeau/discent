@@ -66,7 +66,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
 
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
-      for (int j = 0; j < n_Demes; j++) {
+      for (int j = i+1; j < n_Demes; j++) {
         double avg_fvec = (fvec[i] + fvec[j])/2;
         double exp_M = exp(-geodist_mat[i][j] / m);
         double exp_M2 = exp(-2*geodist_mat[i][j] / m);
@@ -89,10 +89,10 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
 
     // step through partial deriv for M
     for (int i = 0; i < n_Demes; i++) {
-      for (int j = 0; j < n_Demes; j++) {
+      for (int j = i+1; j < n_Demes; j++) {
         double avg_fvec = (fvec[i] + fvec[j])/2;
         double exp_M = exp(-geodist_mat[i][j] / m);
-        double L2term = lambda * pow(m, 2); // explicit regularization term
+        double L2termder = 2 * lambda * m; // explicit regularization term
         double quadexp = 2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
@@ -100,7 +100,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
             //   2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
             // mgrad += lambda * 2 * m; // lambda term for explicit regularization/penalty on large M
             mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * avg_fvec * exp_M + quadexp;
-            mgrad += L2term; // lambda term for explicit regularization/penalty on large M
+            mgrad += L2termder; // lambda term for explicit regularization/penalty on large M partial derivative given M eq
           }
         }
       }
