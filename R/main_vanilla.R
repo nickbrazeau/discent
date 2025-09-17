@@ -119,7 +119,7 @@ disc <- function(discdat,
   #............................................................
   # R manipulations before C++
   #...........................................................
-  disclist <- wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
+  disclist <- discent:::wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
 
   #..............................................................
   # run efficient C++ function
@@ -127,10 +127,10 @@ disc <- function(discdat,
 
   args <- list(gendist = as.vector(disclist$gendist_arr),
                geodist = as.vector(disclist$geodist_mat),
-               fvec = unname( start_params[!grepl("^m$", names(start_params))] ),
+               fvec = unname( disclist$start_params[!grepl("^m$", names(disclist$start_params))] ),
                n_Demes = length(disclist$demes),
                n_Kpairmax = disclist$n_Kpairmax,
-               m = unname(start_params["m"]),
+               m = unname(disclist$start_params["m"]),
                lambda = lambda,
                learningrate = learningrate,
                m_lowerbound = m_lowerbound,
@@ -188,9 +188,11 @@ disc <- function(discdat,
 
 #' @title Wrangle DISC data for efficient input into Cpp
 #' @inheritParams disc
+#' @param locats character vector; names of demes
 #' @description Internal wrangling function that expands the DISC genetic data into an array and the geographic
 #' distances into a matrix for efficient input into Cpp.
-#' @export
+#' @noMd
+#' @noRd
 
 wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats) {
   # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
@@ -285,7 +287,8 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
     n_Kpairmax = n_Kpairmax,
     keyi = keyi,
     gendist_arr = gendist_arr,
-    geodist_mat = geodist_mat
+    geodist_mat = geodist_mat,
+    start_params = start_params
   )
   return(ret)
 }

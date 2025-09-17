@@ -2,11 +2,11 @@
 % Please edit documentation in R/utils.R
 \name{\%>\%}
 \alias{\%>\%}
-\title{Calculate Hessian Matrix from Cost Chain}
+\title{Pipe operator}
 \usage{
 lhs \%>\% rhs
 }
 \description{
-Calculate Hessian Matrix from Cost Chain
+See \code{magrittr::\link[magrittr]{\%>\%}} for details.
 }
 \keyword{internal}
