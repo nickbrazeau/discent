@@ -25,10 +25,27 @@ test_that("Fi gradient by hand", {
     dplyr::mutate(gendist = logit(gendist))
 
 
-  f1retgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], fgrad,
-                                   fi = logit(0.2),
-                                   fj = logit(0.2),
-                                   m = 1e3)) # from start params
+  # With fgrad[j] contribution, F1 gets gradient from all pairs involving deme 1
+  # Calculate F1 gradient contributions from all relevant pairs
+  f1retgrad <- 0
+
+  # F1 as first deme (pairs 1-2, 1-3)
+  f1_pairs_as_i <- input %>% dplyr::filter(deme1 == 1, deme2 %in% c(2,3))
+  if(nrow(f1_pairs_as_i) > 0) {
+    f1retgrad <- f1retgrad + sum(purrr::pmap_dbl(f1_pairs_as_i[,c("gendist", "geodist")], fgrad,
+                                                  fi = logit(0.2),
+                                                  fj = logit(0.2),
+                                                  m = 1e3))
+  }
+
+  # F1 as second deme (pairs 2-1, 3-1) - same contribution due to symmetry
+  f1_pairs_as_j <- input %>% dplyr::filter(deme2 == 1, deme1 %in% c(2,3))
+  if(nrow(f1_pairs_as_j) > 0) {
+    f1retgrad <- f1retgrad + sum(purrr::pmap_dbl(f1_pairs_as_j[,c("gendist", "geodist")], fgrad,
+                                                  fi = logit(0.2),
+                                                  fj = logit(0.2),
+                                                  m = 1e3))
+  }
 
   # now run model
   inputdisc <- dat %>%

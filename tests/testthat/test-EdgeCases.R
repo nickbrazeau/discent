@@ -169,9 +169,12 @@ test_that("Low genetic distances (nearly identical samples)", {
   dat <- IBD_simulation_data
 
   # Create data with very low genetic distances but preserve geodistance structure
+  # Ensure we have representatives from all deme pairs
   low_dist_data <- dat %>%
     dplyr::filter(deme1 != deme2) %>%
-    dplyr::slice(1:10) %>%
+    dplyr::group_by(deme1, deme2) %>%
+    dplyr::slice(1:3) %>%  # Take first 3 from each deme pair
+    dplyr::ungroup() %>%
     dplyr::mutate(gendist = pmax(gendist * 0.001, 0.001))  # Scale down genetic distances
 
   test_params <- c("1" = 0.3, "2" = 0.5, "3" = 0.7, "m" = 400)
