@@ -2,13 +2,25 @@
 % Please edit documentation in R/utils.R
 \name{logit}
 \alias{logit}
-\title{logit transformation}
+\title{Logit Transformation}
 \usage{
 logit(p)
 }
 \arguments{
-\item{p}{numeric vector}
+\item{p}{numeric vector of values in \link{0,1} (probability scale)}
+}
+\value{
+Numeric vector of values on the real line (logit scale)
 }
 \description{
-Standard logit formula
+Transforms probability values to the logit scale using the standard
+logit formula: \eqn{\text{logit}(p) = \log\left(\frac{p}{1-p}\right)}
+}
+\details{
+This function transforms probabilities \link{0,1} to the logit scale (real line).
+Values of 0 and 1 will produce -Inf and +Inf respectively. The transformation
+is used internally in DISC to ensure inbreeding coefficients remain non-negative.
+}
+\seealso{
+\code{\link{expit}}
 }

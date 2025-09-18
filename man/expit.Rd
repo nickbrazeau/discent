@@ -2,13 +2,24 @@
 % Please edit documentation in R/utils.R
 \name{expit}
 \alias{expit}
-\title{expit transformation}
+\title{Expit (Inverse Logit) Transformation}
 \usage{
 expit(p)
 }
 \arguments{
-\item{p}{numeric vector}
+\item{p}{numeric vector of values in logit space}
+}
+\value{
+Numeric vector of values in \link{0,1} (probability scale)
 }
 \description{
-Standard expit formula
+Converts logit-scale values back to probability scale using the standard
+expit formula: \eqn{\text{expit}(p) = \frac{1}{1 + e^{-p}}}
+}
+\details{
+This function is the inverse of \code{\link{logit}}. It transforms values
+from the logit scale (real line) back to probabilities \link{0,1}.
+}
+\seealso{
+\code{\link{logit}}
 }

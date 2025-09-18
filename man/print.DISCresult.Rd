@@ -2,15 +2,18 @@
 % Please edit documentation in R/utils.R
 \name{print.DISCresult}
 \alias{print.DISCresult}
-\title{print DISCresult S3 Class}
+\title{Print DISCresult S3 Class}
 \usage{
 \method{print}{DISCresult}(x, ...)
 }
 \arguments{
-\item{x}{DISC result from deme_inbreeding_spcoef function}
+\item{x}{Object to test}
 
-\item{...}{further arguments passed to or from other methods.}
+\item{...}{Further arguments passed to or from other methods}
+}
+\value{
+Invisibly returns the input object. Called for side effect of printing
 }
 \description{
-overload print() function to print summary only
+S3 method for printing DISCresult objects with summary information
 }

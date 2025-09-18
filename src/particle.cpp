@@ -55,10 +55,12 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     }
 
     //-------------------------------
-    // F gradient
-    // N.B. needs to be complete row (not just triangle) in order for all
-    // sample i's to be accounted for in the gradient (fi + fj where j can be i)
-    // N.B. storing each i, so summing out js/ps
+    // F gradient calculation
+    //
+    // IMPORTANT: This implementation ensures symmetric gradient contributions.
+    // For each deme pair (i,j), both fgrad[i] and fgrad[j] are accounted for in the
+    // gradient term, which ensures all demes get proper gradient contributions
+    // regardless of their position in the upper triangle iteration.
     //-------------------------------
     // clear results from previous step
     vector<double> fgrad(n_Demes);
@@ -72,11 +74,14 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         double exp_M2 = exp(-2*geodist_mat[i][j] / m);
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) { // NB -1 includes self deme comparisons i = j, as well as demes hat do not contain max members in array
-            //fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] / m) +
-            //  ((fvec[i] + fvec[j])/2) * exp(-2*geodist_mat[i][j] / m);
+            // Calculate gradient term for this deme pair and sample
+            // fgradterm = d(cost)/d(F_i) = d(cost)/d(F_j) due to symmetry in model
             double fgradterm = -gendist_arr[i][j][k] * exp_M + avg_fvec * exp_M2;
-            fgrad[i] += fgradterm;
-            fgrad[j] += fgradterm;
+
+            // CRITICAL: Apply gradient to both demes in the pair
+            // This ensures symmetric contribution and proper convergence
+            fgrad[i] += fgradterm;  // Gradient for deme i
+            fgrad[j] += fgradterm;  // Gradient for deme j (symmetric contribution)
           }
         }
       }

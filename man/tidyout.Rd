@@ -2,13 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{tidyout}
 \alias{tidyout}
-\title{Tidy Out Sim Method}
+\title{Tidy Output Generic Method}
 \usage{
 tidyout(x)
 }
 \arguments{
-\item{x}{DISC result from deme_inbreeding_spcoef function}
+\item{x}{Object to tidy (typically a DISCresult)}
+}
+\value{
+Method-specific tidied output
 }
 \description{
-Method assignment
+Generic method for tidying output from DISC analysis
 }

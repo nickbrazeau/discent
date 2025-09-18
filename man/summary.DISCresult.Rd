@@ -7,10 +7,13 @@
 \method{summary}{DISCresult}(object, ...)
 }
 \arguments{
-\item{object}{DISCresult Simulation}
+\item{object}{DISCresult object from \code{\link{disc}} function}
 
-\item{...}{further arguments passed to or from other methods.}
+\item{...}{Further arguments passed to or from other methods}
+}
+\value{
+A list containing tidied final inbreeding coefficients and migration rate
 }
 \description{
-overload summary() function.
+S3 method for summarizing DISCresult objects
 }

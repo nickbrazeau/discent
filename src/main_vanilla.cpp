@@ -6,6 +6,26 @@ using namespace std;
 //------------------------------------------------
 // Perform gradient descent to calculate deme Fi's
 // using vanilla DISCent (ADAM grad descent)
+//
+// @title Internal C++ Function for DISC Optimization
+// @param args List containing:
+//   - fvec: Initial inbreeding coefficient vector
+//   - m: Initial migration rate parameter
+//   - n_Demes: Number of demes
+//   - n_Kpairmax: Maximum number of sample pairs per deme pair
+//   - gendist: Genetic distance vector (flattened)
+//   - geodist_mat: Geographic distance matrix (flattened)
+//   - lambda: L2 regularization parameter
+//   - learningrate: Adam optimizer learning rate
+//   - b1, b2, e: Adam optimizer parameters
+//   - steps: Number of optimization steps
+//   - thin: Thinning interval for output
+//   - return_verbose: Whether to return full trajectory
+// @return List containing optimization results including final parameters,
+//   trajectories (if verbose), gradients, and Adam moments
+// @details This is the core C++ optimization function called by disc().
+//   It implements improved gradient calculations where all deme pairs
+//   contribute symmetrically (fgrad[i] and fgrad[j]) for better convergence.
 //------------------------------------------------
 // [[Rcpp::export]]
 Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {

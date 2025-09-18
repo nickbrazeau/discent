@@ -2,13 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{tidyout.DISCresult}
 \alias{tidyout.DISCresult}
-\title{Tidy Out Sim}
+\title{Tidy DISCresult Output}
 \usage{
 \method{tidyout}{DISCresult}(x)
 }
 \arguments{
-\item{x}{DISC result from deme_inbreeding_spcoef function}
+\item{x}{Object to test}
+}
+\value{
+A list with two elements:
+\itemize{
+\item \code{Final_Fis}: Dataframe with deme names and final inbreeding coefficients
+\item \code{Final_M}: Final migration rate estimate
+}
 }
 \description{
-Function for taking output of SIR NE and lifting it over
+S3 method for tidying DISCresult objects into user-friendly format
 }
