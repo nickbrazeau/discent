@@ -74,7 +74,9 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
           if (gendist_arr[i][j][k] != -1) { // NB -1 includes self deme comparisons i = j, as well as demes hat do not contain max members in array
             //fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] / m) +
             //  ((fvec[i] + fvec[j])/2) * exp(-2*geodist_mat[i][j] / m);
-            fgrad[i] += -gendist_arr[i][j][k] * exp_M + avg_fvec * exp_M2;
+            double fgradterm = -gendist_arr[i][j][k] * exp_M + avg_fvec * exp_M2;
+            fgrad[i] += fgradterm;
+            fgrad[j] += fgradterm;
           }
         }
       }
