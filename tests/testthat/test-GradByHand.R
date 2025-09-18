@@ -15,8 +15,7 @@ test_that("Fi gradient by hand", {
 
   # tidy date and calculate gradient for F1
   input <- dat %>%
-    dplyr::filter(deme1 != deme2) %>%
-    dplyr::filter(deme1 == 1 | deme2 == 1)
+    dplyr::filter(deme1 != deme2)
 
 
   input <- input %>%
