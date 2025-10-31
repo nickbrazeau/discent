@@ -8,3 +8,5 @@
 ^validation$
 ^\.covrignore$
 ^\.github$
+^doc$
+^Meta$
