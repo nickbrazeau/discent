@@ -137,14 +137,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
 
     // calculate and apply the update for M
     m = m - learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
-    // vanilla GD
-    // m = m - learningrate * mgrad;
-    // assert bounds on m
-    if (m < m_lowerbound) {
-      m = m_lowerbound;
-    } else if (m > m_upperbound) {
-      m = m_upperbound;
-    }
+
     // store for out
     m_run[step] = m;
     m_gradtraj[step] = mgrad;

@@ -5,8 +5,6 @@
 #'   plus one parameter named "m" for migration rate
 #' @param lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1
 #' @param learningrate double; Learning rate (alpha) for gradient descent optimization. Default: 0.001
-#' @param m_lowerbound double; Lower bound for the migration parameter "m". Default: 0
-#' @param m_upperbound double; Upper bound for the migration parameter "m". Default: Inf
 #' @param b1 double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9
 #' @param b2 double; Exponential decay rate for second moment estimate in Adam optimizer. Default: 0.999
 #' @param e double; Small constant for numerical stability in Adam optimizer. Default: 1e-8
@@ -65,8 +63,6 @@ disc <- function(discdat,
                  start_params = NULL,
                  lambda = 0.1,
                  learningrate = 1e-3,
-                 m_lowerbound = 0,
-                 m_upperbound = Inf,
                  b1 = 0.9,
                  b2 = 0.999,
                  e = 1e-8,
@@ -107,9 +103,6 @@ disc <- function(discdat,
   assert_single_numeric(b1)
   assert_single_numeric(b2)
   assert_single_numeric(e)
-  assert_single_numeric(m_lowerbound)
-  assert_single_numeric(m_upperbound)
-  assert_gr(m_upperbound, m_lowerbound)
   assert_single_int(steps)
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")

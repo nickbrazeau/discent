@@ -3,30 +3,6 @@
 #include "particle.h"
 using namespace std;
 
-//------------------------------------------------
-// Perform gradient descent to calculate deme Fi's
-// using vanilla DISCent (ADAM grad descent)
-//
-// @title Internal C++ Function for DISC Optimization
-// @param args List containing:
-//   - fvec: Initial inbreeding coefficient vector
-//   - m: Initial migration rate parameter
-//   - n_Demes: Number of demes
-//   - n_Kpairmax: Maximum number of sample pairs per deme pair
-//   - gendist: Genetic distance vector (flattened)
-//   - geodist_mat: Geographic distance matrix (flattened)
-//   - lambda: L2 regularization parameter
-//   - learningrate: Adam optimizer learning rate
-//   - b1, b2, e: Adam optimizer parameters
-//   - steps: Number of optimization steps
-//   - thin: Thinning interval for output
-//   - return_verbose: Whether to return full trajectory
-// @return List containing optimization results including final parameters,
-//   trajectories (if verbose), gradients, and Adam moments
-// @details This is the core C++ optimization function called by disc().
-//   It implements improved gradient calculations where all deme pairs
-//   contribute symmetrically (fgrad[i] and fgrad[j]) for better convergence.
-//------------------------------------------------
 // [[Rcpp::export]]
 Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   // overflow cost parameter
@@ -72,8 +48,6 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   int steps = rcpp_to_int(args["steps"]);
   double lambda = rcpp_to_double(args["lambda"]);
   double learningrate = rcpp_to_double(args["learningrate"]);
-  double m_lowerbound = rcpp_to_double(args["m_lowerbound"]);
-  double m_upperbound = rcpp_to_double(args["m_upperbound"]);
   double b1 = rcpp_to_double(args["b1"]);
   double b2 = rcpp_to_double(args["b2"]);
   double e = rcpp_to_double(args["e"]);
@@ -89,8 +63,6 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   discParticle.n_Kpairmax = n_Kpairmax;
   discParticle.lambda = lambda;
   discParticle.learningrate = learningrate;
-  discParticle.m_lowerbound = m_lowerbound;
-  discParticle.m_upperbound = m_upperbound;
   discParticle.b1 = b1;
   discParticle.b2 = b2;
   discParticle.e = e;
