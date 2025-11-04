@@ -68,7 +68,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
 
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
-      for (int j = i+1; j < n_Demes; j++) {
+      for (int j = 0; j < n_Demes; j++) {
         double avg_fvec = (fvec[i] + fvec[j])/2;
         double exp_M = exp(-geodist_mat[i][j] / m);
         double exp_M2 = exp(-2*geodist_mat[i][j] / m);
@@ -77,11 +77,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
             // Calculate gradient term for this deme pair and sample
             // fgradterm = d(cost)/d(F_i) = d(cost)/d(F_j) due to symmetry in model
             double fgradterm = -gendist_arr[i][j][k] * exp_M + avg_fvec * exp_M2;
-
-            // CRITICAL: Apply gradient to both demes in the pair
-            // This ensures symmetric contribution and proper convergence
             fgrad[i] += fgradterm;  // Gradient for deme i
-            fgrad[j] += fgradterm;  // Gradient for deme j (symmetric contribution)
           }
         }
       }
