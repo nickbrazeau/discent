@@ -46,7 +46,6 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
 
   // items for grad descent
   int steps = rcpp_to_int(args["steps"]);
-  double lambda = rcpp_to_double(args["lambda"]);
   double learningrate = rcpp_to_double(args["learningrate"]);
   double b1 = rcpp_to_double(args["b1"]);
   double b2 = rcpp_to_double(args["b2"]);
@@ -61,7 +60,6 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   discParticle.steps = steps;
   discParticle.n_Demes = n_Demes;
   discParticle.n_Kpairmax = n_Kpairmax;
-  discParticle.lambda = lambda;
   discParticle.learningrate = learningrate;
   discParticle.b1 = b1;
   discParticle.b2 = b2;

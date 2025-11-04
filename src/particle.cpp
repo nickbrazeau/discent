@@ -36,7 +36,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       }
     }
   }
-  cost[0] += lambda * pow(m, 2); // explicit regularization term
+
   // Catch and Cap Extreme Costs
   if (cost[0] > OVERFLO_DOUBLE || isnan(cost[0])) {
     cost[0] = OVERFLO_DOUBLE;
@@ -107,9 +107,6 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       }
     }
 
-    // Add explicit regularization term once total to gradient
-    mgrad += 2 * lambda * m;
-
     //-------------------------------
     // Update F and M
     //-------------------------------
@@ -151,15 +148,13 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         double exp_M = exp(-geodist_mat[i][j] / m);
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
-            // cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-            //   exp(-geodist_mat[i][j] / m)), 2) + lambda * m * m;
             cost[step] += pow( gendist_arr[i][j][k] - (avg_fvec *
               exp_M), 2);
           }
         }
       }
     }
-    cost[step] += lambda * pow(m, 2); // explicit regularization term
+
     // Catch and Cap Extreme Costs
     if (cost[step] > OVERFLO_DOUBLE || isnan(cost[step])) {
       cost[step] = OVERFLO_DOUBLE;
