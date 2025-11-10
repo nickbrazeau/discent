@@ -13,8 +13,6 @@ public:
   int steps;
   double lambda;
   double learningrate;
-  double m_lowerbound;
-  double m_upperbound;
   double b1;
   double b2;
   double e;
