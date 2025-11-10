@@ -12,7 +12,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
   // initialize storage vectors
   // calc initial cost for user proposed Fs and M
   //-------------------------------
-  logit_fi = vector<double>(n_Demes);
+  logit_f = vector<double>(n_Demes);
   logit_fgrad = vector<double>(n_Demes);
   // fi init
   for (int i = 0; i < n_Demes; i++) {
@@ -95,7 +95,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
 
     // transform f to logit_f for reparameterization
     for (int i = 0; i < n_Demes; i++) {
-      logit_fi[i] = log( fvec[i] / (1 - fvec[i]) );
+      logit_f[i] = log( fvec[i] / (1 - fvec[i]) );
     }
 
     // acquire partial L / partial g
