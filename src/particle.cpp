@@ -147,7 +147,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       // calculate and apply fs upate
       logit_f[i] = logit_f[i] - learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
        //update f_i from g_i (backtransform)
-      fvec[i] =  1 / (1 + exp(-logit_f[i]))
+      fvec[i] =  1 / (1 + exp(-logit_f[i]));
       // store for out
       fi_run[step][i] = fvec[i];
       fi_gradtraj[step][i] = fgrad[i];
