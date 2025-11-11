@@ -12,6 +12,9 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
   // initialize storage vectors
   // calc initial cost for user proposed Fs and M
   //-------------------------------
+  logit_f = vector<double>(n_Demes);
+  logit_fgrad = vector<double>(n_Demes);
+  // fi init
   for (int i = 0; i < n_Demes; i++) {
     fi_run[0][i] = fvec[i];
     fi_gradtraj[0][i] = 0.0;
@@ -19,8 +22,11 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     v2t_fi[0][i] = 0.0;
   }
 
+
+  // M init
   m_run[0] = m;
   m_gradtraj[0] = 0.0;
+  double log_m = log(m);
   m1t_m[0] = 0.0;
   v2t_m[0] = 0.0;
 
@@ -37,6 +43,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       }
     }
   }
+  cost[0] += lambda * m * m; // explicit L2 regularization term at time 0
 
   // Catch and Cap Extreme Costs
   if (cost[0] > OVERFLO_DOUBLE || isnan(cost[0])) {
@@ -68,6 +75,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     vector<double> fgrad(n_Demes);
     fill(fgrad.begin(), fgrad.end(), 0.0);
 
+
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
       for (int j = i+1; j < n_Demes; j++) {
@@ -84,6 +92,17 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         }
       }
     }
+
+    // transform f to logit_f for reparameterization
+    for (int i = 0; i < n_Demes; i++) {
+      logit_f[i] = log( fvec[i] / (1 - fvec[i]) );
+    }
+
+    // acquire partial L / partial g
+    for (int i = 0; i < n_Demes; i++) {
+      logit_fgrad[i] = fgrad[i] * fvec[i] * (1 - fvec[i]);
+    }
+
 
     //-------------------------------
     // M gradient
@@ -105,11 +124,13 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
           if (gendist_arr[i][j][k] != -1) {
             // mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
             //   2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
-            mgrad += -2 * inv_m2 * gendist_arr[i][j][k] * d * avg_fvec * exp_M + quadexp;
+            mgrad += -2 * inv_m2 * gendist_arr[i][j][k] * d * avg_fvec * exp_M + quadexp; // partial L / partial M
           }
         }
       }
     }
+    mgrad += 2 * lambda * m; // add explicit L2 regularization term once per gradient/step update
+    double log_mgrad = mgrad * m; // chain rule for reparameterized large M, this is now partial L / partial m
 
     //-------------------------------
     // Update F and M via ADAM
@@ -120,28 +141,30 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     // iterate through each deme
     for (int i = 0; i < n_Demes; i++){
       // get F moments for Adam
-      m1t_fi[step][i] = b1 * m1t_fi[step-1][i] + (1-b1) * fgrad[i];
-      v2t_fi[step][i] = b2 * v2t_fi[step-1][i] + (1-b2) * fgrad[i]*fgrad[i];
+      m1t_fi[step][i] = b1 * m1t_fi[step-1][i] + (1-b1) * logit_fgrad[i];
+      v2t_fi[step][i] = b2 * v2t_fi[step-1][i] + (1-b2) * logit_fgrad[i]*logit_fgrad[i];
       m1t_fi_hat[i] = m1t_fi[step][i] / b1t;
       v2t_fi_hat[i] = v2t_fi[step][i] / b2t;
 
       // calculate and apply fs upate
-      fvec[i] = fvec[i] - learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
-
+      logit_f[i] = logit_f[i] - learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
+       //update f_i from g_i (backtransform)
+      fvec[i] =  1 / (1 + exp(-logit_f[i]));
       // store for out
       fi_run[step][i] = fvec[i];
       fi_gradtraj[step][i] = fgrad[i];
     }
 
     // get M moments for Adam
-    m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * mgrad;
-    v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * mgrad*mgrad;
+    m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * log_mgrad;
+    v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * log_mgrad*log_mgrad;
     m1t_m_hat = m1t_m[step] / b1t;
     v2t_m_hat = v2t_m[step] / b2t;
 
     // calculate and apply the update for M (global, single)
-    m = m - learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
-
+    log_m = log_m - learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
+    //update M from log_m (backtransform)
+    m = exp(log_m);
     // store for out
     m_run[step] = m;
     m_gradtraj[step] = mgrad;
@@ -162,6 +185,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         }
       }
     }
+    cost[step] += lambda * m * m; // explicit L2 regularization term
 
     // Catch and Cap Extreme Costs
     if (cost[step] > OVERFLO_DOUBLE || isnan(cost[step])) {

@@ -3,6 +3,7 @@
 #'   \code{smpl1}, \code{smpl2}, \code{deme1}, \code{deme2}, \code{gendist}, \code{geodist}
 #' @param start_params named double vector; vector of start parameters. Names must match deme names,
 #'   plus one parameter named "m" for migration rate
+#' @param lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1
 #' @param learningrate double; Learning rate (alpha) for gradient descent optimization. Default: 0.001
 #' @param b1 double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9
 #' @param b2 double; Exponential decay rate for second moment estimate in Adam optimizer. Default: 0.999
@@ -35,8 +36,6 @@
 #'     \item One parameter named "m" for the migration rate
 #'     \item All F parameters must be in [0,1] (inbreeding coefficients)
 #'   }
-#' @details Inbreeding coefficients (F) are constrained to be non-negative using logit transformation
-#'   internally. The optimization uses the Adam algorithm with adaptive moment estimation.
 #' @details The model assumes: \eqn{E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)}
 #'   where \eqn{r_{ij}} is genetic relatedness, \eqn{F_i} is deme i's inbreeding coefficient,
 #'   \eqn{d_{ij}} is geographic distance, and \eqn{m} is the migration rate parameter.
@@ -60,6 +59,7 @@
 
 disc <- function(discdat,
                  start_params = NULL,
+                 lambda = 0.1,
                  learningrate = 1e-3,
                  b1 = 0.9,
                  b2 = 0.999,
@@ -96,6 +96,7 @@ disc <- function(discdat,
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
   sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
+  assert_single_numeric(lambda)
   assert_single_numeric(learningrate)
   assert_single_numeric(b1)
   assert_single_numeric(b2)
@@ -149,6 +150,7 @@ disc <- function(discdat,
                n_Kpairmax = disclist$n_Kpairmax,
                m = unname(disclist$start_params["m"]),
                learningrate = learningrate,
+               lambda = lambda,
                b1 = b1,
                b2 = b2,
                e = e,
@@ -215,15 +217,11 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
   keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
   keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
 
-  # transform data w/ logit
+  # boundaries on genetic data for logit
   discdat <- discdat %>%
-    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
-                                   ifelse(gendist < 0.001, 0.001,
-                                          gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = logit(gendist))
-  # transform start parameters w/ logit
-  start_params[names(start_params) != "m"] <- logit(start_params[names(start_params) != "m"])
-
+    dplyr::mutate(gendist = ifelse(gendist > 0.9999, 0.9999,
+                                   ifelse(gendist < 0.0001, 0.0001,
+                                          gendist))) # reasonable bounds for future logit
 
   # get genetic data by pairs through efficient nest
   gendist <- discdat %>%
