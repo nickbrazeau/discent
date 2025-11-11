@@ -9,8 +9,6 @@ disc(
   start_params = NULL,
   lambda = 0.1,
   learningrate = 0.001,
-  m_lowerbound = 0,
-  m_upperbound = Inf,
   b1 = 0.9,
   b2 = 0.999,
   e = 1e-08,
@@ -31,10 +29,6 @@ plus one parameter named "m" for migration rate}
 \item{lambda}{double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1}
 
 \item{learningrate}{double; Learning rate (alpha) for gradient descent optimization. Default: 0.001}
-
-\item{m_lowerbound}{double; Lower bound for the migration parameter "m". Default: 0}
-
-\item{m_upperbound}{double; Upper bound for the migration parameter "m". Default: Inf}
 
 \item{b1}{double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9}
 
@@ -97,9 +91,6 @@ The \code{start_params} vector must contain:
 \item One parameter named "m" for the migration rate
 \item All F parameters must be in \link{0,1} (inbreeding coefficients)
 }
-
-Inbreeding coefficients (F) are constrained to be non-negative using logit transformation
-internally. The optimization uses the Adam algorithm with adaptive moment estimation.
 
 The model assumes: \eqn{E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)}
 where \eqn{r_{ij}} is genetic relatedness, \eqn{F_i} is deme i's inbreeding coefficient,
