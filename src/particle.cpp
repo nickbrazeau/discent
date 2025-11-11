@@ -155,8 +155,6 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       fi_gradtraj[step][i] = fgrad[i];
     }
 
-
-
     // get M moments for Adam
     m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * log_mgrad;
     v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * log_mgrad*log_mgrad;

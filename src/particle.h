@@ -37,10 +37,11 @@ public:
   std::vector<std::vector<double>> v2t_fi;
   std::vector<double> m1t_fi_hat;
   std::vector<double> v2t_fi_hat;
-  // for pso model
-  std::vector<double> particle_pcurr;
-  std::vector<double> particle_pbest;
-  std::vector<double> particle_velocity;
+  // for reparam step
+  std::vector<double> logit_f;
+  std::vector<double> logit_fgrad;
+  double log_m;
+
 
   // PUBLIC FUNCTIONS
   // constructors
