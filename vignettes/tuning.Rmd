@@ -1,0 +1,24 @@
+---
+title: "Hyperparameter Tuning and Sensitivity Analyses"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tuning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(discent)
+```
+
+
+hyperparameter tuning of learning rate, lambda  
+  add some text about adam optimizer and more conservative vs aggressive inputs
+sensitivity analysis for starting parameter guesses 
