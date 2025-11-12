@@ -21,9 +21,7 @@ test_that("Fi gradient by hand", {
   input <- input %>%
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
-                                          gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = logit(gendist))
-
+                                          gendist)))
 
   # With fgrad[j] contribution, F1 gets gradient from all pairs involving deme 1
   # Calculate F1 gradient contributions from all relevant pairs
@@ -33,8 +31,8 @@ test_that("Fi gradient by hand", {
   f1_pairs_as_i <- input %>% dplyr::filter(deme1 == 1, deme2 %in% c(2,3))
   if(nrow(f1_pairs_as_i) > 0) {
     f1retgrad <- f1retgrad + sum(purrr::pmap_dbl(f1_pairs_as_i[,c("gendist", "geodist")], fgrad,
-                                                  fi = logit(0.2),
-                                                  fj = logit(0.2),
+                                                  fi = 0.2,
+                                                  fj = 0.2,
                                                   m = 1e3))
   }
 
@@ -42,8 +40,8 @@ test_that("Fi gradient by hand", {
   f1_pairs_as_j <- input %>% dplyr::filter(deme2 == 1, deme1 %in% c(2,3))
   if(nrow(f1_pairs_as_j) > 0) {
     f1retgrad <- f1retgrad + sum(purrr::pmap_dbl(f1_pairs_as_j[,c("gendist", "geodist")], fgrad,
-                                                  fi = logit(0.2),
-                                                  fj = logit(0.2),
+                                                  fi = 0.2,
+                                                  fj = 0.2,
                                                   m = 1e3))
   }
 
@@ -64,6 +62,8 @@ test_that("Fi gradient by hand", {
   # back out gradient for F1
   # NBset to 0 at first iter, so the additional adam term cancels out
   discF1 <- ret$fi_gradtraj[2,1]
+  # reparam
+  f1retgrad <- f1retgrad * ret$fi_run[1,1] * (1-ret$fi_run[1,1] )
 
   # test out
   testthat::expect_equal(f1retgrad, discF1)
@@ -90,13 +90,11 @@ test_that("M gradient by hand", {
   input <- dat %>%
     dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
                                    ifelse(gendist < 0.001, 0.001,
-                                          gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = logit(gendist))
-
+                                          gendist)))
   # run grad by hand
   Mretgrad <- sum(purrr::pmap_dbl(input[,c("gendist", "geodist")], mgrad,
-                                  fi = logit(0.2),
-                                  fj = logit(0.2),
+                                  fi = 0.2,
+                                  fj = 0.2,
                                   m = 1e3)) # from start params
 
   # now run model
@@ -116,6 +114,8 @@ test_that("M gradient by hand", {
   # back out gradient for M
   # NB  set to 0 at first iter, so the additional adam term cancels out
   discM <- ret$m_gradtraj[2]
+  # reparam
+  Mretgrad <- Mretgrad * ret$m_run[1]
 
   # test out
   testthat::expect_equal(Mretgrad, discM)
