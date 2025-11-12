@@ -134,7 +134,7 @@ disc <- function(discdat,
   #............................................................
   # R manipulations before C++
   #...........................................................
-  disclist <- discent:::wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
+  disclist <- wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
 
   #..............................................................
   # run efficient C++ function
@@ -195,7 +195,8 @@ disc <- function(discdat,
 
   # add S3 class structure
   attr(output, "class") <- "DISCresult"
-  return(output)
+  # out
+  output
 }
 
 
@@ -211,8 +212,8 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
   # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
   # get deme names and lift over sorted names for i and j (note, deme names may be anything, so cannot rely on user indexing)
   demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
-  keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
-  keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
+  keyi <- data.frame(deme1 = demes, i = seq_along(demes))
+  keyj <- data.frame(deme2 = demes, j = seq_along(demes))
 
   # boundaries on genetic data for logit
   discdat <- discdat %>%
@@ -299,5 +300,6 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
     geodist_mat = geodist_mat,
     start_params = start_params
   )
-  return(ret)
+  # out
+  ret
 }

@@ -13,8 +13,8 @@ test_that("test that genetic data imports correctly", {
   #.................................
   # input into Cpp
   #.................................
-  disclist <- discent:::wrangle_discentdat(discdat = dat, start_params = our_start_params,
-                                          locats = locats, normalize_geodist = T)
+  disclist <- wrangle_discentdat(discdat = dat, start_params = our_start_params,
+                                 locats = locats, normalize_geodist = T)
 
   #......................
   # model for export
@@ -52,8 +52,8 @@ test_that("test that genetic data imports correctly", {
   #...........................................................
   gen_compare <- array(-1.0, dim = c(length(disclist$demes), length(disclist$demes), disclist$n_Kpairmax))
 
-  for (i in 1:length(disclist$demes)) {
-    for (j in 1:length(disclist$demes)) {
+  for (i in seq_along(disclist$demes)) {
+    for (j in seq_along(disclist$demes)) {
       for (k in 1:disclist$n_Kpairmax) {
         gen_compare[i,j,k] <- outputgendat[[i]][[j]][k]
       }
@@ -70,12 +70,12 @@ test_that("test that genetic data imports correctly", {
   #...........................................................
   # this is the nesting code from the wrangle function
   demes <- sort(unique(c(dat$deme1, dat$deme2)))
-  keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
-  keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
+  keyi <- data.frame(deme1 = demes, i = seq_along(demes))
+  keyj <- data.frame(deme2 = demes, j = seq_along(demes))
 
   # this makes an ij key independent of deme names
   gendist <- dat %>%
-    discent:::expand_pairwise(.) %>% # get all pairwise for full matrix
+    expand_pairwise(.) %>% # get all pairwise for full matrix
     dplyr::select(c("deme1", "deme2", "gendist")) %>%
     dplyr::filter(!duplicated(.)) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%

@@ -1,0 +1,4 @@
+exclude_patterns:
+  - "tests/*"
+  - "docs/*"
+  - "R/assertions_v5.R"
