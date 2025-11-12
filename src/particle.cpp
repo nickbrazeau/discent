@@ -152,7 +152,7 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       fvec[i] =  1 / (1 + exp(-logit_f[i]));
       // store for out
       fi_run[step][i] = fvec[i];
-      fi_gradtraj[step][i] = fgrad[i];
+      fi_gradtraj[step][i] = logit_fgrad[i];
     }
 
     // get M moments for Adam
@@ -167,7 +167,8 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     m = exp(log_m);
     // store for out
     m_run[step] = m;
-    m_gradtraj[step] = mgrad;
+    m_gradtraj[step] = log_mgrad;
+
     //-------------------------------
     // get updated cost for given F and M
     //-------------------------------
