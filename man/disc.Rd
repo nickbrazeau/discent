@@ -72,9 +72,6 @@ This function estimates deme-specific inbreeding coefficients and a global migra
 rate from genetic and geographic distance data using an isolation-by-distance model. The model
 assumes that genetic similarity between samples decreases exponentially with geographic distance,
 modulated by deme-specific inbreeding coefficients.
-
-The gradient calculation has been optimized to ensure all deme pairs contribute symmetrically
-to parameter updates, improving convergence and accuracy of estimates.
 }
 \details{
 The input dataframe must have exactly these column names in order:
