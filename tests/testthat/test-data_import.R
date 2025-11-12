@@ -87,19 +87,18 @@ test_that("test that genetic data imports correctly", {
   # the input matrix then becomes [i,j,k] = [deme1, deme2, pair]
   # random checks
   testthat::expect_true(
-    identical(discent:::logit(as.numeric(gendist$data[[3]][9,1])), disclist$gendist_arr[2,1,9]) )
+    identical(as.numeric(gendist$data[[3]][9,1]), disclist$gendist_arr[2,1,9]) )
+  testthat::expect_true(
+    identical(as.numeric(gendist$data[[2]][12,1]), disclist$gendist_arr[1,3,12]) )
 
   testthat::expect_true(
-    identical(discent:::logit(as.numeric(gendist$data[[2]][12,1])), disclist$gendist_arr[1,3,12]) )
+    identical(as.numeric(gendist$data[[4]][1,1]), disclist$gendist_arr[2,3,1]) )
 
   testthat::expect_true(
-    identical(discent:::logit(as.numeric(gendist$data[[4]][1,1])), disclist$gendist_arr[2,3,1]) )
+    identical(as.numeric(gendist$data[[4]][9,1]), disclist$gendist_arr[2,3,9]) )
 
   testthat::expect_true(
-    identical(discent:::logit(as.numeric(gendist$data[[4]][9,1])), disclist$gendist_arr[2,3,9]) )
-
-  testthat::expect_true(
-    identical(discent:::logit(as.numeric(gendist$data[[6]][5,1])), disclist$gendist_arr[3,2,5]) )
+    identical(as.numeric(gendist$data[[6]][5,1]), disclist$gendist_arr[3,2,5]) )
 
 
 })

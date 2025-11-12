@@ -5,13 +5,16 @@ using namespace std;
 
 
 //------------------------------------------------
-// run ADAM gradient descent host
+// run ADAM gradient descent
 void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &gendist_arr, vector<vector<double>> &geodist_mat) {
 
   //-------------------------------
   // initialize storage vectors
   // calc initial cost for user proposed Fs and M
   //-------------------------------
+  logit_f = vector<double>(n_Demes);
+  logit_fgrad = vector<double>(n_Demes);
+  // fi init
   for (int i = 0; i < n_Demes; i++) {
     fi_run[0][i] = fvec[i];
     fi_gradtraj[0][i] = 0.0;
@@ -19,150 +22,172 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
     v2t_fi[0][i] = 0.0;
   }
 
+
+  // M init
   m_run[0] = m;
   m_gradtraj[0] = 0.0;
+  double log_m = log(m);
   m1t_m[0] = 0.0;
   v2t_m[0] = 0.0;
 
   // cost is for every pair in the upper triangle
+  cost[0] = 0.0;
   for (int i = 0; i < (n_Demes-1); i++) {
     for (int j = i+1; j < n_Demes; j++) {
       double avg_fvec = (fvec[i] + fvec[j])/2;
       double exp_M = exp(-geodist_mat[i][j] / m);
-      double L2term = lambda * pow(m, 2); // explicit regularization term
       for (int k = 0; k < n_Kpairmax; k++){
         if (gendist_arr[i][j][k] != -1) {
-          cost[0] += pow( (gendist_arr[i][j][k] -  avg_fvec * exp_M), 2) + L2term;
+          cost[0] += pow( (gendist_arr[i][j][k] -  avg_fvec * exp_M), 2);
         }
       }
     }
   }
+  cost[0] += lambda * m * m; // explicit L2 regularization term at time 0
+
   // Catch and Cap Extreme Costs
   if (cost[0] > OVERFLO_DOUBLE || isnan(cost[0])) {
     cost[0] = OVERFLO_DOUBLE;
   }
 
   //-------------------------------
-  // start grad descent by looping through steps
+  // start ADAM grad descent by looping through steps
   //-------------------------------
   for (int step = 1; step < steps; ++step) {
 
     // report progress
-    if (report_progress) {
-      if (((step+1) % 100)==0) {
-        print("      DISC step",step+1);
-      }
+    if (report_progress && (step % 100 == 0)) {
+      print("      DISC step",step);
     }
 
+
     //-------------------------------
-    // F gradient
-    // N.B. needs to be complete row (not just triangle) in order for all
-    // sample i's to be accounted for in the gradient (fi + fj where j can be i)
-    // N.B. storing each i, so summing out js/ps
+    // F gradient calculation
+    // NB: The loss function considers only the upper triangle (due to genetic distances have symmetry).
+    // However, we have taken the gradient of f[i] and f[j] capitalizing on this additive/symmetric
+    // property, such that we need to consider \sum_{j = 1}^K \sum_{p=1}&{P_{i,j} with the first
+    // sum looping through the entire matrix (upper and lower triangle) to ensure that we account
+    // for the entire contribution of f[j] on f[i]. In other words, consider f[i] as fixed, we need
+    // to ensure that all j's are considered (whereas if we looped only through upper triangle, j would degenerate).
+    // For efficiency, we can just add the gradient to fgrad[j] instead of looping through all j in 1:K
     //-------------------------------
     // clear results from previous step
     vector<double> fgrad(n_Demes);
-    fill(fgrad.begin(), fgrad.end(), 0);
+    fill(fgrad.begin(), fgrad.end(), 0.0);
+
 
     // step through partial deriv for each Fi
     for (int i = 0; i < n_Demes; i++) {
-      for (int j = 0; j < n_Demes; j++) {
+      for (int j = i+1; j < n_Demes; j++) {
         double avg_fvec = (fvec[i] + fvec[j])/2;
-        double exp_M = exp(-geodist_mat[i][j] / m);
-        double exp_M2 = exp(-2*geodist_mat[i][j] / m);
+        double dm = geodist_mat[i][j] / m;
+        double exp_M = exp(-dm); // exp(-geodist_mat[i][j] / m);
+        double exp_M2 = exp_M * exp_M; // exp(-2*geodist_mat[i][j] / m);
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) { // NB -1 includes self deme comparisons i = j, as well as demes hat do not contain max members in array
-            //fgrad[i] += -gendist_arr[i][j][k] * exp(-geodist_mat[i][j] / m) +
-            //  ((fvec[i] + fvec[j])/2) * exp(-2*geodist_mat[i][j] / m);
-            fgrad[i] += -gendist_arr[i][j][k] * exp_M + avg_fvec * exp_M2;
+            double fgradterm = -gendist_arr[i][j][k] * exp_M + avg_fvec * exp_M2;
+            fgrad[i] += fgradterm;
+            fgrad[j] += fgradterm;  // accruing f[j] for next f[i] (accounting for upper triangle degen)
           }
         }
       }
     }
 
+    // transform f to logit_f for reparameterization
+    for (int i = 0; i < n_Demes; i++) {
+      logit_f[i] = log( fvec[i] / (1 - fvec[i]) );
+    }
+
+    // acquire partial L / partial g
+    for (int i = 0; i < n_Demes; i++) {
+      logit_fgrad[i] = fgrad[i] * fvec[i] * (1 - fvec[i]);
+    }
+
+
     //-------------------------------
     // M gradient
-    // N.B. all terms included here, easier sum -- longer partial derivative
+    // N.B. all terms included here, easier sum; longer partial derivative
+    // for computational efficiency can calculate terms once and call them below (prior full equation for posterity)
     //-------------------------------
-    // clear previous step results
-    double mgrad = 0;
-
+    double mgrad = 0.0; // clear previous step results
+    double inv_m2 = 1.0 / (m*m); // cache pow(1/m, 2) outside of loop for efficiency
     // step through partial deriv for M
     for (int i = 0; i < n_Demes; i++) {
-      for (int j = 0; j < n_Demes; j++) {
+      for (int j = i+1; j < n_Demes; j++) {
+        double d = geodist_mat[i][j];
+        double dm = d / m;
+        double exp_M = exp(-dm); // exp(-geodist_mat[i][j] / m);
+        double exp_M2 = exp_M * exp_M; // exp(-2*geodist_mat[i][j] / m);
         double avg_fvec = (fvec[i] + fvec[j])/2;
-        double exp_M = exp(-geodist_mat[i][j] / m);
-        double L2term = lambda * pow(m, 2); // explicit regularization term
-        double quadexp = 2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
+        double quadexp = 2 * d * inv_m2 * 0.25 * (fvec[i]*fvec[i] + 2*fvec[i]*fvec[j] + fvec[j]*fvec[j]) * exp_M2;
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
             // mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * ((fvec[i] + fvec[j])/2) * exp(-geodist_mat[i][j] / m) +
             //   2 * geodist_mat[i][j] * pow(1/m, 2) * ((pow(fvec[i], 2) + 2 * fvec[i] * fvec[j] + pow(fvec[j], 2))/4) * exp(-2 * geodist_mat[i][j] / m);
-            // mgrad += lambda * 2 * m; // lambda term for explicit regularization/penalty on large M
-            mgrad += -2 * pow(1/m, 2) * gendist_arr[i][j][k] * geodist_mat[i][j] * avg_fvec * exp_M + quadexp;
-            mgrad += L2term; // lambda term for explicit regularization/penalty on large M
+            mgrad += -2 * inv_m2 * gendist_arr[i][j][k] * d * avg_fvec * exp_M + quadexp; // partial L / partial M
           }
         }
       }
     }
+    mgrad += 2 * lambda * m; // add explicit L2 regularization term once per gradient/step update
+    double log_mgrad = mgrad * m; // chain rule for reparameterized large M, this is now partial L / partial m
 
     //-------------------------------
-    // Update F and M
+    // Update F and M via ADAM
     //-------------------------------
-    // update F
+    double b1t = (1-pow(b1, step)); // cache ADAM beta^step term for efficiency
+    double b2t = (1-pow(b2, step)); // cache ADAM beta^step term for efficiency
+
+    // iterate through each deme
     for (int i = 0; i < n_Demes; i++){
       // get F moments for Adam
-      m1t_fi[step][i] = b1 * m1t_fi[step-1][i] + (1-b1) * fgrad[i];
-      v2t_fi[step][i] = b2 * v2t_fi[step-1][i] + (1-b2) * pow(fgrad[i], 2);
-      m1t_fi_hat[i] = m1t_fi[step][i] / (1-pow(b1, step));
-      v2t_fi_hat[i] = v2t_fi[step][i] / (1-pow(b2, step));
+      m1t_fi[step][i] = b1 * m1t_fi[step-1][i] + (1-b1) * logit_fgrad[i];
+      v2t_fi[step][i] = b2 * v2t_fi[step-1][i] + (1-b2) * logit_fgrad[i]*logit_fgrad[i];
+      m1t_fi_hat[i] = m1t_fi[step][i] / b1t;
+      v2t_fi_hat[i] = v2t_fi[step][i] / b2t;
 
       // calculate and apply fs upate
-      fvec[i] = fvec[i] - learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
-
+      logit_f[i] = logit_f[i] - learningrate * (m1t_fi_hat[i]/(sqrt(v2t_fi_hat[i]) + e));
+       //update f_i from g_i (backtransform)
+      fvec[i] =  1 / (1 + exp(-logit_f[i]));
       // store for out
       fi_run[step][i] = fvec[i];
-      fi_gradtraj[step][i] = fgrad[i];
+      fi_gradtraj[step][i] = logit_fgrad[i];
     }
 
     // get M moments for Adam
-    m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * mgrad;
-    v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * pow(mgrad, 2);
-    m1t_m_hat = m1t_m[step] / (1-pow(b1, step));
-    v2t_m_hat = v2t_m[step] / (1-pow(b2, step));
+    m1t_m[step] = b1 * m1t_m[step-1] + (1-b1) * log_mgrad;
+    v2t_m[step] = b2 * v2t_m[step-1] + (1-b2) * log_mgrad*log_mgrad;
+    m1t_m_hat = m1t_m[step] / b1t;
+    v2t_m_hat = v2t_m[step] / b2t;
 
-    // calculate and apply the update for M
-    m = m - learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
-    // vanilla GD
-    // m = m - learningrate * mgrad;
-    // assert bounds on m
-    if (m < m_lowerbound) {
-      m = m_lowerbound;
-    } else if (m > m_upperbound) {
-      m = m_upperbound;
-    }
+    // calculate and apply the update for M (global, single)
+    log_m = log_m - learningrate * (m1t_m_hat / (sqrt(v2t_m_hat) + e));
+    //update M from log_m (backtransform)
+    m = exp(log_m);
     // store for out
     m_run[step] = m;
-    m_gradtraj[step] = mgrad;
+    m_gradtraj[step] = log_mgrad;
+
     //-------------------------------
     // get updated cost for given F and M
     //-------------------------------
     // cost is for every pair in the upper triangle
+    cost[step] = 0.0;
     for (int i = 0; i < (n_Demes-1); i++) {
       for (int j = i+1; j < n_Demes; j++) {
         double avg_fvec = (fvec[i] + fvec[j])/2;
         double exp_M = exp(-geodist_mat[i][j] / m);
-        double L2term = lambda * pow(m, 2); // explicit regularization term
         for (int k = 0; k < n_Kpairmax; k++){
           if (gendist_arr[i][j][k] != -1) {
-            // cost[step] += pow( (gendist_arr[i][j][k] - ((fvec[i] + fvec[j])/2) *
-            //   exp(-geodist_mat[i][j] / m)), 2) + lambda * m * m;
             cost[step] += pow( gendist_arr[i][j][k] - (avg_fvec *
-              exp_M), 2) + L2term;
+              exp_M), 2);
           }
         }
       }
     }
+    cost[step] += lambda * m * m; // explicit L2 regularization term
+
     // Catch and Cap Extreme Costs
     if (cost[step] > OVERFLO_DOUBLE || isnan(cost[step])) {
       cost[step] = OVERFLO_DOUBLE;

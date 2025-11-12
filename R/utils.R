@@ -25,9 +25,15 @@ update_progress <- function(pb_list, name, i, max_i) {
 }
 
 #------------------------------------------------
-#' @title logit transformation
-#' @param p numeric vecotr
-#' @description Standard expit formula
+#' @title Logit Transformation
+#' @param p numeric vector of values in [0,1] (probability scale)
+#' @description Transforms probability values to the logit scale using the standard
+#'   logit formula: \eqn{\text{logit}(p) = \log\left(\frac{p}{1-p}\right)}
+#' @return Numeric vector of values on the real line (logit scale)
+#' @details This function transforms probabilities [0,1] to the logit scale (real line).
+#'   Values of 0 and 1 will produce -Inf and +Inf respectively. The transformation
+#'   is used internally in DISC to ensure inbreeding coefficients remain non-negative.
+#' @seealso \code{\link{expit}}
 #' @export
 logit <- function(p){
   # out
@@ -35,22 +41,31 @@ logit <- function(p){
 }
 
 #------------------------------------------------
-#' @title expit transformation
-#' @param p numeric vecotr
-#' @description Standard expit formula
-#' @noMd
-#' @noRd
-# no export because simple
+#' @title Expit (Inverse Logit) Transformation
+#' @param p numeric vector of values in logit space
+#' @description Converts logit-scale values back to probability scale using the standard
+#'   expit formula: \eqn{\text{expit}(p) = \frac{1}{1 + e^{-p}}}
+#' @return Numeric vector of values in [0,1] (probability scale)
+#' @details This function is the inverse of \code{\link{logit}}. It transforms values
+#'   from the logit scale (real line) back to probabilities [0,1].
+#' @seealso \code{\link{logit}}
+#' @export
 expit <- function(p){
   # out
   1/(1+exp(-p))
 }
 
 #------------------------------------------------
-#' @title Simple function for expanding a pairwise matrix
-#' @param discdf dataframe; that is specific to the DISCent framework. Must have colnames of: "smpl1", "smpl2", "deme1", "deme2", "gendist", "geodist" in correct order
-#' @description This is an internal function that largely lacks generalizability. Do not recommend external use.
-#' @noMd
+#' @title Expand Pairwise Distance Matrix
+#' @param discdf dataframe with columns: "smpl1", "smpl2", "deme1", "deme2", "gendist", "geodist"
+#' @description Internal function to create symmetric pairwise distance matrix by adding
+#'   reverse pairs (i,j) -> (j,i). This ensures all pairwise comparisons are represented
+#'   in both directions for gradient calculations.
+#' @return Expanded dataframe with both (i,j) and (j,i) pairs, duplicates removed
+#' @details This function is used internally to ensure symmetric contribution of all
+#'   deme pairs to gradient calculations, which is essential for the improved gradient
+#'   computation that includes fgrad[j] contributions.
+#' @keywords internal
 #' @noRd
 
 expand_pairwise <- function(discdf){
@@ -76,19 +91,19 @@ expand_pairwise <- function(discdf){
 # DISCresult S3 Class Overloading
 #...........................................................
 #' @title Check if DISCresult S3 Class
-#' @description Overload is: function for determining if object is of class DISCresult
-#' @param x DISC result from deme_inbreeding_spcoef function
-#' @noMd
+#' @description Tests whether an object is of class DISCresult
+#' @param x Object to test
+#' @return Logical value: TRUE if object is of class DISCresult, FALSE otherwise
 #' @export
 is.DISCresult <- function(x) {
   inherits(x, "is.DISCresult")
 }
 
-#' @title print DISCresult S3 Class
-#' @description overload print() function to print summary only
+#' @title Print DISCresult S3 Class
+#' @description S3 method for printing DISCresult objects with summary information
 #' @inheritParams is.DISCresult
-#' @param ... further arguments passed to or from other methods.
-#' @noMd
+#' @param ... Further arguments passed to or from other methods
+#' @return Invisibly returns the input object. Called for side effect of printing
 #' @export
 print.DISCresult <- function(x, ...) {
 
@@ -96,13 +111,14 @@ print.DISCresult <- function(x, ...) {
   cat(crayon::red("Final DISC Range:"),  paste(round(min(x$Final_Fis),2), round(max(x$Final_Fis),2), sep = " - "), "\n")
   cat(crayon::blue("Final Migration Rate:"), round(x$Final_m, 3), "\n")
 
+  invisible(x)
 }
 
 #' @title Summary of DISCresult S3 Class
-#' @description overload summary() function.
-#' @param object DISCresult Simulation
-#' @param ... further arguments passed to or from other methods.
-#' @noMd
+#' @description S3 method for summarizing DISCresult objects
+#' @param object DISCresult object from \code{\link{disc}} function
+#' @param ... Further arguments passed to or from other methods
+#' @return A list containing tidied final inbreeding coefficients and migration rate
 #' @export
 summary.DISCresult <- function(object, ...) {
   # send summary only
@@ -113,21 +129,24 @@ summary.DISCresult <- function(object, ...) {
 #............................................................
 # organizing disc output
 #...........................................................
-#' @title Tidy Out Sim Method
-#' @description Method assignment
-#' @inheritParams is.DISCresult
-#' @noMd
+#' @title Tidy Output Generic Method
+#' @description Generic method for tidying output from DISC analysis
+#' @param x Object to tidy (typically a DISCresult)
+#' @return Method-specific tidied output
 #' @export
 tidyout <- function(x) {
   UseMethod("tidyout")
 }
 
-#' @title Tidy Out Sim
-#' @description Function for taking output of SIR NE and lifting it over
+#' @title Tidy DISCresult Output
+#' @description S3 method for tidying DISCresult objects into user-friendly format
 #' @inheritParams is.DISCresult
-#' @noMd
+#' @return A list with two elements:
+#'   \itemize{
+#'     \item \code{Final_Fis}: Dataframe with deme names and final inbreeding coefficients
+#'     \item \code{Final_M}: Final migration rate estimate
+#'   }
 #' @export
-
 tidyout.DISCresult <- function(x) {
   #......................
   # clean up

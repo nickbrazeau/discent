@@ -1,45 +1,63 @@
 #' @title Identify Deme Inbreeding Spatial Coefficients in Continuous Space
-#' @param discdat dataframe; The genetic-geographic data by deme (K)
-#' @param start_params named double vector; vector of start parameters.
-#' @param lambda double; A quadratic L2 explicit regularization, or penalty, parameter on "m" parameter. Note, lambda is a scalar such that: \eqn{\lambda m^2}.
-#' @param learningrate double; alpha parameter for how much each "step" is weighted in the gradient descent
-#' @param b1 double; exponential decay rates for the first moment estimate in the Adam optimization algorithm
-#' @param b2 double; exponential decay rates for the second moment estimate in the Adam optimization algorithm
-#' @param e double; epsilon (error) for stability in the Adam optimization algorithm
-#' @param steps integer; the number of steps as we move down the gradient
-#' @param thin integer; the number of steps to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)
-#' @param m_lowerbound double; lower limit value for the global "m" parameter; any "m" value encounter less than the lower bound will be replaced by the lower bound
-#' @param m_upperbound double; upper limit value for the global "m" parameter; any "m" value encounter greater than the upper bound will be replaced by the upper bound
-#' @param normalize_geodist boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.
-#' @param report_progress boolean; whether or not a progress bar should be shown as you iterate through steps
-#' @param return_verbose boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
-#' only for the final iteration. User will typically not want to store every iteration, which can be memory intensive
-#' @description The purpose of this statistic is to identify an inbreeding coefficient, or degree of
-#'              relatedness, for a given location in discrete space. We assume that locations in spaces can be
-#'              represented as "demes," such that multiple individuals live in the same deme
-#'              (i.e. samples are sourced from the same location). The expected pairwise relationship
-#'              between two individuals, or samples, is dependent on the each sample's deme's inbreeding
-#'              coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
-#' @details The gen.geo.dist dataframe must be named with the following columns:
-#'          "smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
-#'          Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
-#'          Pairwise Genetic Distance; Pairwise Geographpic Distance. Note, the order of the
-#'          columns do not matter but the names of the columns must match.
-#' @details The start_params vector names must match the cluster names (i.e. clusters must be
-#'          have a name that we can match on for the starting relatedness paramerts). In addition,
-#'          you must provide a start parameter for "m".
-#' @details Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
-#' logit transformation internally in the code.
-#' @details Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
-#' for moment decay rates, epsilon, and learning rates are taken from \cite{DP Kingma, 2014}.
+#' @param discdat dataframe; The genetic-geographic data by deme (K). Must contain columns:
+#'   \code{smpl1}, \code{smpl2}, \code{deme1}, \code{deme2}, \code{gendist}, \code{geodist}
+#' @param start_params named double vector; vector of start parameters. Names must match deme names,
+#'   plus one parameter named "m" for migration rate
+#' @param lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1
+#' @param learningrate double; Learning rate (alpha) for gradient descent optimization. Default: 0.001
+#' @param b1 double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9
+#' @param b2 double; Exponential decay rate for second moment estimate in Adam optimizer. Default: 0.999
+#' @param e double; Small constant for numerical stability in Adam optimizer. Default: 1e-8
+#' @param steps integer; Number of optimization steps. Default: 1000
+#' @param thin integer; Thinning interval for stored iterations (1 = store all). Default: 1
+#' @param normalize_geodist logical; Whether to normalize geographic distances to [0,1] using
+#'   min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
+#'   stability but complicates interpretation of migration rate. Default: TRUE
+#' @param report_progress logical; Whether to display progress bar during optimization. Default: TRUE
+#' @param return_verbose logical; Whether to return full optimization trajectory (TRUE) or just
+#'   final results (FALSE). Full trajectory can be memory intensive. Default: FALSE
+#' @description This function estimates deme-specific inbreeding coefficients and a global migration
+#'   rate from genetic and geographic distance data using an isolation-by-distance model. The model
+#'   assumes that genetic similarity between samples decreases exponentially with geographic distance,
+#'   modulated by deme-specific inbreeding coefficients.
+#' @details The input dataframe must have exactly these column names in order:
+#'   \itemize{
+#'     \item \code{smpl1}, \code{smpl2}: Sample identifiers
+#'     \item \code{deme1}, \code{deme2}: Deme (location) identifiers
+#'     \item \code{gendist}: Pairwise genetic distance [0,1]
+#'     \item \code{geodist}: Pairwise geographic distance
+#'   }
+#' @details The \code{start_params} vector must contain:
+#'   \itemize{
+#'     \item One parameter per unique deme (named with deme identifiers)
+#'     \item One parameter named "m" for the migration rate
+#'     \item All F parameters must be in [0,1] (inbreeding coefficients)
+#'   }
+#' @details The model assumes: \eqn{E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)}
+#'   where \eqn{r_{ij}} is genetic relatedness, \eqn{F_i} is deme i's inbreeding coefficient,
+#'   \eqn{d_{ij}} is geographic distance, and \eqn{m} is the migration rate parameter.
+#' @return A list of class "DISCresult" containing:
+#'   \itemize{
+#'     \item \code{Final_Fis}: Final inbreeding coefficient estimates
+#'     \item \code{Final_m}: Final migration rate estimate
+#'     \item \code{deme_key}: Mapping of deme names to indices
+#'     \item \code{cost}: Final cost function value(s)
+#'   }
+#'   If \code{return_verbose = TRUE}, additional elements include:
+#'   \itemize{
+#'     \item \code{fi_run}: F parameter trajectory over iterations
+#'     \item \code{m_run}: Migration parameter trajectory
+#'     \item \code{fi_gradtraj}: F gradient trajectory
+#'     \item \code{m_gradtraj}: Migration gradient trajectory
+#'     \item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
+#'     \item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
+#'   }
 #' @export
 
 disc <- function(discdat,
                  start_params = NULL,
                  lambda = 0.1,
                  learningrate = 1e-3,
-                 m_lowerbound = 0,
-                 m_upperbound = Inf,
                  b1 = 0.9,
                  b2 = 0.999,
                  e = 1e-8,
@@ -80,9 +98,6 @@ disc <- function(discdat,
   assert_single_numeric(b1)
   assert_single_numeric(b2)
   assert_single_numeric(e)
-  assert_single_numeric(m_lowerbound)
-  assert_single_numeric(m_upperbound)
-  assert_gr(m_upperbound, m_lowerbound)
   assert_single_int(steps)
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")
@@ -105,7 +120,7 @@ disc <- function(discdat,
   assert_eq(
     x = choose(length(unique(c(discdat$deme1, discdat$deme2))), 2), # max number of between distances
     y = length(unique(paste(discdat$deme1, discdat$deme2, discdat$geodist, sep = "-"))), # count of unique between distances
-    message = "You have pairwise demes with differing geodistances measurements in your data input. Geodistances must be the same between demes (pairwise geodistances should be the same)."
+    message = "You have pairwise demes with differing geodistances measurements in your data input. Geodistances must be the same between demes (pairwise geodistances should be the same). Expected %s unique pairs but got %s."
   )
 
 
@@ -131,10 +146,8 @@ disc <- function(discdat,
                n_Demes = length(disclist$demes),
                n_Kpairmax = disclist$n_Kpairmax,
                m = unname(disclist$start_params["m"]),
-               lambda = lambda,
                learningrate = learningrate,
-               m_lowerbound = m_lowerbound,
-               m_upperbound = m_upperbound,
+               lambda = lambda,
                b1 = b1,
                b2 = b2,
                e = e,
@@ -156,7 +169,7 @@ disc <- function(discdat,
     output <- list(
       deme_key = disclist$keyi,
       m_run = output_raw$m_run[thin_its],
-      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
+      fi_run = do.call("rbind", output_raw$fi_run)[thin_its, ],
       m_gradtraj = output_raw$m_gradtraj[thin_its],
       fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
       m_1moment = output_raw$m_firstmoment[thin_its],
@@ -164,7 +177,7 @@ disc <- function(discdat,
       fi_1moment = do.call("rbind", output_raw$fi_firstmoment)[thin_its, ],
       fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
-      Final_Fis = expit(output_raw$Final_Fis),
+      Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m,
       raw_geodist_mat = output_raw$raw_geodist_mat,
       raw_gendist_arr = output_raw$raw_gendist_arr
@@ -175,8 +188,8 @@ disc <- function(discdat,
       deme_key = disclist$keyi,
       cost = output_raw$cost[thin_its],
       m_run = output_raw$m_run[thin_its],
-      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
-      Final_Fis = expit(output_raw$Final_Fis),
+      fi_run = do.call("rbind", output_raw$fi_run)[thin_its, ],
+      Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m)
   }
 
@@ -201,15 +214,11 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
   keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
   keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
 
-  # transform data w/ logit
+  # boundaries on genetic data for logit
   discdat <- discdat %>%
-    dplyr::mutate(gendist = ifelse(gendist > 0.999, 0.999,
-                                   ifelse(gendist < 0.001, 0.001,
-                                          gendist))) %>% # reasonable bounds on logit
-    dplyr::mutate(gendist = logit(gendist))
-  # transform start parameters w/ logit
-  start_params[names(start_params) != "m"] <- logit(start_params[names(start_params) != "m"])
-
+    dplyr::mutate(gendist = ifelse(gendist > 0.9999, 0.9999,
+                                   ifelse(gendist < 0.0001, 0.0001,
+                                          gendist))) # reasonable bounds for future logit
 
   # get genetic data by pairs through efficient nest
   gendist <- discdat %>%

@@ -9,8 +9,6 @@ disc(
   start_params = NULL,
   lambda = 0.1,
   learningrate = 0.001,
-  m_lowerbound = 0,
-  m_upperbound = Inf,
   b1 = 0.9,
   b2 = 0.999,
   e = 1e-08,
@@ -22,57 +20,76 @@ disc(
 )
 }
 \arguments{
-\item{discdat}{dataframe; The genetic-geographic data by deme (K)}
+\item{discdat}{dataframe; The genetic-geographic data by deme (K). Must contain columns:
+\code{smpl1}, \code{smpl2}, \code{deme1}, \code{deme2}, \code{gendist}, \code{geodist}}
 
-\item{start_params}{named double vector; vector of start parameters.}
+\item{start_params}{named double vector; vector of start parameters. Names must match deme names,
+plus one parameter named "m" for migration rate}
 
-\item{lambda}{double; A quadratic L2 explicit regularization, or penalty, parameter on "m" parameter. Note, lambda is a scalar such that: \eqn{\lambda m^2}.}
+\item{lambda}{double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1}
 
-\item{learningrate}{double; alpha parameter for how much each "step" is weighted in the gradient descent}
+\item{learningrate}{double; Learning rate (alpha) for gradient descent optimization. Default: 0.001}
 
-\item{m_lowerbound}{double; lower limit value for the global "m" parameter; any "m" value encounter less than the lower bound will be replaced by the lower bound}
+\item{b1}{double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9}
 
-\item{m_upperbound}{double; upper limit value for the global "m" parameter; any "m" value encounter greater than the upper bound will be replaced by the upper bound}
+\item{b2}{double; Exponential decay rate for second moment estimate in Adam optimizer. Default: 0.999}
 
-\item{b1}{double; exponential decay rates for the first moment estimate in the Adam optimization algorithm}
+\item{e}{double; Small constant for numerical stability in Adam optimizer. Default: 1e-8}
 
-\item{b2}{double; exponential decay rates for the second moment estimate in the Adam optimization algorithm}
+\item{steps}{integer; Number of optimization steps. Default: 1000}
 
-\item{e}{double; epsilon (error) for stability in the Adam optimization algorithm}
+\item{thin}{integer; Thinning interval for stored iterations (1 = store all). Default: 1}
 
-\item{steps}{integer; the number of steps as we move down the gradient}
+\item{normalize_geodist}{logical; Whether to normalize geographic distances to \link{0,1} using
+min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
+stability but complicates interpretation of migration rate. Default: TRUE}
 
-\item{thin}{integer; the number of steps to keep as part of the output (i.e. if the user specifies 10, every 10th iteration will be kept)}
+\item{report_progress}{logical; Whether to display progress bar during optimization. Default: TRUE}
 
-\item{normalize_geodist}{boolean; whether geographic distances between demes should be normalized (i.e. Min-Max Feature Scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}} }, which places the geodistances on the scale to \eqn{[0-1]}). Helps increase model stability at the expense of complicating the interpretation of the migration rate parameter.}
-
-\item{report_progress}{boolean; whether or not a progress bar should be shown as you iterate through steps}
-
-\item{return_verbose}{boolean; whether the inbreeding coefficients and migration rate should be returned for every iteration or
-only for the final iteration. User will typically not want to store every iteration, which can be memory intensive}
+\item{return_verbose}{logical; Whether to return full optimization trajectory (TRUE) or just
+final results (FALSE). Full trajectory can be memory intensive. Default: FALSE}
+}
+\value{
+A list of class "DISCresult" containing:
+\itemize{
+\item \code{Final_Fis}: Final inbreeding coefficient estimates
+\item \code{Final_m}: Final migration rate estimate
+\item \code{deme_key}: Mapping of deme names to indices
+\item \code{cost}: Final cost function value(s)
+}
+If \code{return_verbose = TRUE}, additional elements include:
+\itemize{
+\item \code{fi_run}: F parameter trajectory over iterations
+\item \code{m_run}: Migration parameter trajectory
+\item \code{fi_gradtraj}: F gradient trajectory
+\item \code{m_gradtraj}: Migration gradient trajectory
+\item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
+\item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
+}
 }
 \description{
-The purpose of this statistic is to identify an inbreeding coefficient, or degree of
-relatedness, for a given location in discrete space. We assume that locations in spaces can be
-represented as "demes," such that multiple individuals live in the same deme
-(i.e. samples are sourced from the same location). The expected pairwise relationship
-between two individuals, or samples, is dependent on the each sample's deme's inbreeding
-coefficient and the geographic distance between the demes. The program assumes a symmetric distance matrix.
+This function estimates deme-specific inbreeding coefficients and a global migration
+rate from genetic and geographic distance data using an isolation-by-distance model. The model
+assumes that genetic similarity between samples decreases exponentially with geographic distance,
+modulated by deme-specific inbreeding coefficients.
 }
 \details{
-The gen.geo.dist dataframe must be named with the following columns:
-"smpl1"; "smpl2"; "deme1"; "deme2"; "gendist"; "geodist"; which corresponds to:
-Sample 1 Name; Sample 2 Name; Sample 1 Location; Sample 2 Location;
-Pairwise Genetic Distance; Pairwise Geographpic Distance. Note, the order of the
-columns do not matter but the names of the columns must match.
+The input dataframe must have exactly these column names in order:
+\itemize{
+\item \code{smpl1}, \code{smpl2}: Sample identifiers
+\item \code{deme1}, \code{deme2}: Deme (location) identifiers
+\item \code{gendist}: Pairwise genetic distance \link{0,1}
+\item \code{geodist}: Pairwise geographic distance
+}
 
-The start_params vector names must match the cluster names (i.e. clusters must be
-have a name that we can match on for the starting relatedness paramerts). In addition,
-you must provide a start parameter for "m".
+The \code{start_params} vector must contain:
+\itemize{
+\item One parameter per unique deme (named with deme identifiers)
+\item One parameter named "m" for the migration rate
+\item All F parameters must be in \link{0,1} (inbreeding coefficients)
+}
 
-Note: We have implemented coding decisions to not allow the "f" inbreeding coefficients to be negative by using a
-logit transformation internally in the code.
-
-Gradient descent is performed using the Adam (adaptive moment estimation) optimization approach. Default values
-for moment decay rates, epsilon, and learning rates are taken from \cite{DP Kingma, 2014}.
+The model assumes: \eqn{E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)}
+where \eqn{r_{ij}} is genetic relatedness, \eqn{F_i} is deme i's inbreeding coefficient,
+\eqn{d_{ij}} is geographic distance, and \eqn{m} is the migration rate parameter.
 }

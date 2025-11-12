@@ -1,0 +1,25 @@
+---
+title: "Propagatin Uncertainty"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{uncertainty}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(discent)
+```
+
+
+Current implementation scales approximately $O(n^2k)$ where $n$ and $k$ are number of demes and average samples per deme pair, respectively. 
+but model is fast
+
+bootstrap with traditional approach 

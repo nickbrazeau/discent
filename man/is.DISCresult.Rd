@@ -7,8 +7,11 @@
 is.DISCresult(x)
 }
 \arguments{
-\item{x}{DISC result from deme_inbreeding_spcoef function}
+\item{x}{Object to test}
+}
+\value{
+Logical value: TRUE if object is of class DISCresult, FALSE otherwise
 }
 \description{
-Overload is: function for determining if object is of class DISCresult
+Tests whether an object is of class DISCresult
 }
