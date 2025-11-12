@@ -43,9 +43,9 @@ rnorm_interval <- function(mean, sd, a=0, b=1) {
 #' In effect, a scalar for the distance matrix.
 #' @param Ft numeric; Inbreeding coefficient parameter in the population
 #' (\emph{i.e.} the total population, \eqn{N_e}).
-#' @description
-#' \deqn{ \frac{1}{N_i + N_j}(1 - P(D \leq d)) + (1 - \frac{1}{N_i + N_j})(1 - P(D \leq d)) }
-#'
+#' @description Simulate a spatial coalescent recursion with:
+#' \deqn{ F^{t+1}_(i,j) = \frac{1}{N_i + N_j}(1 - P(D \leq d)) + (1 - \frac{1}{N_i + N_j})(1 - P(D \leq d))*F^t }
+#' to generate IBD data for analysis.
 #'@export
 
 sim_IBDIBD <- function(demesize, distmat, rate, Ft) {

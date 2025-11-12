@@ -10,7 +10,7 @@
 #' @param e double; Small constant for numerical stability in Adam optimizer. Default: 1e-8
 #' @param steps integer; Number of optimization steps. Default: 1000
 #' @param thin integer; Thinning interval for stored iterations (1 = store all). Default: 1
-#' @param normalize_geodist logical; Whether to normalize geographic distances to [0,1] using
+#' @param normalize_geodist logical; Whether to normalize geographic distances to (0,1) using
 #'   min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
 #'   stability but complicates interpretation of migration rate. Default: TRUE
 #' @param report_progress logical; Whether to display progress bar during optimization. Default: TRUE
@@ -24,14 +24,14 @@
 #'   \itemize{
 #'     \item \code{smpl1}, \code{smpl2}: Sample identifiers
 #'     \item \code{deme1}, \code{deme2}: Deme (location) identifiers
-#'     \item \code{gendist}: Pairwise genetic distance [0,1]
+#'     \item \code{gendist}: Pairwise genetic distance (0,1)
 #'     \item \code{geodist}: Pairwise geographic distance
 #'   }
 #' @details The \code{start_params} vector must contain:
 #'   \itemize{
 #'     \item One parameter per unique deme (named with deme identifiers)
 #'     \item One parameter named "m" for the migration rate
-#'     \item All F parameters must be in [0,1] (inbreeding coefficients)
+#'     \item All F parameters must be in (0,1) (inbreeding coefficients)
 #'   }
 #' @details The model assumes: \eqn{E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)}
 #'   where \eqn{r_{ij}} is genetic relatedness, \eqn{F_i} is deme i's inbreeding coefficient,
