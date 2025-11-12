@@ -10,7 +10,7 @@ cost_function <- function(params, data) {
   # Calculate cost using same logic as C++ (upper triangle only)
   for(i in 1:(length(f_vals)-1)) {
     for(j in (i+1):length(f_vals)) {
-      pairs_ij <- dat %>%
+      pairs_ij <- data %>%
         dplyr::filter((deme1 == i & deme2 == j) | (deme1 == j & deme2 == i))
 
       if(nrow(pairs_ij) > 0) {
@@ -56,12 +56,12 @@ test_that("Finite difference gradient validation - F gradients", {
     # Forward difference
     params_plus <- test_params
     params_plus[i] <- params_plus[i] + h
-    cost_plus <- cost_function(params_plus, dat)
+    cost_plus <- cost_function(params_plus, data = dat)
 
     # Backward difference
     params_minus <- test_params
     params_minus[i] <- params_minus[i] - h
-    cost_minus <- cost_function(params_minus, dat)
+    cost_minus <- cost_function(params_minus, data  = dat)
 
     # Central difference
     numerical_f_grads[i] <- (cost_plus - cost_minus) / (2 * h)
@@ -106,12 +106,12 @@ test_that("Finite difference gradient validation - M gradient", {
   # Forward difference
   params_plus <- test_params
   params_plus[4] <- test_params[4] + h
-  cost_plus <- cost_function(params_plus, dat)
+  cost_plus <- cost_function(params_plus, data = dat)
 
   # Backward difference
   params_minus <- test_params
   params_minus[4] <- params_minus[4] - h
-  cost_minus <- cost_function(params_minus)
+  cost_minus <- cost_function(params_minus, data = dat)
 
   # Compare disc vs finite diff gradients
   numerical_m_grad <- (cost_plus - cost_minus) / (2 * h)
