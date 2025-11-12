@@ -20,9 +20,6 @@
 #'   rate from genetic and geographic distance data using an isolation-by-distance model. The model
 #'   assumes that genetic similarity between samples decreases exponentially with geographic distance,
 #'   modulated by deme-specific inbreeding coefficients.
-#'
-#'   The gradient calculation has been optimized to ensure all deme pairs contribute symmetrically
-#'   to parameter updates, improving convergence and accuracy of estimates.
 #' @details The input dataframe must have exactly these column names in order:
 #'   \itemize{
 #'     \item \code{smpl1}, \code{smpl2}: Sample identifiers
@@ -172,7 +169,7 @@ disc <- function(discdat,
     output <- list(
       deme_key = disclist$keyi,
       m_run = output_raw$m_run[thin_its],
-      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
+      fi_run = do.call("rbind", output_raw$fi_run)[thin_its, ],
       m_gradtraj = output_raw$m_gradtraj[thin_its],
       fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
       m_1moment = output_raw$m_firstmoment[thin_its],
@@ -180,7 +177,7 @@ disc <- function(discdat,
       fi_1moment = do.call("rbind", output_raw$fi_firstmoment)[thin_its, ],
       fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
-      Final_Fis = expit(output_raw$Final_Fis),
+      Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m,
       raw_geodist_mat = output_raw$raw_geodist_mat,
       raw_gendist_arr = output_raw$raw_gendist_arr
@@ -191,8 +188,8 @@ disc <- function(discdat,
       deme_key = disclist$keyi,
       cost = output_raw$cost[thin_its],
       m_run = output_raw$m_run[thin_its],
-      fi_run = expit(do.call("rbind", output_raw$fi_run))[thin_its, ],
-      Final_Fis = expit(output_raw$Final_Fis),
+      fi_run = do.call("rbind", output_raw$fi_run)[thin_its, ],
+      Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m)
   }
 
