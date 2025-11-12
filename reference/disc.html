@@ -125,7 +125,7 @@ plus one parameter named "m" for migration rate</p></dd>
 
 
 <dt id="arg-normalize-geodist">normalize_geodist<a class="anchor" aria-label="anchor" href="#arg-normalize-geodist"></a></dt>
-<dd><p>logical; Whether to normalize geographic distances to 0,1 using
+<dd><p>logical; Whether to normalize geographic distances to (0,1) using
 min-max scaling: \(X' = \frac{X - X_{min}}{X_{max} - X_{min}}\). Improves numerical
 stability but complicates interpretation of migration rate. Default: TRUE</p></dd>
 
@@ -156,11 +156,11 @@ final results (FALSE). Full trajectory can be memory intensive. Default: FALSE</
     <h2>Details</h2>
     <p>The input dataframe must have exactly these column names in order:</p><ul><li><p><code>smpl1</code>, <code>smpl2</code>: Sample identifiers</p></li>
 <li><p><code>deme1</code>, <code>deme2</code>: Deme (location) identifiers</p></li>
-<li><p><code>gendist</code>: Pairwise genetic distance 0,1</p></li>
+<li><p><code>gendist</code>: Pairwise genetic distance (0,1)</p></li>
 <li><p><code>geodist</code>: Pairwise geographic distance</p></li>
 </ul><p>The <code>start_params</code> vector must contain:</p><ul><li><p>One parameter per unique deme (named with deme identifiers)</p></li>
 <li><p>One parameter named "m" for the migration rate</p></li>
-<li><p>All F parameters must be in 0,1 (inbreeding coefficients)</p></li>
+<li><p>All F parameters must be in (0,1) (inbreeding coefficients)</p></li>
 </ul><p>The model assumes: \(E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)\)
 where \(r_{ij}\) is genetic relatedness, \(F_i\) is deme i's inbreeding coefficient,
 \(d_{ij}\) is geographic distance, and \(m\) is the migration rate parameter.</p>

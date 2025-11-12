@@ -70,7 +70,7 @@ logit formula: \(\text{logit}(p) = \log\left(\frac{p}{1-p}\right)\)</p>
 
 
 <dl><dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>numeric vector of values in 0,1 (probability scale)</p></dd>
+<dd><p>numeric vector of values in (0,1) (probability scale)</p></dd>
 
 </dl></div>
     <div id="value">
@@ -79,7 +79,7 @@ logit formula: \(\text{logit}(p) = \log\left(\frac{p}{1-p}\right)\)</p>
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>This function transforms probabilities 0,1 to the logit scale (real line).
+    <p>This function transforms probabilities (0,1) to the logit scale (real line).
 Values of 0 and 1 will produce -Inf and +Inf respectively. The transformation
 is used internally in DISC to ensure inbreeding coefficients remain non-negative.</p>
     </div>
