@@ -39,7 +39,6 @@ ret <- discent::disc(discdat = IBD_simulation_data,
                      e = 1e-8,
                      steps = 1e4,
                      thin = 1,
-                     normalize_geodist = TRUE,
                      report_progress = TRUE,
                      return_verbose = TRUE)
 

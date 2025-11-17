@@ -10,9 +10,6 @@
 #' @param e double; Small constant for numerical stability in Adam optimizer. Default: 1e-8
 #' @param steps integer; Number of optimization steps. Default: 1000
 #' @param thin integer; Thinning interval for stored iterations (1 = store all). Default: 1
-#' @param normalize_geodist logical; Whether to normalize geographic distances to (0,1) using
-#'   min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
-#'   stability but complicates interpretation of migration rate. Default: TRUE
 #' @param report_progress logical; Whether to display progress bar during optimization. Default: TRUE
 #' @param return_verbose logical; Whether to return full optimization trajectory (TRUE) or just
 #'   final results (FALSE). Full trajectory can be memory intensive. Default: FALSE
@@ -63,7 +60,6 @@ disc <- function(discdat,
                  e = 1e-8,
                  steps = 1e3,
                  thin = 1,
-                 normalize_geodist = TRUE,
                  report_progress = TRUE,
                  return_verbose = FALSE){
 
@@ -102,7 +98,6 @@ disc <- function(discdat,
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")
   assert_single_logical(report_progress)
-  assert_single_logical(normalize_geodist)
 
   # no missing
   if(sum(is.na(discdat)) != 0) {
@@ -134,7 +129,7 @@ disc <- function(discdat,
   #............................................................
   # R manipulations before C++
   #...........................................................
-  disclist <- wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
+  disclist <- wrangle_discentdat(discdat, start_params, locats)
 
   #..............................................................
   # run efficient C++ function
@@ -208,7 +203,7 @@ disc <- function(discdat,
 #' @noMd
 #' @noRd
 
-wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats) {
+wrangle_discentdat <- function(discdat, start_params, locats) {
   # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
   # get deme names and lift over sorted names for i and j (note, deme names may be anything, so cannot rely on user indexing)
   demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
@@ -244,20 +239,6 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
   gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
   for (i in seq_len(nrow(gendist))) {
     gendist_arr[gendist$i[i], gendist$j[i], seq_len(nrow(gendist$data[[i]]))] <- unname(unlist(gendist$data[[i]]))
-  }
-
-  # normalize geodistances per user; NB have already removed self comparisons, so no 0s
-  if (normalize_geodist) {
-    mingeodist <- min(discdat$geodist)
-    maxgeodist <- max(discdat$geodist)
-    discdat <- discdat %>%
-      dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
-  }
-  # catch accidental bad M start if user is standardizing distances
-  if (normalize_geodist & (start_params[names(start_params) == "m"] > 500) ) {
-    warning("You have selected to normalize geographic distances, but your
-            migration rate start parameter is large. Please consider placing it on a
-            similar scale to your normalized geographic distances for stability.")
   }
 
 

@@ -46,7 +46,6 @@ test_that("Finite difference gradient validation - F gradients", {
               lambda = 0,
               b1 = 0.9, b2 = 0.999, e = 1e-8,
               steps = 2,
-              normalize_geodist = FALSE,
               report_progress = FALSE,
               return_verbose = TRUE)
 
@@ -98,7 +97,6 @@ test_that("Finite difference gradient validation - M gradient", {
               lambda = 0,
               b1 = 0.9, b2 = 0.999, e = 1e-8,
               steps = 2,
-              normalize_geodist = FALSE,
               report_progress = FALSE,
               return_verbose = TRUE)
 

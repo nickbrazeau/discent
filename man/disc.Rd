@@ -14,7 +14,6 @@ disc(
   e = 1e-08,
   steps = 1000,
   thin = 1,
-  normalize_geodist = TRUE,
   report_progress = TRUE,
   return_verbose = FALSE
 )
@@ -39,10 +38,6 @@ plus one parameter named "m" for migration rate}
 \item{steps}{integer; Number of optimization steps. Default: 1000}
 
 \item{thin}{integer; Thinning interval for stored iterations (1 = store all). Default: 1}
-
-\item{normalize_geodist}{logical; Whether to normalize geographic distances to (0,1) using
-min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
-stability but complicates interpretation of migration rate. Default: TRUE}
 
 \item{report_progress}{logical; Whether to display progress bar during optimization. Default: TRUE}
 

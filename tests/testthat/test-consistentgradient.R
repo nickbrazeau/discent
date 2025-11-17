@@ -17,7 +17,6 @@ test_that("model has deterministic results from same start", {
                b2 = 0.999,
                e = 1e-8,
                steps = 1e4,
-               normalize_geodist = F,
                report_progress = F,
                return_verbose = F)
 
@@ -28,7 +27,6 @@ test_that("model has deterministic results from same start", {
                b2 = 0.999,
                e = 1e-8,
                steps = 1e4,
-               normalize_geodist = F,
                report_progress = F,
                return_verbose = F)
 
@@ -39,7 +37,6 @@ test_that("model has deterministic results from same start", {
                b2 = 0.999,
                e = 1e-8,
                steps = 1e4,
-               normalize_geodist = F,
                report_progress = F,
                return_verbose = F)
 
@@ -50,7 +47,6 @@ test_that("model has deterministic results from same start", {
                b2 = 0.999,
                e = 1e-8,
                steps = 5e4, # different number of steps!!
-               normalize_geodist = F,
                report_progress = F,
                return_verbose = F)
 

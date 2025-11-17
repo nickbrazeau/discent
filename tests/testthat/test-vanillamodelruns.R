@@ -18,7 +18,6 @@ test_that("Vanilla model runs", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
-              normalize_geodist = T,
               report_progress = F,
               return_verbose = F)
   testthat::expect_length(mod, 6)

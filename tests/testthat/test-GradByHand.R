@@ -56,7 +56,6 @@ test_that("Fi gradient by hand", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
-              normalize_geodist = F,
               report_progress = T,
               return_verbose = T)
   # back out gradient for F1
@@ -108,7 +107,6 @@ test_that("M gradient by hand", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
-              normalize_geodist = F,
               report_progress = T,
               return_verbose = T)
   # back out gradient for M
