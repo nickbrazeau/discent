@@ -9,7 +9,7 @@ A dataframe with 45 rows and 6 columns representing pairwise genetic and geograp
 \describe{
 \item{smpl1, smpl2}{Integer sample identifiers (1-10)}
 \item{deme1, deme2}{Factor deme (location) identifiers (1-3)}
-\item{gendist}{Numeric genetic distances in \link{0,1} based on simulated identity by descent}
+\item{gendist}{Numeric genetic distances in (0,1) based on simulated identity by descent}
 \item{geodist}{Numeric geographic distances (500, 1000) representing spatial separation}
 }
 }

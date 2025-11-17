@@ -10,7 +10,7 @@
 #' @param e double; Small constant for numerical stability in Adam optimizer. Default: 1e-8
 #' @param steps integer; Number of optimization steps. Default: 1000
 #' @param thin integer; Thinning interval for stored iterations (1 = store all). Default: 1
-#' @param normalize_geodist logical; Whether to normalize geographic distances to [0,1] using
+#' @param normalize_geodist logical; Whether to normalize geographic distances to (0,1) using
 #'   min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
 #'   stability but complicates interpretation of migration rate. Default: TRUE
 #' @param report_progress logical; Whether to display progress bar during optimization. Default: TRUE
@@ -24,14 +24,14 @@
 #'   \itemize{
 #'     \item \code{smpl1}, \code{smpl2}: Sample identifiers
 #'     \item \code{deme1}, \code{deme2}: Deme (location) identifiers
-#'     \item \code{gendist}: Pairwise genetic distance [0,1]
+#'     \item \code{gendist}: Pairwise genetic distance (0,1)
 #'     \item \code{geodist}: Pairwise geographic distance
 #'   }
 #' @details The \code{start_params} vector must contain:
 #'   \itemize{
 #'     \item One parameter per unique deme (named with deme identifiers)
 #'     \item One parameter named "m" for the migration rate
-#'     \item All F parameters must be in [0,1] (inbreeding coefficients)
+#'     \item All F parameters must be in (0,1) (inbreeding coefficients)
 #'   }
 #' @details The model assumes: \eqn{E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)}
 #'   where \eqn{r_{ij}} is genetic relatedness, \eqn{F_i} is deme i's inbreeding coefficient,
@@ -134,7 +134,7 @@ disc <- function(discdat,
   #............................................................
   # R manipulations before C++
   #...........................................................
-  disclist <- discent:::wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
+  disclist <- wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
 
   #..............................................................
   # run efficient C++ function
@@ -195,7 +195,8 @@ disc <- function(discdat,
 
   # add S3 class structure
   attr(output, "class") <- "DISCresult"
-  return(output)
+  # out
+  output
 }
 
 
@@ -211,8 +212,8 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
   # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
   # get deme names and lift over sorted names for i and j (note, deme names may be anything, so cannot rely on user indexing)
   demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
-  keyi <- data.frame(deme1 = demes, i = seq_len(length(demes)))
-  keyj <- data.frame(deme2 = demes, j = seq_len(length(demes)))
+  keyi <- data.frame(deme1 = demes, i = seq_along(demes))
+  keyj <- data.frame(deme2 = demes, j = seq_along(demes))
 
   # boundaries on genetic data for logit
   discdat <- discdat %>%
@@ -299,5 +300,6 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
     geodist_mat = geodist_mat,
     start_params = start_params
   )
-  return(ret)
+  # out
+  ret
 }

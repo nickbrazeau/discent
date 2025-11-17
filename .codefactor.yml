@@ -1,0 +1,4 @@
+exclude:
+  - "tests/*"
+  - "docs/*"
+  - "**/assertions_v5.R"

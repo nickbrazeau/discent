@@ -40,7 +40,7 @@ plus one parameter named "m" for migration rate}
 
 \item{thin}{integer; Thinning interval for stored iterations (1 = store all). Default: 1}
 
-\item{normalize_geodist}{logical; Whether to normalize geographic distances to \link{0,1} using
+\item{normalize_geodist}{logical; Whether to normalize geographic distances to (0,1) using
 min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
 stability but complicates interpretation of migration rate. Default: TRUE}
 
@@ -78,7 +78,7 @@ The input dataframe must have exactly these column names in order:
 \itemize{
 \item \code{smpl1}, \code{smpl2}: Sample identifiers
 \item \code{deme1}, \code{deme2}: Deme (location) identifiers
-\item \code{gendist}: Pairwise genetic distance \link{0,1}
+\item \code{gendist}: Pairwise genetic distance (0,1)
 \item \code{geodist}: Pairwise geographic distance
 }
 
@@ -86,7 +86,7 @@ The \code{start_params} vector must contain:
 \itemize{
 \item One parameter per unique deme (named with deme identifiers)
 \item One parameter named "m" for the migration rate
-\item All F parameters must be in \link{0,1} (inbreeding coefficients)
+\item All F parameters must be in (0,1) (inbreeding coefficients)
 }
 
 The model assumes: \eqn{E[r_{ij}] = \frac{F_i + F_j}{2} \exp(-d_{ij}/m)}

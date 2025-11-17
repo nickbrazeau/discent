@@ -26,11 +26,11 @@ update_progress <- function(pb_list, name, i, max_i) {
 
 #------------------------------------------------
 #' @title Logit Transformation
-#' @param p numeric vector of values in [0,1] (probability scale)
+#' @param p numeric vector of values in (0,1) (probability scale)
 #' @description Transforms probability values to the logit scale using the standard
 #'   logit formula: \eqn{\text{logit}(p) = \log\left(\frac{p}{1-p}\right)}
 #' @return Numeric vector of values on the real line (logit scale)
-#' @details This function transforms probabilities [0,1] to the logit scale (real line).
+#' @details This function transforms probabilities (0,1) to the logit scale (real line).
 #'   Values of 0 and 1 will produce -Inf and +Inf respectively. The transformation
 #'   is used internally in DISC to ensure inbreeding coefficients remain non-negative.
 #' @seealso \code{\link{expit}}
@@ -45,9 +45,9 @@ logit <- function(p){
 #' @param p numeric vector of values in logit space
 #' @description Converts logit-scale values back to probability scale using the standard
 #'   expit formula: \eqn{\text{expit}(p) = \frac{1}{1 + e^{-p}}}
-#' @return Numeric vector of values in [0,1] (probability scale)
+#' @return Numeric vector of values in (0,1) (probability scale)
 #' @details This function is the inverse of \code{\link{logit}}. It transforms values
-#'   from the logit scale (real line) back to probabilities [0,1].
+#'   from the logit scale (real line) back to probabilities (0,1).
 #' @seealso \code{\link{logit}}
 #' @export
 expit <- function(p){

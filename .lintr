@@ -1,0 +1,4 @@
+linters: lintr::with_defaults()
+exclusions: list(
+  "R/assertions_v5.R"
+)
