@@ -12,6 +12,7 @@
 #' @param thin integer; Thinning interval for stored iterations (1 = store all). Default: 1
 #' @param report_progress logical; Whether to display progress bar during optimization. Default: TRUE
 #' @param return_verbose logical; Whether to return full optimization trajectory (TRUE) or just
+#' @param diagnostics logical; Whether to return diagnostics (described below)
 #'   final results (FALSE). Full trajectory can be memory intensive. Default: FALSE
 #' @description This function estimates deme-specific inbreeding coefficients and a global migration
 #'   rate from genetic and geographic distance data using an isolation-by-distance model. The model
@@ -49,6 +50,12 @@
 #'     \item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
 #'     \item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
 #'   }
+#'   If \code{diagnostics = TRUE}, additional diagnostics elements are provided from \link{calculate_hessian_eigen}, which include:
+#'   \itemize{
+#'     \item \code{Hessian}: Hessian matrix
+#'     \item \code{Eigen}: Eigenvalues and eigenvectors from the Hessian
+#'     \item \code{KappaH}: Conditional number from Hessian matrix
+#'   }
 #' @export
 
 disc <- function(discdat,
@@ -61,7 +68,8 @@ disc <- function(discdat,
                  steps = 1e3,
                  thin = 1,
                  report_progress = TRUE,
-                 return_verbose = FALSE){
+                 return_verbose = FALSE,
+                 diagnostics = TRUE) {
 
   #..............................................................
   # Assertions & Catches
@@ -190,6 +198,16 @@ disc <- function(discdat,
 
   # add S3 class structure
   attr(output, "class") <- "DISCresult"
+
+  # append Hessian
+  if (diagnostics == T) {
+    diagn <- calculate_hessian_eigen(mod = output,
+                                     discdat = discdat,
+                                     lambda = lambda)
+
+    output <- append(output, diagn)
+  }
+
   # out
   output
 }

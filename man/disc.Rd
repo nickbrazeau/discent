@@ -15,7 +15,8 @@ disc(
   steps = 1000,
   thin = 1,
   report_progress = TRUE,
-  return_verbose = FALSE
+  return_verbose = FALSE,
+  diagnostics = TRUE
 )
 }
 \arguments{
@@ -41,7 +42,9 @@ plus one parameter named "m" for migration rate}
 
 \item{report_progress}{logical; Whether to display progress bar during optimization. Default: TRUE}
 
-\item{return_verbose}{logical; Whether to return full optimization trajectory (TRUE) or just
+\item{return_verbose}{logical; Whether to return full optimization trajectory (TRUE) or just}
+
+\item{diagnostics}{logical; Whether to return diagnostics (described below)
 final results (FALSE). Full trajectory can be memory intensive. Default: FALSE}
 }
 \value{
@@ -60,6 +63,12 @@ If \code{return_verbose = TRUE}, additional elements include:
 \item \code{m_gradtraj}: Migration gradient trajectory
 \item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
 \item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
+}
+If \code{diagnostics = TRUE}, additional diagnostics elements are provided from \link{calculate_hessian_eigen}, which include:
+\itemize{
+\item \code{Hessian}: Hessian matrix
+\item \code{Eigen}: Eigenvalues and eigenvectors from the Hessian
+\item \code{KappaH}: Conditional number from Hessian matrix
 }
 }
 \description{
