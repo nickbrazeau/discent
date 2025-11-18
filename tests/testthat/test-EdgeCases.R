@@ -13,6 +13,7 @@ test_that("Extreme F values near boundaries", {
                   learningrate = 1e-4,
                   lambda = 0,
                   steps = 100,
+                  diagnostics = F,
                   report_progress = FALSE,
                   return_verbose = TRUE)
 
@@ -24,6 +25,7 @@ test_that("Extreme F values near boundaries", {
                    learningrate = 1e-4,
                    lambda = 0,
                    steps = 100,
+                   diagnostics = F,
                    report_progress = FALSE,
                    return_verbose = TRUE)
 
@@ -55,6 +57,7 @@ test_that("Extreme M values", {
                       learningrate = 1e-3,
                       lambda = 0,
                       steps = 100,
+                      diagnostics = F,
                       report_progress = FALSE,
                       return_verbose = TRUE)
 
@@ -65,6 +68,7 @@ test_that("Extreme M values", {
                       learningrate = 1e-3,
                       lambda = 0,
                       steps = 100,
+                      diagnostics = F,
                       report_progress = FALSE,
                       return_verbose = TRUE)
 
@@ -99,6 +103,7 @@ test_that("Sparse deme pair data", {
                        learningrate = 1e-3,
                        lambda = 0,
                        steps = 2,
+                       diagnostics = F,
                        report_progress = FALSE,
                        return_verbose = TRUE)
 
@@ -125,6 +130,7 @@ test_that("High regularization lambda values", {
                          learningrate = 1e-3,
                          lambda = 1e3,
                          steps = 2,
+                         diagnostics = F,
                          report_progress = FALSE,
                          return_verbose = TRUE)
 
@@ -154,6 +160,7 @@ test_that("Low genetic distances (nearly identical samples)", {
                       learningrate = 1e-3,
                       lambda = 0,
                       steps = 2,
+                      diagnostics = F,
                       report_progress = FALSE,
                       return_verbose = TRUE)
 

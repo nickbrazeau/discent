@@ -17,17 +17,17 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
   #..............................................................
   assert_dataframe(discdat)
   assert_single_numeric(lambda)
-  assert_custom_class(output, "DISCresult")
+  assert_custom_class(mod, "DISCresult")
 
   #............................................................
   # core
   #............................................................
   # numDeriv expects a function for which the first (vector) argument is used as a parameter vector.
-  loss <- function(par_vec, discdat, n_demes, key, lambda) {
+  loss <- function(par_vec, data, n_demes, key, lambda) {
 
     fs <- par_vec[1:n_demes]
     m <- par_vec[n_demes+1]
-
+    # cpp code
     # cost[0] = 0.0;
     # for (int i = 0; i < (n_Demes-1); i++) {
     #   for (int j = i+1; j < n_Demes; j++) {
@@ -46,7 +46,7 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
     for(i in 1:(n_demes-1)) {
       for(j in (i+1):n_demes) {
         # take care of kij
-        k_ij <- discdat %>%
+        k_ij <- data %>%
           dplyr::filter((deme1 == key[i] & deme2 == key[j]) | (deme1 == key[j] & deme2 == key[i]))
         if(length(unique(k_ij$geodist)) != 1) {stop("Deme geodist mismatch")}
         # vals
@@ -69,7 +69,7 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
   names(par_vec) <- c(mod$deme_key$Deme, "m")
   H <- numDeriv::hessian(loss,
                     x = par_vec,
-                    data = dat,
+                    data = discdat,
                     n_demes = length(mod$Final_Fis),
                     key = mod$deme_key$Deme,
                     lambda = lambda)

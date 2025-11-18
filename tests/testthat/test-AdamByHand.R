@@ -29,6 +29,7 @@ test_that("Fi adam by hand", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
+              diagnostics = F,
               report_progress = T,
               return_verbose = T)
   # back out for Fi adam
@@ -81,6 +82,7 @@ test_that("M adam by hand", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
+              diagnostics = F,
               report_progress = T,
               return_verbose = T)
   # back out for m adam
