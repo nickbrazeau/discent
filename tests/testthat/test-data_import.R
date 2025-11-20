@@ -22,7 +22,6 @@ test_that("test that genetic data imports correctly", {
   mod <- disc(discdat = dat,
               start_params = our_start_params,
               learningrate = 1e-5,
-              lambda = 1e-1,
               b1 = 0.9,
               b2 = 0.999,
               e = 1e-8,

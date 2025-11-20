@@ -11,7 +11,7 @@ test_that("Hessian and diagnostics behave", {
   # model should always follow the same gradient/trajectory
   mod1 <- disc(discdat = inputdisc,
                start_params = our_start_params,
-               learningrate = 1e-5,
+               learningrate = 1e-4,
                b1 = 0.9,
                b2 = 0.999,
                e = 1e-8,

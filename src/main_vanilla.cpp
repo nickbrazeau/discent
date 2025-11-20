@@ -14,8 +14,6 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   vector<double> fvec = rcpp_to_vector_double(args["fvec"]);
   // extract proposed global M of migration
   double m = rcpp_to_double(args["m"]);
-  // extract proposed lambda for L2 regularization
-  double lambda = rcpp_to_double(args["lambda"]);
   // get dims
   int n_Demes = rcpp_to_int(args["n_Demes"]);
   int n_Kpairmax =  rcpp_to_int(args["n_Kpairmax"]);
@@ -62,7 +60,6 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   discParticle.steps = steps;
   discParticle.n_Demes = n_Demes;
   discParticle.n_Kpairmax = n_Kpairmax;
-  discParticle.lambda = lambda;
   discParticle.learningrate = learningrate;
   discParticle.b1 = b1;
   discParticle.b2 = b2;
