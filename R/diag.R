@@ -51,7 +51,7 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
         if(length(unique(k_ij$geodist)) != 1) {stop("Deme geodist mismatch")}
         # vals
         avg_fvec = (fs[i] + fs[j])/2
-        exp_M = exp( unique(k_ij$geodist) / m)
+        exp_M = exp( - unique(k_ij$geodist) / m)
         cost = cost + sum( (k_ij$gendist - avg_fvec * exp_M)^2)
         }
     }
