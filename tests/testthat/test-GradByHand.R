@@ -58,14 +58,25 @@ test_that("Fi gradient by hand", {
               steps = 1e3,
               report_progress = T,
               return_verbose = T)
-  # back out gradient for F1
+  # BACK TRANSFORM Ci
+  # from Cpp code (alter for readability)
+  # if (k == i)
+  #   cgrad[k] += logit_fgrad[i] * (1-1/n_Deme)
+  # else if (k != i)
+  #   cgrad[k] += logit_fgrad[i] * (-1/n_Deme)
+  # cgrad[k] = \sum_{i==k} logit_fgrad[k] * (1 - 1/n_Demes) + \sum_{i≠k} logit_fgrad[i] * (-1/n_Demes)
+  #     \sum{i == k} is a single condition, so single term
+  #            = logit_fgrad[k] - logit_fgrad[k]/n_Demes +  (-1/n_Demes) * \sum_{i!=k} logit_fgrad[i]
+  #     second term \sum_{i!=k} logit_fgrad[i] , when i != k is logit_fgrad[i] = beta - logit_fgrad[k] --> the one time its incorporated
+  #            = logit_fgrad[k] - logit_fgrad[k]/n_Demes -beta/n_Demes + logit_fgrad[k]/n_Demes
+  #            = logit_fgrad[k] - beta/n_Demes
+  # we back out the logit as well with f*(1-f)
   # NBset to 0 at first iter, so the additional adam term cancels out
-  discF1 <- ret$fi_gradtraj[2,1]
-  # reparam
-  f1retgrad <- f1retgrad * ret$fi_run[1,1] * (1-ret$fi_run[1,1] )
+
+  discF1 <- (ret$ci_gradtraj[2,1] + ret$b_gradtraj[2]/3)/(ret$fi_run[1,1] * (1 - ret$fi_run[1,1]))
 
   # test out
-  testthat::expect_equal(f1retgrad, discF1)
+  testthat::expect_equal(f1retgrad, discF1, tolerance = 1e-5)
 
 })
 
