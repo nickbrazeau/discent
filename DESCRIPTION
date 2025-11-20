@@ -16,7 +16,8 @@ Imports:
     tidyr,
     purrr,
     utils,
-    crayon
+    crayon,
+    numDeriv
 Suggests: 
     stats,
     broom,

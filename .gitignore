@@ -14,5 +14,6 @@ old/
 inst/doc
 todo.txt
 .claude/
+claude_ignore/
 /doc/
 /Meta/

@@ -3,18 +3,15 @@
 #'   \code{smpl1}, \code{smpl2}, \code{deme1}, \code{deme2}, \code{gendist}, \code{geodist}
 #' @param start_params named double vector; vector of start parameters. Names must match deme names,
 #'   plus one parameter named "m" for migration rate
-#' @param lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1
 #' @param learningrate double; Learning rate (alpha) for gradient descent optimization. Default: 0.001
 #' @param b1 double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9
 #' @param b2 double; Exponential decay rate for second moment estimate in Adam optimizer. Default: 0.999
 #' @param e double; Small constant for numerical stability in Adam optimizer. Default: 1e-8
 #' @param steps integer; Number of optimization steps. Default: 1000
 #' @param thin integer; Thinning interval for stored iterations (1 = store all). Default: 1
-#' @param normalize_geodist logical; Whether to normalize geographic distances to (0,1) using
-#'   min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
-#'   stability but complicates interpretation of migration rate. Default: TRUE
 #' @param report_progress logical; Whether to display progress bar during optimization. Default: TRUE
 #' @param return_verbose logical; Whether to return full optimization trajectory (TRUE) or just
+#' @param diagnostics logical; Whether to return diagnostics (described below)
 #'   final results (FALSE). Full trajectory can be memory intensive. Default: FALSE
 #' @description This function estimates deme-specific inbreeding coefficients and a global migration
 #'   rate from genetic and geographic distance data using an isolation-by-distance model. The model
@@ -47,25 +44,32 @@
 #'   \itemize{
 #'     \item \code{fi_run}: F parameter trajectory over iterations
 #'     \item \code{m_run}: Migration parameter trajectory
-#'     \item \code{fi_gradtraj}: F gradient trajectory
+#'     \item \code{ci_gradtraj}: C_i gradient trajectory
+#'     \item \code{b_gradtraj}: \eqn{\beta} gradient trajectory
 #'     \item \code{m_gradtraj}: Migration gradient trajectory
-#'     \item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
+#'     \item \code{ci_1moment}, \code{ci_2moment}: C_i parameter Adam moments
+#'     \item \code{b_1moment}, \code{b_2moment}: \eqn{\beta} parameter Adam moments
 #'     \item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
+#'   }
+#'   If \code{diagnostics = TRUE}, additional diagnostics elements are provided from \link{calculate_hessian_eigen}, which include:
+#'   \itemize{
+#'     \item \code{Hessian}: Hessian matrix
+#'     \item \code{Eigen}: Eigenvalues and eigenvectors from the Hessian
+#'     \item \code{KappaH}: Conditional number from Hessian matrix
 #'   }
 #' @export
 
 disc <- function(discdat,
                  start_params = NULL,
-                 lambda = 0.1,
                  learningrate = 1e-3,
                  b1 = 0.9,
                  b2 = 0.999,
                  e = 1e-8,
                  steps = 1e3,
                  thin = 1,
-                 normalize_geodist = TRUE,
                  report_progress = TRUE,
-                 return_verbose = FALSE){
+                 return_verbose = FALSE,
+                 diagnostics = TRUE) {
 
   #..............................................................
   # Assertions & Catches
@@ -93,7 +97,6 @@ disc <- function(discdat,
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
   sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
-  assert_single_numeric(lambda)
   assert_single_numeric(learningrate)
   assert_single_numeric(b1)
   assert_single_numeric(b2)
@@ -102,7 +105,6 @@ disc <- function(discdat,
   assert_single_int(thin)
   assert_greq(thin, 1, message = "Must be at least 1")
   assert_single_logical(report_progress)
-  assert_single_logical(normalize_geodist)
 
   # no missing
   if(sum(is.na(discdat)) != 0) {
@@ -134,7 +136,7 @@ disc <- function(discdat,
   #............................................................
   # R manipulations before C++
   #...........................................................
-  disclist <- wrangle_discentdat(discdat, normalize_geodist, start_params, locats)
+  disclist <- wrangle_discentdat(discdat, start_params, locats)
 
   #..............................................................
   # run efficient C++ function
@@ -147,7 +149,6 @@ disc <- function(discdat,
                n_Kpairmax = disclist$n_Kpairmax,
                m = unname(disclist$start_params["m"]),
                learningrate = learningrate,
-               lambda = lambda,
                b1 = b1,
                b2 = b2,
                e = e,
@@ -170,12 +171,17 @@ disc <- function(discdat,
       deme_key = disclist$keyi,
       m_run = output_raw$m_run[thin_its],
       fi_run = do.call("rbind", output_raw$fi_run)[thin_its, ],
+      b_run = output_raw$b_run[thin_its],
+      ci_run = do.call("rbind", output_raw$ci_run)[thin_its, ],
       m_gradtraj = output_raw$m_gradtraj[thin_its],
-      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
+      b_gradtraj = output_raw$b_gradtraj[thin_its],
+      ci_gradtraj = do.call("rbind", output_raw$ci_gradtraj)[thin_its, ],
       m_1moment = output_raw$m_firstmoment[thin_its],
       m_2moment = output_raw$m_secondmoment[thin_its],
-      fi_1moment = do.call("rbind", output_raw$fi_firstmoment)[thin_its, ],
-      fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
+      b_1moment = output_raw$b_firstmoment[thin_its],
+      b_2moment = output_raw$b_secondmoment[thin_its],
+      ci_1moment = do.call("rbind", output_raw$ci_firstmoment)[thin_its, ],
+      ci_2moment = do.call("rbind", output_raw$ci_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
       Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m,
@@ -195,6 +201,15 @@ disc <- function(discdat,
 
   # add S3 class structure
   attr(output, "class") <- "DISCresult"
+
+  # append Hessian
+  if (diagnostics == T) {
+    diagn <- calculate_hessian_eigen(mod = output,
+                                     discdat = discdat)
+
+    output <- append(output, diagn)
+  }
+
   # out
   output
 }
@@ -208,7 +223,7 @@ disc <- function(discdat,
 #' @noMd
 #' @noRd
 
-wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats) {
+wrangle_discentdat <- function(discdat, start_params, locats) {
   # use efficient R functions to group pairs and wrangle data for faster C++ manipulation
   # get deme names and lift over sorted names for i and j (note, deme names may be anything, so cannot rely on user indexing)
   demes <- sort(unique(c(discdat$deme1, discdat$deme2)))
@@ -244,20 +259,6 @@ wrangle_discentdat <- function(discdat, normalize_geodist, start_params, locats)
   gendist_arr <- array(data = -1, dim = c(length(locats), length(locats), n_Kpairmax))
   for (i in seq_len(nrow(gendist))) {
     gendist_arr[gendist$i[i], gendist$j[i], seq_len(nrow(gendist$data[[i]]))] <- unname(unlist(gendist$data[[i]]))
-  }
-
-  # normalize geodistances per user; NB have already removed self comparisons, so no 0s
-  if (normalize_geodist) {
-    mingeodist <- min(discdat$geodist)
-    maxgeodist <- max(discdat$geodist)
-    discdat <- discdat %>%
-      dplyr::mutate(geodist = (geodist - mingeodist)/(maxgeodist - mingeodist))
-  }
-  # catch accidental bad M start if user is standardizing distances
-  if (normalize_geodist & (start_params[names(start_params) == "m"] > 500) ) {
-    warning("You have selected to normalize geographic distances, but your
-            migration rate start parameter is large. Please consider placing it on a
-            similar scale to your normalized geographic distances for stability.")
   }
 
 

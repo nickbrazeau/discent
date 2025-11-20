@@ -11,9 +11,8 @@ test_that("Extreme F values near boundaries", {
   ret_low <- disc(discdat = inputdisc,
                   start_params = extreme_low_params,
                   learningrate = 1e-4,
-                  lambda = 0,
                   steps = 100,
-                  normalize_geodist = FALSE,
+                  diagnostics = F,
                   report_progress = FALSE,
                   return_verbose = TRUE)
 
@@ -23,9 +22,8 @@ test_that("Extreme F values near boundaries", {
   ret_high <- disc(discdat = inputdisc,
                    start_params = extreme_high_params,
                    learningrate = 1e-4,
-                   lambda = 0,
                    steps = 100,
-                   normalize_geodist = FALSE,
+                   diagnostics = F,
                    report_progress = FALSE,
                    return_verbose = TRUE)
 
@@ -55,9 +53,8 @@ test_that("Extreme M values", {
   ret_small_m <- disc(discdat = inputdisc,
                       start_params = small_m_params,
                       learningrate = 1e-3,
-                      lambda = 0,
                       steps = 100,
-                      normalize_geodist = FALSE,
+                      diagnostics = F,
                       report_progress = FALSE,
                       return_verbose = TRUE)
 
@@ -66,9 +63,8 @@ test_that("Extreme M values", {
   ret_large_m <- disc(discdat = inputdisc,
                       start_params = large_m_params,
                       learningrate = 1e-3,
-                      lambda = 0,
                       steps = 100,
-                      normalize_geodist = FALSE,
+                      diagnostics = F,
                       report_progress = FALSE,
                       return_verbose = TRUE)
 
@@ -101,9 +97,8 @@ test_that("Sparse deme pair data", {
     ret_sparse <- disc(discdat = sparse_data,
                        start_params = test_params,
                        learningrate = 1e-3,
-                       lambda = 0,
                        steps = 2,
-                       normalize_geodist = FALSE,
+                       diagnostics = F,
                        report_progress = FALSE,
                        return_verbose = TRUE)
 
@@ -115,32 +110,6 @@ test_that("Sparse deme pair data", {
 
 })
 
-test_that("High regularization lambda values", {
-  # Test behavior with strong regularization
-  data("IBD_simulation_data", package = "discent")
-  dat <- IBD_simulation_data
-
-  test_params <- c("1" = 0.3, "2" = 0.5, "3" = 0.7, "m" = 400)
-
-  inputdisc <- dat %>% dplyr::filter(deme1 != deme2)
-
-  # Test with very high lambda
-  ret_high_lambda <- disc(discdat = inputdisc,
-                         start_params = test_params,
-                         learningrate = 1e-3,
-                         lambda = 1e3,
-                         steps = 2,
-                         normalize_geodist = FALSE,
-                         report_progress = FALSE,
-                         return_verbose = TRUE)
-
-
-  # Check numerical stability
-  expect_true(all(is.finite(ret_high_lambda$fi_gradtraj)),
-              label = "F gradients should be finite")
-  expect_true(all(is.finite(ret_high_lambda$m_gradtraj)),
-              label = "M gradient should be finite")
-})
 
 test_that("Low genetic distances (nearly identical samples)", {
   # Test behavior when genetic distance is very low (nearly identical samples)
@@ -158,9 +127,8 @@ test_that("Low genetic distances (nearly identical samples)", {
   ret_low_gen <- disc(discdat = low_dist_data,
                       start_params = test_params,
                       learningrate = 1e-3,
-                      lambda = 0,
                       steps = 2,
-                      normalize_geodist = FALSE,
+                      diagnostics = F,
                       report_progress = FALSE,
                       return_verbose = TRUE)
 

@@ -7,16 +7,15 @@
 disc(
   discdat,
   start_params = NULL,
-  lambda = 0.1,
   learningrate = 0.001,
   b1 = 0.9,
   b2 = 0.999,
   e = 1e-08,
   steps = 1000,
   thin = 1,
-  normalize_geodist = TRUE,
   report_progress = TRUE,
-  return_verbose = FALSE
+  return_verbose = FALSE,
+  diagnostics = TRUE
 )
 }
 \arguments{
@@ -25,8 +24,6 @@ disc(
 
 \item{start_params}{named double vector; vector of start parameters. Names must match deme names,
 plus one parameter named "m" for migration rate}
-
-\item{lambda}{double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1}
 
 \item{learningrate}{double; Learning rate (alpha) for gradient descent optimization. Default: 0.001}
 
@@ -40,13 +37,11 @@ plus one parameter named "m" for migration rate}
 
 \item{thin}{integer; Thinning interval for stored iterations (1 = store all). Default: 1}
 
-\item{normalize_geodist}{logical; Whether to normalize geographic distances to (0,1) using
-min-max scaling: \eqn{X' = \frac{X - X_{min}}{X_{max} - X_{min}}}. Improves numerical
-stability but complicates interpretation of migration rate. Default: TRUE}
-
 \item{report_progress}{logical; Whether to display progress bar during optimization. Default: TRUE}
 
-\item{return_verbose}{logical; Whether to return full optimization trajectory (TRUE) or just
+\item{return_verbose}{logical; Whether to return full optimization trajectory (TRUE) or just}
+
+\item{diagnostics}{logical; Whether to return diagnostics (described below)
 final results (FALSE). Full trajectory can be memory intensive. Default: FALSE}
 }
 \value{
@@ -61,10 +56,18 @@ If \code{return_verbose = TRUE}, additional elements include:
 \itemize{
 \item \code{fi_run}: F parameter trajectory over iterations
 \item \code{m_run}: Migration parameter trajectory
-\item \code{fi_gradtraj}: F gradient trajectory
+\item \code{ci_gradtraj}: C_i gradient trajectory
+\item \code{b_gradtraj}: \eqn{\beta} gradient trajectory
 \item \code{m_gradtraj}: Migration gradient trajectory
-\item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
+\item \code{ci_1moment}, \code{ci_2moment}: C_i parameter Adam moments
+\item \code{b_1moment}, \code{b_2moment}: \eqn{\beta} parameter Adam moments
 \item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
+}
+If \code{diagnostics = TRUE}, additional diagnostics elements are provided from \link{calculate_hessian_eigen}, which include:
+\itemize{
+\item \code{Hessian}: Hessian matrix
+\item \code{Eigen}: Eigenvalues and eigenvectors from the Hessian
+\item \code{KappaH}: Conditional number from Hessian matrix
 }
 }
 \description{

@@ -14,7 +14,7 @@ test_that("test that genetic data imports correctly", {
   # input into Cpp
   #.................................
   disclist <- wrangle_discentdat(discdat = dat, start_params = our_start_params,
-                                 locats = locats, normalize_geodist = T)
+                                 locats = locats)
 
   #......................
   # model for export
@@ -22,12 +22,10 @@ test_that("test that genetic data imports correctly", {
   mod <- disc(discdat = dat,
               start_params = our_start_params,
               learningrate = 1e-5,
-              lambda = 1e-1,
               b1 = 0.9,
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
-              normalize_geodist = T,
               report_progress = F,
               return_verbose = T)
   #............................................................

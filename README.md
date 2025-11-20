@@ -1,4 +1,4 @@
-<h1><img src="https://raw.githubusercontent.com/nickbrazeau/discent/master/R_ignore/images/discent_hex.png" width="125" height="120" align="left"> 
+<h1><img src="https://raw.githubusercontent.com/nickbrazeau/discent/master/R_ignore/images/discent_hex.png" width="120" height="120" align="left"> 
  DISCent<h1> 
 
 <!-- badges: start -->

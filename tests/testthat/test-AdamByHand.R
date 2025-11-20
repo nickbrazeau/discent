@@ -29,7 +29,7 @@ test_that("Fi adam by hand", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
-              normalize_geodist = F,
+              diagnostics = F,
               report_progress = T,
               return_verbose = T)
   # back out for Fi adam
@@ -38,13 +38,31 @@ test_that("Fi adam by hand", {
   e <- 1e-8
   learningrate <- 1e-3
   # init case has no prior so that is why b1 * 0
-  # perform updates in reparam space
-  mt_f1 <- b1 * 0 + (1-b1) *  ret$fi_gradtraj[2,1]
-  vt_f1 <- b2 * 0 + (1-b2) *  ret$fi_gradtraj[2,1] *  ret$fi_gradtraj[2,1]
-  mt_f1hat <- mt_f1 / (1 - b1^1)
-  vt_f1hat <- vt_f1 / (1 - b2^1)
-  fnew1 = expit( logit(ret$fi_run[1,1]) - learningrate * (mt_f1hat/(sqrt(vt_f1hat) + e)) )
 
+  # get adam m
+  mt_beta1 <- b1 * 0 + (1-b1) *  ret$b_gradtraj[2]
+  vt_beta1 <- b2 * 0 + (1-b2) *  ret$b_gradtraj[2] *  ret$b_gradtraj[2]
+  mt_beta1hat <- mt_beta1 / (1 - b1^1)
+  vt_beta1hat <- vt_beta1 / (1 - b2^1)
+  # back out for m adam
+  bnew1 = ret$b_run[1] - learningrate * (mt_beta1hat/(sqrt(vt_beta1hat) + e))
+
+  # perform updates in reparam space for ci
+  # Need to update all c values to compute cbar
+  cnew <- rep(0,3)
+  for (i in 1:3) {
+    # get adam ci
+    mt_ci <- b1 * 0 + (1-b1) * ret$ci_gradtraj[2,i]
+    vt_ci <- b2 * 0 + (1-b2) * ret$ci_gradtraj[2,i] * ret$ci_gradtraj[2,i]
+    mt_cihat <- mt_ci / (1 - b1^1)
+    vt_cihat <- vt_ci / (1 - b2^1)
+    # back out for ci adam
+    cnew[i] = ret$ci_run[1,i] - learningrate * (mt_cihat/(sqrt(vt_cihat) + e))
+  }
+  cbar <- mean(cnew)
+
+  # calc h
+  fnew1 <- expit( bnew1 + cnew[1] - cbar )
   # test out
   testthat::expect_equal(fnew1, ret$fi_run[2,1])
 
@@ -82,7 +100,7 @@ test_that("M adam by hand", {
               b2 = 0.999,
               e = 1e-8,
               steps = 1e3,
-              normalize_geodist = T,
+              diagnostics = F,
               report_progress = T,
               return_verbose = T)
   # back out for m adam
