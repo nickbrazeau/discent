@@ -10,20 +10,19 @@
 #'   }
 #' @export
 
-calculate_hessian_eigen <- function(mod, discdat, lambda) {
+calculate_hessian_eigen <- function(mod, discdat) {
 
   #..............................................................
   # Assertions & Catches
   #..............................................................
   assert_dataframe(discdat)
-  assert_single_numeric(lambda)
   assert_custom_class(mod, "DISCresult")
 
   #............................................................
   # core
   #............................................................
   # numDeriv expects a function for which the first (vector) argument is used as a parameter vector.
-  loss <- function(par_vec, data, n_demes, key, lambda) {
+  loss <- function(par_vec, data, n_demes, key) {
 
     fs <- par_vec[1:n_demes]
     m <- par_vec[n_demes+1]
@@ -40,7 +39,6 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
     #     }
     #   }
     # }
-    # cost[0] += lambda * m * m; // explicit L2 regularization term at time 0
     cost <- 0
     # cost
     for(i in 1:(n_demes-1)) {
@@ -56,8 +54,6 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
         }
     }
 
-  # Add L2 regularization term
-  cost <- cost + lambda * m * m
   # out
   return(cost)
   }
@@ -71,8 +67,7 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
                     x = par_vec,
                     data = discdat,
                     n_demes = length(mod$Final_Fis),
-                    key = mod$deme_key$Deme,
-                    lambda = lambda)
+                    key = mod$deme_key$Deme)
 
   #......................
   # calculate eigen and conditional number

@@ -56,7 +56,6 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
       }
     }
   }
-  cost[0] += lambda * m * m; // explicit L2 regularization term at time 0
 
   // Catch and Cap Extreme Costs
   if (cost[0] > OVERFLO_DOUBLE || isnan(cost[0])) {
@@ -153,7 +152,6 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         }
       }
     }
-    mgrad += 2 * lambda * m; // add explicit L2 regularization term once per gradient/step update
     double log_mgrad = mgrad * m; // chain rule for reparameterized large M, this is now partial L / partial m
 
     //-------------------------------------------------
@@ -241,7 +239,6 @@ void Particle::performGD(bool report_progress, vector<vector<vector<double>>> &g
         }
       }
     }
-    cost[step] += lambda * m * m; // explicit L2 regularization term
 
     // Catch and Cap Extreme Costs
     if (cost[step] > OVERFLO_DOUBLE || isnan(cost[step])) {

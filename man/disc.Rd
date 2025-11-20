@@ -7,7 +7,6 @@
 disc(
   discdat,
   start_params = NULL,
-  lambda = 0.1,
   learningrate = 0.001,
   b1 = 0.9,
   b2 = 0.999,
@@ -25,8 +24,6 @@ disc(
 
 \item{start_params}{named double vector; vector of start parameters. Names must match deme names,
 plus one parameter named "m" for migration rate}
-
-\item{lambda}{double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1}
 
 \item{learningrate}{double; Learning rate (alpha) for gradient descent optimization. Default: 0.001}
 
