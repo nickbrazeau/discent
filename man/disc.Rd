@@ -59,9 +59,11 @@ If \code{return_verbose = TRUE}, additional elements include:
 \itemize{
 \item \code{fi_run}: F parameter trajectory over iterations
 \item \code{m_run}: Migration parameter trajectory
-\item \code{fi_gradtraj}: F gradient trajectory
+\item \code{ci_gradtraj}: C_i gradient trajectory
+\item \code{b_gradtraj}: \eqn{\beta} gradient trajectory
 \item \code{m_gradtraj}: Migration gradient trajectory
-\item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
+\item \code{ci_1moment}, \code{ci_2moment}: C_i parameter Adam moments
+\item \code{b_1moment}, \code{b_2moment}: \eqn{\beta} parameter Adam moments
 \item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
 }
 If \code{diagnostics = TRUE}, additional diagnostics elements are provided from \link{calculate_hessian_eigen}, which include:

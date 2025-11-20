@@ -68,7 +68,7 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   discParticle.b2 = b2;
   discParticle.e = e;
   discParticle.m = m;
-  discParticle.fvec = fvec; 
+  discParticle.fvec = fvec;
 
   //-------------------------------
   // storage and ADAM items
@@ -77,15 +77,22 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   discParticle.m_run = vector<double>(steps);
   discParticle.fi_run = vector<vector<double>>(steps, vector<double>(n_Demes));
   discParticle.m_gradtraj = vector<double>(steps); // m gradient storage;
-  discParticle.fi_gradtraj =   vector<vector<double>>(steps, vector<double>(n_Demes)); // fi storage gradient;
+  discParticle.b_gradtraj = vector<double>(steps); // b storage gradient;
+  discParticle.b_run = vector<double>(steps); // b values
+  discParticle.ci_gradtraj = vector<vector<double>>(steps, vector<double>(n_Demes)); // ci storage gradient;
+  discParticle.ci_run = vector<vector<double>>(steps, vector<double>(n_Demes)); // ci storage of values;
   discParticle.m1t_m = vector<double>(steps); // first m moment;
   discParticle.v2t_m =   vector<double>(steps); // second m moment (v);
   discParticle.m1t_m_hat = double();
   discParticle.v2t_m_hat = double();
-  discParticle.m1t_fi = vector<vector<double>>(steps, vector<double>(n_Demes)); // first fi moment;
-  discParticle.v2t_fi = vector<vector<double>>(steps, vector<double>(n_Demes)); // second fi moment (v);
-  discParticle.m1t_fi_hat = vector<double>(n_Demes); // first moment bias corrected;
-  discParticle.v2t_fi_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
+  discParticle.m1t_b = vector<double>(steps); // first b moment;
+  discParticle.v2t_b = vector<double>(steps); // second b moment (v);
+  discParticle.m1t_b_hat = double(); // first moment bias corrected;
+  discParticle.v2t_b_hat = double(); // second moment (v) bias corrected;
+  discParticle.m1t_ci = vector<vector<double>>(steps, vector<double>(n_Demes)); // first ci moment;
+  discParticle.v2t_ci = vector<vector<double>>(steps, vector<double>(n_Demes)); // second ci moment (v);
+  discParticle.m1t_ci_hat = vector<double>(n_Demes); // first moment bias corrected;
+  discParticle.v2t_ci_hat = vector<double>(n_Demes); // second moment (v) bias corrected;
 
   //-------------------------------
   // run GD
@@ -98,11 +105,16 @@ Rcpp::List vanilla_deme_inbreeding_coef_cpp(Rcpp::List args) {
   return Rcpp::List::create(Rcpp::Named("m_run") = discParticle.m_run,
                             Rcpp::Named("fi_run") = discParticle.fi_run,
                             Rcpp::Named("m_gradtraj") = discParticle.m_gradtraj,
-                            Rcpp::Named("fi_gradtraj") = discParticle.fi_gradtraj,
+                            Rcpp::Named("b_gradtraj") = discParticle.b_gradtraj,
+                            Rcpp::Named("ci_gradtraj") = discParticle.ci_gradtraj,
+                            Rcpp::Named("b_run") = discParticle.b_run,
+                            Rcpp::Named("ci_run") = discParticle.ci_run,
                             Rcpp::Named("m_firstmoment") = discParticle.m1t_m,
                             Rcpp::Named("m_secondmoment") = discParticle.v2t_m,
-                            Rcpp::Named("fi_firstmoment") = discParticle.m1t_fi,
-                            Rcpp::Named("fi_secondmoment") = discParticle.v2t_fi,
+                            Rcpp::Named("b_firstmoment") = discParticle.m1t_b,
+                            Rcpp::Named("b_secondmoment") = discParticle.v2t_b,
+                            Rcpp::Named("ci_firstmoment") = discParticle.m1t_ci,
+                            Rcpp::Named("ci_secondmoment") = discParticle.v2t_ci,
                             Rcpp::Named("cost") = discParticle.cost,
                             Rcpp::Named("Final_Fis") = discParticle.fvec,
                             Rcpp::Named("Final_m") = discParticle.m,

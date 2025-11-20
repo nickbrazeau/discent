@@ -45,9 +45,11 @@
 #'   \itemize{
 #'     \item \code{fi_run}: F parameter trajectory over iterations
 #'     \item \code{m_run}: Migration parameter trajectory
-#'     \item \code{fi_gradtraj}: F gradient trajectory
+#'     \item \code{ci_gradtraj}: C_i gradient trajectory
+#'     \item \code{b_gradtraj}: \eqn{\beta} gradient trajectory
 #'     \item \code{m_gradtraj}: Migration gradient trajectory
-#'     \item \code{fi_1moment}, \code{fi_2moment}: F parameter Adam moments
+#'     \item \code{ci_1moment}, \code{ci_2moment}: C_i parameter Adam moments
+#'     \item \code{b_1moment}, \code{b_2moment}: \eqn{\beta} parameter Adam moments
 #'     \item \code{m_1moment}, \code{m_2moment}: Migration parameter Adam moments
 #'   }
 #'   If \code{diagnostics = TRUE}, additional diagnostics elements are provided from \link{calculate_hessian_eigen}, which include:
@@ -173,12 +175,17 @@ disc <- function(discdat,
       deme_key = disclist$keyi,
       m_run = output_raw$m_run[thin_its],
       fi_run = do.call("rbind", output_raw$fi_run)[thin_its, ],
+      b_run = output_raw$b_run[thin_its],
+      ci_run = do.call("rbind", output_raw$ci_run)[thin_its, ],
       m_gradtraj = output_raw$m_gradtraj[thin_its],
-      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
+      b_gradtraj = output_raw$b_gradtraj[thin_its],
+      ci_gradtraj = do.call("rbind", output_raw$ci_gradtraj)[thin_its, ],
       m_1moment = output_raw$m_firstmoment[thin_its],
       m_2moment = output_raw$m_secondmoment[thin_its],
-      fi_1moment = do.call("rbind", output_raw$fi_firstmoment)[thin_its, ],
-      fi_2moment = do.call("rbind", output_raw$fi_secondmoment)[thin_its, ],
+      b_1moment = output_raw$b_firstmoment[thin_its],
+      b_2moment = output_raw$b_secondmoment[thin_its],
+      ci_1moment = do.call("rbind", output_raw$ci_firstmoment)[thin_its, ],
+      ci_2moment = do.call("rbind", output_raw$ci_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
       Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m,
