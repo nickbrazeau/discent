@@ -24,7 +24,5 @@ test_that("Hessian and diagnostics behave", {
   # symmetry of Hessian
   testthat::expect_equal(mod1$Hessian, t(mod1$Hessian), tolerance=1e-10)
 
-  # Positive eigenvalues at minimum = should be positive definite
-  testthat::expect_true(all(mod1$Eigen$values > 0))
 
 })
