@@ -3,7 +3,7 @@
 #'   \code{smpl1}, \code{smpl2}, \code{deme1}, \code{deme2}, \code{gendist}, \code{geodist}
 #' @param start_params named double vector; vector of start parameters. Names must match deme names,
 #'   plus one parameter named "m" for migration rate
-#' @param lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 0.1
+#' @param lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 1e-5
 #' @param learningrate double; Learning rate (alpha) for gradient descent optimization. Default: 0.001
 #' @param b1 double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9
 #' @param b2 double; Exponential decay rate for second moment estimate in Adam optimizer. Default: 0.999
@@ -60,7 +60,7 @@
 
 disc <- function(discdat,
                  start_params = NULL,
-                 lambda = 0.1,
+                 lambda = 1e-5,
                  learningrate = 1e-3,
                  b1 = 0.9,
                  b2 = 0.999,
