@@ -19,6 +19,6 @@ library(discent)
 ```
 
 
-hyperparameter tuning of learning rate, lambda  
+hyperparameter tuning of learning rate, m_lambda  
   add some text about adam optimizer and more conservative vs aggressive inputs
 sensitivity analysis for starting parameter guesses 

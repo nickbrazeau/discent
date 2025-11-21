@@ -107,13 +107,13 @@ double rbeta1(double shape1, double shape2);
 double dbeta1(double x, double shape1, double shape2, bool return_log = true);
 
 //------------------------------------------------
-int rpois1(double lambda);
+int rpois1(double m_lambda);
 
 //------------------------------------------------
-int rztpois1(double lambda);
+int rztpois1(double m_lambda);
 
 //------------------------------------------------
-double dpois1(int n, double lambda, bool return_log = true);
+double dpois1(int n, double m_lambda, bool return_log = true);
 
 //------------------------------------------------
 std::vector<double> rdirichlet1(double alpha, int n);

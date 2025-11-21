@@ -11,7 +11,8 @@ public:
   // PUBLIC OBJECTS
   // params
   int steps;
-  double lambda;
+  double m_lambda;
+  double fi_lambda;
   double learningrate;
   double b1;
   double b2;

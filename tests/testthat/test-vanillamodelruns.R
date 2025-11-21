@@ -13,7 +13,7 @@ test_that("Vanilla model runs", {
   mod <- disc(discdat = inputdisc,
               start_params = our_start_params,
               learningrate = 1e-2,
-              lambda = 1e-1,
+              m_lambda = 1e-1,
               b1 = 0.9,
               b2 = 0.999,
               e = 1e-8,

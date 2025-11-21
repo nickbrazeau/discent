@@ -10,20 +10,21 @@
 #'   }
 #' @export
 
-calculate_hessian_eigen <- function(mod, discdat, lambda) {
+calculate_hessian_eigen <- function(mod, discdat, m_lambda, fi_lambda) {
 
   #..............................................................
   # Assertions & Catches
   #..............................................................
   assert_dataframe(discdat)
-  assert_single_numeric(lambda)
+  assert_single_numeric(m_lambda)
+  assert_single_numeric(fi_lambda)
   assert_custom_class(mod, "DISCresult")
 
   #............................................................
   # core
   #............................................................
   # numDeriv expects a function for which the first (vector) argument is used as a parameter vector.
-  loss <- function(par_vec, data, n_demes, key, lambda) {
+  loss <- function(par_vec, data, n_demes, key, m_lambda, fi_lambda) {
 
     fs <- par_vec[1:n_demes]
     m <- par_vec[n_demes+1]
@@ -40,7 +41,8 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
     #     }
     #   }
     # }
-    # cost[0] += lambda * m * m; // explicit L2 regularization term at time 0
+    # cost[0] += m_lambda * m * m; // explicit L2 regularization term at time 0 for m
+
     cost <- 0
     # cost
     for(i in 1:(n_demes-1)) {
@@ -53,13 +55,17 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
         avg_fvec = (fs[i] + fs[j])/2
         exp_M = exp( unique(k_ij$geodist) / m)
         cost = cost + sum( (k_ij$gendist - avg_fvec * exp_M)^2)
-        }
+      }
     }
 
-  # Add L2 regularization term
-  cost <- cost + lambda * m * m
-  # out
-  return(cost)
+    # Add L2 regularization term for M
+    cost <- cost + m_lambda * m * m
+    # Add L2 regularization term for Fi
+    for(i in 1:n_demes) {
+      cost <- cost + fi_lambda * fs[i] * fs[i]
+    }
+    # out
+    return(cost)
   }
 
   #......................
@@ -68,11 +74,12 @@ calculate_hessian_eigen <- function(mod, discdat, lambda) {
   par_vec <- c(mod$Final_Fis, mod$Final_m)
   names(par_vec) <- c(mod$deme_key$Deme, "m")
   H <- numDeriv::hessian(loss,
-                    x = par_vec,
-                    data = discdat,
-                    n_demes = length(mod$Final_Fis),
-                    key = mod$deme_key$Deme,
-                    lambda = lambda)
+                         x = par_vec,
+                         data = discdat,
+                         n_demes = length(mod$Final_Fis),
+                         key = mod$deme_key$Deme,
+                         m_lambda = m_lambda,
+                         fi_lambda = fi_lambda)
 
   #......................
   # calculate eigen and conditional number

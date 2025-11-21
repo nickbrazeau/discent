@@ -427,28 +427,28 @@ double dbeta1(double x, double shape1, double shape2, bool return_log) {
 }
 
 //------------------------------------------------
-// draw from Poisson distribution with rate lambda
+// draw from Poisson distribution with rate m_lambda
 #ifdef RCPP_ACTIVE
-int rpois1(double lambda) {
-  return R::rpois(lambda);
+int rpois1(double m_lambda) {
+  return R::rpois(m_lambda);
 }
 #else
-int rpois1(double lambda) {
+int rpois1(double m_lambda) {
   Rcpp::stop("C++ version of poisson draws not coded yet!");
 }
 #endif
 
 //------------------------------------------------
-// draw from zero-truncated Poisson distribution with rate lambda
-// mean = lambda/(1 -exp(-lambda))
+// draw from zero-truncated Poisson distribution with rate m_lambda
+// mean = m_lambda/(1 -exp(-m_lambda))
 #ifdef RCPP_ACTIVE
-int rztpois1(double lambda) {
+int rztpois1(double m_lambda) {
   double rnd1 = runif_0_1();
-  double t = -log(1 - rnd1*(1 - exp(-lambda)));
-  return R::rpois(lambda - t) + 1;
+  double t = -log(1 - rnd1*(1 - exp(-m_lambda)));
+  return R::rpois(m_lambda - t) + 1;
 }
 #else
-int rztpois1(double lambda) {
+int rztpois1(double m_lambda) {
   Rcpp::stop("C++ version of zero-truncated poisson draws not coded yet!");
 }
 #endif
@@ -456,12 +456,12 @@ int rztpois1(double lambda) {
 //------------------------------------------------
 // probability mass of Poisson distribution
 #ifdef RCPP_ACTIVE
-double dpois1(int n, double lambda, bool return_log) {
-  return R::dpois(n,lambda,return_log);
+double dpois1(int n, double m_lambda, bool return_log) {
+  return R::dpois(n,m_lambda,return_log);
 }
 #else
-double dpois1(int n, double lambda, bool return_log) {
-  double ret = n*log(lambda) - lambda - lgamma(n + 1);
+double dpois1(int n, double m_lambda, bool return_log) {
+  double ret = n*log(m_lambda) - m_lambda - lgamma(n + 1);
   if (!return_log) {
     ret = exp(ret);
   }

@@ -3,7 +3,8 @@
 #'   \code{smpl1}, \code{smpl2}, \code{deme1}, \code{deme2}, \code{gendist}, \code{geodist}
 #' @param start_params named double vector; vector of start parameters. Names must match deme names,
 #'   plus one parameter named "m" for migration rate
-#' @param lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\lambda m^2}. Default: 1e-5
+#' @param m_lambda double; A quadratic L2 regularization parameter on "m" parameter: \eqn{\m_lambda m^2}. Default: 0
+#' @param fi_lambda double; A quadratic L2 regularization parameter on "fi" parameter: \eqn{\fi_lambda fi^2}. Default: 0
 #' @param learningrate double; Learning rate (alpha) for gradient descent optimization. Default: 0.001
 #' @param b1 double; Exponential decay rate for first moment estimate in Adam optimizer. Default: 0.9
 #' @param b2 double; Exponential decay rate for second moment estimate in Adam optimizer. Default: 0.999
@@ -60,7 +61,8 @@
 
 disc <- function(discdat,
                  start_params = NULL,
-                 lambda = 1e-5,
+                 m_lambda = 0,
+                 fi_lambda = 0,
                  learningrate = 1e-3,
                  b1 = 0.9,
                  b2 = 0.999,
@@ -97,7 +99,8 @@ disc <- function(discdat,
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
   sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
-  assert_single_numeric(lambda)
+  assert_single_numeric(m_lambda)
+  assert_single_numeric(fi_lambda)
   assert_single_numeric(learningrate)
   assert_single_numeric(b1)
   assert_single_numeric(b2)
@@ -150,7 +153,8 @@ disc <- function(discdat,
                n_Kpairmax = disclist$n_Kpairmax,
                m = unname(disclist$start_params["m"]),
                learningrate = learningrate,
-               lambda = lambda,
+               m_lambda = m_lambda,
+               fi_lambda = fi_lambda,
                b1 = b1,
                b2 = b2,
                e = e,
@@ -203,7 +207,8 @@ disc <- function(discdat,
   if (diagnostics == T) {
     diagn <- calculate_hessian_eigen(mod = output,
                                      discdat = discdat,
-                                     lambda = lambda)
+                                     m_lambda = m_lambda,
+                                     fi_lambda = fi_lambda)
 
     output <- append(output, diagn)
   }
