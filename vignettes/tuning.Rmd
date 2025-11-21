@@ -22,3 +22,23 @@ library(discent)
 hyperparameter tuning of learning rate, lambda  
   add some text about adam optimizer and more conservative vs aggressive inputs
 sensitivity analysis for starting parameter guesses 
+
+
+```{r, eval=FALSE}
+library(ggplot2)
+
+# volcano is a matrix; convert to data frame
+volcano_df <- as.data.frame(as.table(volcano))
+names(volcano_df) <- c("x", "y", "z")
+
+ggplot(volcano_df, aes(x, y, z = z)) +
+  geom_contour_filled(bins = 15) +
+  labs(fill = "Elevation") +
+  theme_minimal()
+
+# need to convert loss from final fis and M at various different levels
+# and capture that landscape
+# from your expand.grid start params 
+
+
+```

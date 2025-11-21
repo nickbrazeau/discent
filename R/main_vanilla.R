@@ -57,6 +57,7 @@
 #'     \item \code{Eigen}: Eigenvalues and eigenvectors from the Hessian
 #'     \item \code{KappaH}: Conditional number from Hessian matrix
 #'   }
+#'
 #' @export
 
 disc <- function(discdat,
