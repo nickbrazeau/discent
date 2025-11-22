@@ -34,5 +34,7 @@ Uses the DISCent equation, \eqn{r_ij = (f_i + f_j/2)e^(-d_{ij}/m)} to simulate
 data expected genetic distances between sample pairs within demes. We assume a beta-binomial
 model to create realistic "noise" amongst the pairs, where \eqn{Y|p ~ binom(n,p)} such that
 \eqn{p ~ beta(\mu * \phi, (1 - \mu) * \phi)}, where \eqn{\mu} is average relatedness (defined by \eqn{\rij}) and \eqn{\phi}
-is a concentration parameter of that relatedness.
+is a concentration parameter of that relatedness. In our instance the beta-binomial returns counts (ie number of related segments),
+we fix the segment denominator at 100. Overdispersion can be adjusted to produce more or less correlation
+of relatedness
 }
