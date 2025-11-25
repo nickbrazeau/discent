@@ -25,9 +25,7 @@ rbetabinom <- function(n = 1, k = 10, alpha = 1, beta = 1) {
 #' data expected genetic distances between sample pairs within demes. We assume a beta-binomial
 #' model to create realistic "noise" amongst the pairs, where \eqn{Y|p ~ binom(n,p)} such that
 #' \eqn{p ~ beta(\mu * \phi, (1 - \mu) * \phi)}, where \eqn{\mu} is average relatedness (defined by \eqn{\rij}) and \eqn{\phi}
-#' is a concentration parameter of that relatedness. In our instance the beta-binomial returns counts (ie number of related segments),
-#' we fix the segment denominator at 100. Overdispersion can be adjusted to produce more or less correlation
-#' of relatedness
+#' is a concentration parameter of that relatedness.
 #'
 #'
 #' @return A dataframe of class "DISCsim" containing columns:
@@ -135,7 +133,7 @@ run_forward_disc <- function(true_params, geodist_matrix, samples_per_deme, over
     data$gendist <- rbetabinom(n = nrow(data),
                                k = overdispersion,
                                alpha = mu*overdispersion,
-                               beta =  (1-mu)*overdispersion) / 100
+                               beta =  (1-mu)*overdispersion) / overdispersion
     return(data)
   }
 
