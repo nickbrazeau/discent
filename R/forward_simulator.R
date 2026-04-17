@@ -25,7 +25,7 @@ rbetabinom <- function(n = 1, k = 10, alpha = 1, beta = 1) {
 #' data expected genetic distances between sample pairs within demes. We assume a beta-binomial
 #' model to create realistic "noise" amongst the pairs, where \eqn{Y|p ~ binom(n,p)} such that
 #' \eqn{p ~ beta(\mu * \phi, (1 - \mu) * \phi)}, where \eqn{\mu} is average relatedness (defined by \eqn{\rij}) and \eqn{\phi}
-#' is a concentration parameter of that relatedness.
+#' is a concentration parameter of that relatedness. Of note, this model _violates_ transitivity that arises from true genetic data.
 #'
 #'
 #' @return A dataframe of class "DISCsim" containing columns:
