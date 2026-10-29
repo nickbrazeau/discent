@@ -96,7 +96,7 @@ expand_pairwise <- function(discdf){
 #' @return Logical value: TRUE if object is of class DISCresult, FALSE otherwise
 #' @export
 is.DISCresult <- function(x) {
-  inherits(x, "is.DISCresult")
+  inherits(x, "DISCresult")
 }
 
 #' @title Print DISCresult S3 Class

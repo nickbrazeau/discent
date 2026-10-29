@@ -97,7 +97,7 @@ disc <- function(discdat,
   assert_length(start_params, n = (length(unique(c(discdat$deme1, discdat$deme2))) + 1),
                 message = "Start params length not correct. You must specificy a start parameter
                            for each deme and the migration parameter, m")
-  sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE)
+  sapply(start_params[!grepl("^m$", names(start_params))], assert_bounded, left = 0, right = 1, inclusive_left = FALSE, inclusive_right = FALSE)
   assert_single_numeric(learningrate)
   assert_single_numeric(b1)
   assert_single_numeric(b2)
@@ -113,7 +113,7 @@ disc <- function(discdat,
   }
 
   # catch accidental bad F and M start
-  if ( any(round(start_params, digits = 1e200) == 0) ) {
+  if ( any(round(start_params, digits = 1e20) == 0) ) {
     warning("At least one of your start parameters is zero (or essentially zero), which will result in unstable behavior in the Gradient-Descent algorithm. Consider increasing the start parameter.")
   }
 
@@ -145,7 +145,7 @@ disc <- function(discdat,
 
   args <- list(gendist = as.vector(disclist$gendist_arr),
                geodist = as.vector(disclist$geodist_mat),
-               fvec = unname( disclist$start_params[!grepl("^m$", names(disclist$start_params))] ),
+               fvec = unname( disclist$start_params[as.character(disclist$demes)] ),
                n_Demes = length(disclist$demes),
                n_Kpairmax = disclist$n_Kpairmax,
                m = unname(disclist$start_params["m"]),
@@ -207,8 +207,7 @@ disc <- function(discdat,
   if (diagnostics == T) {
     diagn <- calculate_hessian_eigen(mod = output,
                                      discdat = discdat)
-
-    output <- append(output, diagn)
+    output <- structure(append(output, diagn), class = "DISCresult")
   }
 
   # out
@@ -231,17 +230,12 @@ wrangle_discentdat <- function(discdat, start_params, locats) {
   keyi <- data.frame(deme1 = demes, i = seq_along(demes))
   keyj <- data.frame(deme2 = demes, j = seq_along(demes))
 
-  # boundaries on genetic data for logit
-  discdat <- discdat %>%
-    dplyr::mutate(gendist = ifelse(gendist > 0.9999, 0.9999,
-                                   ifelse(gendist < 0.0001, 0.0001,
-                                          gendist))) # reasonable bounds for future logit
 
   # get genetic data by pairs through efficient nest
   gendist <- discdat %>%
     expand_pairwise(.) %>% # get all pairwise for full matrix
-    dplyr::select(c("deme1", "deme2", "gendist")) %>%
     dplyr::filter(!duplicated(.)) %>%
+    dplyr::select(c("deme1", "deme2", "gendist")) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%
     tidyr::nest(.) %>%
     dplyr::left_join(., keyi, by = "deme1") %>%
