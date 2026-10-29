@@ -29,10 +29,7 @@ test_that("Finite difference gradient validation - F gradients", {
   # Load data
   data("IBD_simulation_data", package = "discent")
   dat <- IBD_simulation_data %>%
-    dplyr::filter(deme1 != deme2) %>%
-    dplyr::mutate(gendist = ifelse(gendist > 0.9999, 0.9999,
-                                   ifelse(gendist < 0.0001, 0.0001,
-                                          gendist)))
+    dplyr::filter(deme1 != deme2)
 
   test_params <- c("1" = 0.3, "2" = 0.7, "3" = 0.1, "m" = 50)
   h <- 1e-6  # finite difference step size
@@ -95,10 +92,8 @@ test_that("Finite difference gradient validation - M gradient", {
   # Load data
   data("IBD_simulation_data", package = "discent")
   dat <- IBD_simulation_data %>%
-    dplyr::filter(deme1 != deme2) %>%
-    dplyr::mutate(gendist = ifelse(gendist > 0.9999, 0.9999,
-                                   ifelse(gendist < 0.0001, 0.0001,
-                                          gendist)))
+    dplyr::filter(deme1 != deme2)
+
   # Test parameters
   test_params <- c("1" = 0.3, "2" = 0.7, "3" = 0.1, "m" = 500)
   h <- 1e-6
@@ -126,7 +121,7 @@ test_that("Finite difference gradient validation - M gradient", {
 
   # Compare disc vs finite diff gradients
   numerical_m_grad <- (cost_plus - cost_minus) / (2 * h)
-  disc_grad <- ret$m_gradtraj[2]/ret$m_run[2]
+  disc_grad <- ret$m_gradtraj[2]/ret$m_run[1]
 
 
   # Compare

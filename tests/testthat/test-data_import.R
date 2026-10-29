@@ -74,8 +74,8 @@ test_that("test that genetic data imports correctly", {
   # this makes an ij key independent of deme names
   gendist <- dat %>%
     expand_pairwise(.) %>% # get all pairwise for full matrix
-    dplyr::select(c("deme1", "deme2", "gendist")) %>%
     dplyr::filter(!duplicated(.)) %>%
+    dplyr::select(c("deme1", "deme2", "gendist")) %>%
     dplyr::group_by_at(c("deme1", "deme2")) %>%
     tidyr::nest(.) %>%
     dplyr::left_join(., keyi, by = "deme1") %>%
