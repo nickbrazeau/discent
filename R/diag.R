@@ -73,7 +73,12 @@ calculate_hessian_eigen <- function(mod, discdat) {
   # calculate eigen and conditional number
   #......................
   eig <- eigen(H, symmetric = TRUE)
-  kappaH <- kappa(H)
+  # get kappa
+  kappaH_raw <- max(eig$values) / min(eig$values)
+  # normalize for M (which is unit dependent) to measure "excess" covar between our two params
+  d <- sqrt(diag(H))
+  eig_scaled   <- eigen(H / tcrossprod(d), symmetric = TRUE)
+  kappaH_scaled <- max(eig_scaled$values) / min(eig_scaled$values)
 
 
   #......................
@@ -82,7 +87,8 @@ calculate_hessian_eigen <- function(mod, discdat) {
   out <- list(
     Hessian = H,
     Eigen = eig,
-    KappaH = kappaH
+    KappaH_raw = kappaH_raw,
+    KappaH_scaled = kappaH_scaled
   )
 
 }
