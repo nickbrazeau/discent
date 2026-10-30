@@ -64,7 +64,7 @@ expit <- function(p){
 #' @return Expanded dataframe with both (i,j) and (j,i) pairs, duplicates removed
 #' @details This function is used internally to ensure symmetric contribution of all
 #'   deme pairs to gradient calculations, which is essential for the improved gradient
-#'   computation that includes fgrad[j] contributions.
+#'   computation that includes fgrad(j) contributions.
 #' @keywords internal
 #' @noRd
 
