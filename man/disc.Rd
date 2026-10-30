@@ -15,7 +15,7 @@ disc(
   thin = 1,
   report_progress = TRUE,
   return_verbose = FALSE,
-  diagnostics = TRUE
+  diagnostics = FALSE
 )
 }
 \arguments{

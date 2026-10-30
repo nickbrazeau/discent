@@ -51,11 +51,11 @@ calculate_hessian_eigen <- function(mod, discdat) {
         avg_fvec = (fs[i] + fs[j])/2
         exp_M = exp( - unique(k_ij$geodist) / m)
         cost = cost + sum( (k_ij$gendist - avg_fvec * exp_M)^2)
-        }
+      }
     }
 
-  # out
-  return(cost)
+    # out
+    return(cost)
   }
 
   #......................
@@ -64,17 +64,28 @@ calculate_hessian_eigen <- function(mod, discdat) {
   par_vec <- c(mod$Final_Fis, mod$Final_m)
   names(par_vec) <- c(mod$deme_key$Deme, "m")
   H <- numDeriv::hessian(loss,
-                    x = par_vec,
-                    data = discdat,
-                    n_demes = length(mod$Final_Fis),
-                    key = mod$deme_key$Deme)
+                         x = par_vec,
+                         data = discdat,
+                         n_demes = length(mod$Final_Fis),
+                         key = mod$deme_key$Deme)
 
   #......................
   # calculate eigen and conditional number
   #......................
   eig <- eigen(H, symmetric = TRUE)
-  kappaH <- kappa(H)
+  # get kappa
+  kappaH_raw <- max(eig$values) / min(eig$values)
 
+  # check that we can scale
+  dH <- diag(H)
+  if (all(is.finite(dH)) & all(dH > 0)) {
+    d <- sqrt(diag(H))
+    eig_scaled   <- eigen(H / tcrossprod(d), symmetric = TRUE)
+    kappaH_scaled <- max(eig_scaled$values) / min(eig_scaled$values)
+  } else {
+    warning("Hessian has non-positive diagonal entries; KappaH_scaled set to NA")
+    kappaH_scaled <- NA
+  }
 
   #......................
   # out
@@ -82,7 +93,8 @@ calculate_hessian_eigen <- function(mod, discdat) {
   out <- list(
     Hessian = H,
     Eigen = eig,
-    KappaH = kappaH
+    KappaH_raw = kappaH_raw,
+    KappaH_scaled = kappaH_scaled
   )
 
 }
