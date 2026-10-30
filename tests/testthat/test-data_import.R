@@ -7,7 +7,7 @@ test_that("test that genetic data imports correctly", {
   # start params
   our_start_params <- rep(0.2, 3)
   names(our_start_params) <- 1:3
-  our_start_params <- c(our_start_params, "m" = 10)
+  our_start_params <- c(our_start_params, "m" = 1e3)
   # locats
   locats <- names(our_start_params)[!grepl("^m$", names(our_start_params))]
   #.................................

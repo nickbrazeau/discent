@@ -70,7 +70,7 @@ disc <- function(discdat,
                  thin = 1,
                  report_progress = TRUE,
                  return_verbose = FALSE,
-                 diagnostics = TRUE) {
+                 diagnostics = FALSE) {
 
   #..............................................................
   # Assertions & Catches
@@ -172,17 +172,10 @@ disc <- function(discdat,
       deme_key = disclist$keyi,
       m_run = output_raw$m_run[thin_its],
       fi_run = do.call("rbind", output_raw$fi_run)[thin_its, ],
-      b_run = output_raw$b_run[thin_its],
-      ci_run = do.call("rbind", output_raw$ci_run)[thin_its, ],
       m_gradtraj = output_raw$m_gradtraj[thin_its],
-      b_gradtraj = output_raw$b_gradtraj[thin_its],
-      ci_gradtraj = do.call("rbind", output_raw$ci_gradtraj)[thin_its, ],
+      fi_gradtraj = do.call("rbind", output_raw$fi_gradtraj)[thin_its, ],
       m_1moment = output_raw$m_firstmoment[thin_its],
       m_2moment = output_raw$m_secondmoment[thin_its],
-      b_1moment = output_raw$b_firstmoment[thin_its],
-      b_2moment = output_raw$b_secondmoment[thin_its],
-      ci_1moment = do.call("rbind", output_raw$ci_firstmoment)[thin_its, ],
-      ci_2moment = do.call("rbind", output_raw$ci_secondmoment)[thin_its, ],
       cost = output_raw$cost[thin_its],
       Final_Fis = output_raw$Final_Fis,
       Final_m = output_raw$Final_m,

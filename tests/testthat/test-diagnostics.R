@@ -17,7 +17,8 @@ test_that("Hessian and diagnostics behave", {
                e = 1e-8,
                steps = 1e5,
                report_progress = F,
-               return_verbose = F)
+               return_verbose = F,
+               diagnostics = T)
   #............................................................
   # Hessian behavior
   #...........................................................

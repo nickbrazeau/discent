@@ -77,7 +77,7 @@ test_that("Finite difference gradient validation - F gradients", {
   #            = logit_fgrad[k] - beta/n_Demes
   # we back out the logit as well with f*(1-f)
 
-  disc_grads <- (ret$ci_gradtraj[2,] + ret$b_gradtraj[2]/3)/(ret$fi_run[1,] * (1 - ret$fi_run[1,]))
+  disc_grads <- (ret$fi_gradtraj[2,])/(ret$fi_run[1,] * (1 - ret$fi_run[1,]))
 
   # iter through
   for(i in 1:3) {
