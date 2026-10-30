@@ -1,9 +1,9 @@
-pandoc: 3.1.11
-pkgdown: 2.2.0
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   installation: installation.html
   model_intuition: model_intuition.html
   tuning: tuning.html
   uncertainty: uncertainty.html
-last_built: 2025-11-25T13:49Z
+last_built: 2026-10-30T02:12Z
