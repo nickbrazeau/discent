@@ -13,7 +13,8 @@ sandbox/
 old/
 inst/doc
 todo.txt
-.claude/
-claude_ignore/
+ignore/
 /doc/
 /Meta/
+
+R_ignore/RoT_diagnostics.html
